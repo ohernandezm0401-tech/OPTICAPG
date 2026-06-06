@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiSaaS v3.0 | El control definitivo para tu Óptica moderna</title>
+    <meta name="description" content="Gestiona historias clínicas especializadas, agenda multi-sede, ventas POS, laboratorio e inspección regulatoria en una sola plataforma premium.">
+    <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+
+    <!-- Floating Navigation Bar -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">👁️</span>
+                <span class="logo-text">Opti<span>SaaS</span></span>
+            </a>
+            <nav class="nav-links">
+                <a href="#features">Características</a>
+                <a href="#demo">Flujo Operativo</a>
+                <a href="#compliance">Cumplimiento</a>
+                <a href="#pricing">Planes</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-btn" aria-label="Cambiar Tema">🌙</button>
+                <a href="#contact" class="btn btn-primary">Solicitar Demo</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="glow-orb glow-1"></div>
+        <div class="glow-orb glow-2"></div>
+        <div class="container hero-container">
+            <span class="badge-new">✨ Nueva Versión 3.0 Enterprise</span>
+            <h1 class="hero-title">El control total de tu óptica, <span>de la cita a la entrega</span></h1>
+            <p class="hero-subtitle">
+                La primera plataforma multi-sede diseñada específicamente para ópticas. Administra historias clínicas, facturación electrónica, laboratorios y el cumplimiento de Secretaría de Salud e INVIMA.
+            </p>
+            <div class="hero-ctas">
+                <a href="#demo" class="btn btn-accent">Ver Flujo en Acción 🚀</a>
+                <a href="#contact" class="btn btn-secondary">Hablar con un Asesor</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operational Tour (Interactive Demo) -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Tour de Operación</span>
+                <h2>Flujo de Trabajo End-to-End</h2>
+                <p>Descubre cómo OptiSaaS unifica todos los pasos de tu operación comercial y clínica de forma integrada y sin esfuerzo.</p>
+            </div>
+
+            <!-- Steps Indicator -->
+            <div class="steps-progress-wrapper">
+                <div class="steps-progress-line">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="steps-progress-container">
+                    <div class="step-node active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <span class="step-title">Registro</span>
+                    </div>
+                    <div class="step-node" data-step="2">
+                        <div class="step-circle">2</div>
+                        <span class="step-title">Consulta</span>
+                    </div>
+                    <div class="step-node" data-step="3">
+                        <div class="step-circle">3</div>
+                        <span class="step-title">Venta POS</span>
+                    </div>
+                    <div class="step-node" data-step="4">
+                        <div class="step-circle">4</div>
+                        <span class="step-title">Facturación</span>
+                    </div>
+                    <div class="step-node" data-step="5">
+                        <div class="step-circle">5</div>
+                        <span class="step-title">Laboratorio</span>
+                    </div>
+                    <div class="step-node" data-step="6">
+                        <div class="step-circle">6</div>
+                        <span class="step-title">Sec. Salud</span>
+                    </div>
+                    <div class="step-node" data-step="7">
+                        <div class="step-circle">7</div>
+                        <span class="step-title">Entrega</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laptop Device Mockup -->
+            <div class="device-mockup">
+                <div class="device-header">
+                    <div class="device-dots">
+                        <span class="dot-red"></span>
+                        <span class="dot-yellow"></span>
+                        <span class="dot-green"></span>
+                    </div>
+                    <div class="device-tabs">
+                        <div class="device-tab active">
+                            <span>👁️ OptiSaaS Dashboard</span>
+                        </div>
+                    </div>
+                    <div class="device-address-bar">
+                        <span>🔒</span> https://app.optisaas.co/dashboard
+                    </div>
+                </div>
+                <div class="device-screen" id="demo-screen-content">
+                    <!-- Dynamic screen content will be cloned from templates -->
+                </div>
+                <div class="device-controls">
+                    <button id="prev-step" class="btn-ctrl" disabled>
+                        <span class="ctrl-icon">←</span> Anterior
+                    </button>
+                    <span id="step-indicator" class="step-text">Paso 1 de 7: Registro y Agenda</span>
+                    <button id="next-step" class="btn-ctrl">
+                        Siguiente <span class="ctrl-icon">→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Grid Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Características Clave</span>
+                <h2>Una suite completa para tu negocio</h2>
+                <p>Diseñada por optometristas y administradores para resolver los problemas reales de las ópticas modernas.</p>
+            </div>
+            
+            <div class="bento-grid">
+                <div class="bento-card bento-large card-glow">
+                    <div class="bento-icon">🏢</div>
+                    <h3>Control Centralizado Multi-Sede</h3>
+                    <p>Visualiza el inventario, agendas de especialistas y las finanzas de todas tus sucursales en tiempo real desde un único panel administrador.</p>
+                </div>
+                <div class="bento-card card-glow">
+                    <div class="bento-icon">🔒</div>
+                    <h3>Historia Clínica Segura</h3>
+                    <p>Registros clínicos encriptados que cumplen con la normativa de confidencialidad de datos médicos.</p>
+                </div>
+                <div class="bento-card card-glow">
+                    <div class="bento-icon">📊</div>
+                    <h3>Reportes de Rendimiento</h3>
+                    <p>Analíticas inteligentes de ventas, productos de mayor rotación y comisiones por asesor.</p>
+                </div>
+                <div class="bento-card card-glow">
+                    <div class="bento-icon">🔔</div>
+                    <h3>Recordatorios por WhatsApp</h3>
+                    <p>Envía confirmaciones de citas y avisos de entrega de gafas automáticamente a tus pacientes.</p>
+                </div>
+                <div class="bento-card bento-medium card-glow">
+                    <div class="bento-icon">📦</div>
+                    <h3>Inventario Óptico Inteligente</h3>
+                    <p>Gestiona monturas, lentes y accesorios. Controla niveles mínimos y alertas de stock de manera inteligente.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Regulatory Compliance Highlight -->
+    <section id="compliance" class="compliance-section">
+        <div class="container compliance-container">
+            <div class="compliance-text">
+                <span class="section-tag">Tranquilidad Regulatoria</span>
+                <h2>Evita multas y sanciones de Secretaría de Salud</h2>
+                <p>
+                    OptiSaaS incluye módulos integrados para cumplir al 100% con los requerimientos de los entes reguladores. Registra la trazabilidad del lente, las hojas de vida de los equipos ópticos y el histórico de actas INVIMA de forma nativa.
+                </p>
+                <ul class="compliance-list">
+                    <li>✔️ <strong>Habilitación Médica:</strong> Check-list del consultorio de optometría.</li>
+                    <li>✔️ <strong>Trazabilidad de Dispositivos:</strong> Control de lotes de lentes y monturas.</li>
+                    <li>✔️ <strong>Gestión de Hojas de Vida:</strong> Alertas de mantenimiento de equipos ópticos.</li>
+                </ul>
+            </div>
+            <div class="compliance-visual">
+                <div class="audit-card">
+                    <div class="audit-header">
+                        <span>📋 Reporte de Cumplimiento</span>
+                        <span class="badge-success">Excelente 100%</span>
+                    </div>
+                    <div class="audit-item">
+                        <span>Registro INVIMA de Lentes</span>
+                        <span class="check-green">✓ Valido</span>
+                    </div>
+                    <div class="audit-item">
+                        <span>Mantenimiento de Auto-Refractómetro</span>
+                        <span class="check-green">✓ Al día</span>
+                    </div>
+                    <div class="audit-item">
+                        <span>Fórmulas de Venta Directa</span>
+                        <span class="check-green">✓ Firmadas</span>
+                    </div>
+                    <div class="audit-gauge">
+                        <div class="gauge-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Precios Claros</span>
+                <h2>Planes adaptados al tamaño de tu óptica</h2>
+                <p>Comienza a digitalizar tu negocio hoy. Sin costos ocultos, cancela cuando quieras.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card card-glow">
+                    <h3>Plan Emprendedor</h3>
+                    <div class="price">$149.000<span>/mes</span></div>
+                    <p class="plan-desc">Ideal para ópticas individuales que inician su digitalización.</p>
+                    <ul class="pricing-features">
+                        <li>📍 1 Sede Única</li>
+                        <li>👤 1 Usuario Especialista</li>
+                        <li>📅 Agenda & Recepción</li>
+                        <li>💵 Ventas POS básicas</li>
+                        <li>🔒 Historias Clínicas</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-secondary">Comenzar Gratis</a>
+                </div>
+                <div class="pricing-card card-glow plan-featured">
+                    <div class="featured-tag">Más Popular ⭐</div>
+                    <h3>Plan Clínico</h3>
+                    <div class="price">$249.000<span>/mes</span></div>
+                    <p class="plan-desc">Perfecto para clínicas con consultorios dedicados de Optometría.</p>
+                    <ul class="pricing-features">
+                        <li>📍 Hasta 2 Sedes</li>
+                        <li>👤 Usuarios Especialistas Ilimitados</li>
+                        <li>📅 Agenda Médica Avanzada</li>
+                        <li>🧾 Facturación Electrónica DIAN</li>
+                        <li>🛡️ Control de Secretaría de Salud</li>
+                        <li>📦 Control de Inventario Completo</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-accent">Elegir Plan Clínico</a>
+                </div>
+                <div class="pricing-card card-glow">
+                    <h3>Plan Multi-Sede</h3>
+                    <div class="price">$449.000<span>/mes</span></div>
+                    <p class="plan-desc">Para cadenas de ópticas con laboratorios y administración centralizada.</p>
+                    <ul class="pricing-features">
+                        <li>📍 Sedes Ilimitadas</li>
+                        <li>👤 Todos los Usuarios Especialistas/Asesores</li>
+                        <li>🏭 Módulo de Laboratorio y Taller</li>
+                        <li>⚙️ Integración API multi-tenant</li>
+                        <li>📊 Reportes y Comisiones Centralizadas</li>
+                        <li>🛠️ Soporte 24/7 y Capacitación</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-secondary">Contactar Ventas</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Footer Section -->
+    <section id="contact" class="contact-section">
+        <div class="container contact-container">
+            <div class="contact-info">
+                <h2>¿Listo para llevar tu óptica al siguiente nivel?</h2>
+                <p>Completa el formulario y uno de nuestros expertos en habilitación óptica te contactará para guiarte en una demostración en vivo.</p>
+                <div class="contact-meta">
+                    <p>📞 +57 (300) 123-4567</p>
+                    <p>✉️ contacto@optisaas.co</p>
+                </div>
+            </div>
+            <form class="contact-form card-glow" onsubmit="event.preventDefault(); alert('¡Gracias por tu interés! Te contactaremos pronto.');">
+                <div class="form-group">
+                    <label for="c-name">Nombre Completo</label>
+                    <input type="text" id="c-name" placeholder="Ej. Dr. Andrés Vega" required>
+                </div>
+                <div class="form-group">
+                    <label for="c-optica">Nombre de la Óptica</label>
+                    <input type="text" id="c-optica" placeholder="Ej. Ópticas Visión Total" required>
+                </div>
+                <div class="form-group">
+                    <label for="c-email">Email Corporativo</label>
+                    <input type="email" id="c-email" placeholder="Ej. admin@visiontotal.com" required>
+                </div>
+                <button type="submit" class="btn btn-accent">Solicitar Demostración Gratis</button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 OptiSaaS. Todos los derechos reservados. Cumplimiento de Normativa de Salud Vigente.</p>
+        </div>
+    </footer>
+
+    <!-- ==========================================
+         DEMO SCREEN HTML TEMPLATES (SaaS Mocks)
+         ========================================== -->
+
+    <!-- Template 1: Registro (Recepción) -->
+    <template id="temp-step-1">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item active">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item">🛡️ Habilitación</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Recepción / Agenda</div>
+                    <div class="saas-branch">🏢 Sede Norte (Bogotá)</div>
+                </header>
+                <div class="saas-body">
+                    <h4 class="saas-title">Citas del Día</h4>
+                    <div class="saas-split-layout">
+                        <!-- Agenda List -->
+                        <div class="saas-card saas-flex-2">
+                            <div class="saas-list-item">
+                                <div class="saas-list-info">
+                                    <strong>08:00 AM - Andrés Vega</strong>
+                                    <span>Control Optométrico</span>
+                                </div>
+                                <span class="saas-badge badge-success">Atendido</span>
+                            </div>
+                            <div class="saas-list-item highlight">
+                                <div class="saas-list-info">
+                                    <strong>09:30 AM - Lucía Gómez</strong>
+                                    <span>Consulta Inicial Optometría</span>
+                                </div>
+                                <span class="saas-badge badge-warning">Esperando</span>
+                            </div>
+                            <div class="saas-list-item">
+                                <div class="saas-list-info">
+                                    <strong>10:45 AM - Roberto Díaz</strong>
+                                    <span>Entrega de Montura</span>
+                                </div>
+                                <span class="saas-badge badge-info">Agendado</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Registry Form -->
+                        <div class="saas-card saas-flex-1">
+                            <h5>Registro Rápido de Paciente</h5>
+                            <div class="saas-form-group">
+                                <label>Nombre</label>
+                                <input type="text" value="Lucía Gómez" disabled>
+                            </div>
+                            <div class="saas-form-group">
+                                <label>Cédula</label>
+                                <input type="text" value="1.034.567.890" disabled>
+                            </div>
+                            <div class="saas-form-group">
+                                <label>Motivo</label>
+                                <input type="text" value="Visión borrosa lectura de cerca" disabled>
+                            </div>
+                            <button class="saas-btn saas-btn-primary">Registrar en Fila</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 2: Consulta (Optometría EHR) -->
+    <template id="temp-step-2">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item">💼 Ventas POS</div>
+                    <div class="saas-nav-item active">🩺 Optometría</div>
+                    <div class="saas-nav-item">🛡️ Habilitación</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Clínico / Consulta Optométrica</div>
+                    <div class="saas-branch">🩺 Dr. Andrés Vega (Optómetra)</div>
+                </header>
+                <div class="saas-body">
+                    <div class="saas-patient-bar">
+                        <span><strong>Paciente:</strong> Lucía Gómez (28 años)</span>
+                        <span><strong>H.C. N°:</strong> HC-1034567890</span>
+                    </div>
+                    
+                    <div class="saas-card">
+                        <h5>Fórmula de Refracción (Prescripción Final)</h5>
+                        <table class="saas-table">
+                            <thead>
+                                <tr>
+                                    <th>Ojo</th>
+                                    <th>Esfera (Esf)</th>
+                                    <th>Cilindro (Cil)</th>
+                                    <th>Eje (Eje)</th>
+                                    <th>Adición (Add)</th>
+                                    <th>Agudeza Visual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>OD</strong> (Derecho)</td>
+                                    <td>-1.25</td>
+                                    <td>-0.50</td>
+                                    <td>90°</td>
+                                    <td>--</td>
+                                    <td>20/20</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>OI</strong> (Izquierdo)</td>
+                                    <td>-1.00</td>
+                                    <td>-0.75</td>
+                                    <td>180°</td>
+                                    <td>--</td>
+                                    <td>20/25</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="saas-split-layout mt-1">
+                        <div class="saas-card saas-flex-1">
+                            <h5>Diagnóstico Clínico</h5>
+                            <p class="saas-text-box">H52.2 - Astigmatismo Miópico Compuesto en ambos ojos.</p>
+                        </div>
+                        <div class="saas-card saas-flex-1">
+                            <h5>Recomendaciones / Indicaciones</h5>
+                            <p class="saas-text-box">Lentes Monofocales en policarbonato con Filtro Azul y Antirreflejo para uso continuo, especialmente frente a pantallas.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 3: Venta POS (Carrito / Cotización) -->
+    <template id="temp-step-3">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item active">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item">🛡️ Habilitación</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Comercial / Punto de Venta</div>
+                    <div class="saas-branch">👤 Asesor: Carlos Gómez</div>
+                </header>
+                <div class="saas-body">
+                    <h4 class="saas-title">Creación de Pedido / Cotización</h4>
+                    <div class="saas-split-layout">
+                        <!-- Left: Cart Items -->
+                        <div class="saas-card saas-flex-2">
+                            <h5>Ítems Seleccionados</h5>
+                            <div class="saas-cart-item">
+                                <div class="saas-cart-desc">
+                                    <strong>Montura Ray-Ban Aviator Metal (Gold)</strong>
+                                    <span class="saas-text-muted">Ref: RB3025 - Stock: 3 unidades</span>
+                                </div>
+                                <div class="saas-cart-price">$320.000 COP</div>
+                            </div>
+                            <div class="saas-cart-item">
+                                <div class="saas-cart-desc">
+                                    <strong>Lentes Monofocal Poly Filtro Azul AR</strong>
+                                    <span class="saas-text-muted">Fórmula cargada de HC-1034567890</span>
+                                </div>
+                                <div class="saas-cart-price">$180.000 COP</div>
+                            </div>
+                            <div class="saas-cart-item discount">
+                                <div class="saas-cart-desc">
+                                    <strong>Descuento Campaña de Salud (-10%)</strong>
+                                </div>
+                                <div class="saas-cart-price text-danger">-$50.000 COP</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Total & Finalize -->
+                        <div class="saas-card saas-flex-1">
+                            <h5>Resumen de Pedido</h5>
+                            <div class="saas-price-summary">
+                                <div class="saas-summary-line">
+                                    <span>Subtotal</span>
+                                    <span>$500.000</span>
+                                </div>
+                                <div class="saas-summary-line">
+                                    <span>Descuento</span>
+                                    <span>-$50.000</span>
+                                </div>
+                                <hr>
+                                <div class="saas-summary-line total">
+                                    <span>TOTAL</span>
+                                    <span>$450.000 COP</span>
+                                </div>
+                            </div>
+                            <button class="saas-btn saas-btn-success w-100">Proceder a Pago</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 4: Facturación (Pagos y Abonos) -->
+    <template id="temp-step-4">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item active">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item">🛡️ Habilitación</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Facturación / Caja</div>
+                    <div class="saas-branch">🧾 Factura Electrónica N° FE-3042</div>
+                </header>
+                <div class="saas-body">
+                    <div class="saas-split-layout">
+                        <!-- Invoice detail -->
+                        <div class="saas-card saas-flex-2">
+                            <h5>Factura de Venta DIAN</h5>
+                            <div class="saas-invoice-preview">
+                                <div class="saas-invoice-header">
+                                    <div>
+                                        <strong>OPTISASS LABS S.A.S.</strong><br>
+                                        NIT: 901.432.556-3<br>
+                                        Resolución DIAN No. 1876000
+                                    </div>
+                                    <div class="text-right">
+                                        Fecha: 26/05/2026<br>
+                                        Cliente: Lucía Gómez
+                                    </div>
+                                </div>
+                                <hr>
+                                <table class="saas-invoice-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Descripción</th>
+                                            <th>Cant</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Montura Ray-Ban + Lentes Filtro Azul</td>
+                                            <td>1</td>
+                                            <td>$450.000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Recaudo details -->
+                        <div class="saas-card saas-flex-1">
+                            <h5>Registro de Pago</h5>
+                            <div class="saas-summary-line">
+                                <span>Total Factura:</span>
+                                <strong>$450.000</strong>
+                            </div>
+                            <div class="saas-summary-line text-success">
+                                <span>Abono (50%):</span>
+                                <strong>$225.000</strong>
+                            </div>
+                            <div class="saas-summary-line text-warning">
+                                <span>Saldo Restante:</span>
+                                <strong>$225.000</strong>
+                            </div>
+                            
+                            <hr class="my-1">
+                            <label class="saas-label">Método de Pago Utilizado</label>
+                            <div class="saas-payment-grid">
+                                <div class="saas-pay-option active">💵 Efectivo</div>
+                                <div class="saas-pay-option">💳 Tarjeta</div>
+                                <div class="saas-pay-option">📱 Transferencia</div>
+                            </div>
+                            <button class="saas-btn saas-btn-primary w-100 mt-1">Guardar y Enviar Factura</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 5: Laboratorio (Kanban de Producción) -->
+    <template id="temp-step-5">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item active">🏭 Laboratorio</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Taller / Tallado y Biselado de Lentes</div>
+                    <div class="saas-branch">🛠️ Técnico: Miguel Osorio</div>
+                </header>
+                <div class="saas-body">
+                    <h4 class="saas-title">Tablero de Seguimiento de Órdenes</h4>
+                    <div class="saas-kanban">
+                        <!-- Column 1 -->
+                        <div class="saas-kanban-col">
+                            <h6>📥 Recibidos (0)</h6>
+                            <div class="saas-kanban-empty">Sin órdenes pendientes</div>
+                        </div>
+                        <!-- Column 2 -->
+                        <div class="saas-kanban-col">
+                            <h6>⚙️ En Biselado (1)</h6>
+                            <div class="saas-kanban-item active">
+                                <strong>Orden #ORD-894</strong>
+                                <p>Lucía Gómez</p>
+                                <span class="saas-text-muted">Lente Poly AR Filtro Azul</span>
+                                <div class="saas-progress-bar-mini">
+                                    <div class="saas-progress-fill-mini" style="width: 45%;"></div>
+                                </div>
+                                <span class="saas-mini-label">Biselando montura Ray-Ban...</span>
+                            </div>
+                        </div>
+                        <!-- Column 3 -->
+                        <div class="saas-kanban-col">
+                            <h6>🔍 Control de Calidad (1)</h6>
+                            <div class="saas-kanban-item">
+                                <strong>Orden #ORD-892</strong>
+                                <p>Andrés Vega</p>
+                                <span class="saas-text-muted">Bifocal Flat-Top</span>
+                                <span class="saas-badge badge-success">Listo para test</span>
+                            </div>
+                        </div>
+                        <!-- Column 4 -->
+                        <div class="saas-kanban-col">
+                            <h6>📦 Listo para Entrega (1)</h6>
+                            <div class="saas-kanban-item ready">
+                                <strong>Orden #ORD-889</strong>
+                                <p>Carlos Restrepo</p>
+                                <span class="saas-text-muted">Progresivo Transitions</span>
+                                <span class="saas-badge badge-primary">En vitrina</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 6: Secretaría de Salud (Cumplimiento) -->
+    <template id="temp-step-6">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item active">🛡️ Habilitación</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Regulatorio / Secretaría de Salud e INVIMA</div>
+                    <div class="saas-branch">🛡️ Auditoría: Cumplimiento Sede Norte</div>
+                </header>
+                <div class="saas-body">
+                    <div class="saas-split-layout">
+                        <!-- Habilitacion Status -->
+                        <div class="saas-card saas-flex-2">
+                            <h5>Trazabilidad de Dispositivos Médicos (INVIMA)</h5>
+                            <table class="saas-table">
+                                <thead>
+                                    <tr>
+                                        <th>Dispositivo</th>
+                                        <th>Lote/Serie</th>
+                                        <th>Registro INVIMA</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="success-row">
+                                        <td>Lente Poly AR Blue (ORD-894)</td>
+                                        <td>LOT-2026A-842</td>
+                                        <td>Reg. INVIMA 2021DM-0022</td>
+                                        <td><span class="saas-badge badge-success">Cumple</span></td>
+                                    </tr>
+                                    <tr class="success-row">
+                                        <td>Montura Ray-Ban RB3025</td>
+                                        <td>SER-RB-99042</td>
+                                        <td>Reg. INVIMA 2022DM-0034</td>
+                                        <td><span class="saas-badge badge-success">Cumple</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <h5 class="mt-1">Mantenimiento de Equipos Biomédicos</h5>
+                            <div class="saas-list-item">
+                                <div class="saas-list-info">
+                                    <strong>Auto-Refractómetro Topcon KR-800</strong>
+                                    <span>Última Calibración: 15/04/2026 por BioTech S.A.S.</span>
+                                </div>
+                                <span class="saas-badge badge-success">Vigente</span>
+                            </div>
+                        </div>
+
+                        <!-- Checklists -->
+                        <div class="saas-card saas-flex-1">
+                            <h5>Checklist de Habilitación</h5>
+                            <ul class="saas-checklist">
+                                <li>✔️ Hojas de vida de equipos completas</li>
+                                <li>✔️ Registro de actas de recepción técnica</li>
+                                <li>✔️ Fórmulas médicas archivadas digitalmente</li>
+                                <li>✔️ Registro de temperatura de insumos</li>
+                                <li>✔️ Protocolo de lavado de manos publicado</li>
+                            </ul>
+                            <div class="saas-score-panel">
+                                <span>Puntaje de Habilitación</span>
+                                <strong class="text-success">100 / 100 Apto</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <!-- Template 7: Entrega (Despacho / Firma) -->
+    <template id="temp-step-7">
+        <div class="saas-dashboard">
+            <aside class="saas-sidebar">
+                <div class="saas-logo">👁️ OptiSaaS</div>
+                <div class="saas-nav">
+                    <div class="saas-nav-item">📅 Recepción</div>
+                    <div class="saas-nav-item">👤 Pacientes</div>
+                    <div class="saas-nav-item">💼 Ventas POS</div>
+                    <div class="saas-nav-item">🩺 Optometría</div>
+                    <div class="saas-nav-item active">📦 Entregas</div>
+                </div>
+            </aside>
+            <main class="saas-content">
+                <header class="saas-header">
+                    <div class="saas-breadcrumb">Módulo Comercial / Despacho Final</div>
+                    <div class="saas-branch">📦 Orden: ORD-894 (Completada)</div>
+                </header>
+                <div class="saas-body">
+                    <div class="saas-split-layout">
+                        <!-- Left: Quality checks -->
+                        <div class="saas-card saas-flex-2">
+                            <h5>Verificaciones de Control de Calidad</h5>
+                            <ul class="saas-checklist">
+                                <li>✔️ Alineación física de la montura validada</li>
+                                <li>✔️ Validación de eje y cilindro en el lensómetro</li>
+                                <li>✔️ Limpieza y asepsia del dispositivo realizada</li>
+                                <li>✔️ Estuche protector y microfibra entregados</li>
+                            </ul>
+                            
+                            <h5 class="mt-1">Firma Digital de Conformidad</h5>
+                            <div class="saas-signature-pad">
+                                <span class="saas-signature-text">Lucía Gómez</span>
+                                <div class="saas-signature-line"></div>
+                                <span class="saas-signature-sub">Firma registrada por pantalla táctil</span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Deliver check -->
+                        <div class="saas-card saas-flex-1">
+                            <h5>Liquidación de Saldo</h5>
+                            <div class="saas-summary-line text-warning">
+                                <span>Saldo por Cobrar:</span>
+                                <strong>$225.000 COP</strong>
+                            </div>
+                            
+                            <div class="saas-form-group mt-1">
+                                <label>Recibir Saldo en Caja</label>
+                                <select class="saas-select">
+                                    <option>💵 Efectivo (Caja General)</option>
+                                    <option>💳 Datáfono Sede Norte</option>
+                                    <option>📱 Nequi / Transferencia</option>
+                                </select>
+                            </div>
+                            <button class="saas-btn saas-btn-success w-100 mt-1">Registrar Recibo y Despachar Gafas</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <script src="landing.js"></script>
+</body>
+</html>

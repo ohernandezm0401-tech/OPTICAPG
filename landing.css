@@ -1,0 +1,1482 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* ==========================================
+   DESIGN TOKENS & SYSTEMS
+   ========================================== */
+:root {
+    --font-title: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    
+    /* Light Mode Palette */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    
+    --border-color: #cbd5e1;
+    --border-glow: rgba(2, 132, 199, 0.1);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --accent-primary: #0284c7;      /* Cyan/Blue Optic */
+    --accent-secondary: #7c3aed;    /* Purple Tech */
+    --accent-success: #10b981;      /* Green Success */
+    --accent-warning: #f59e0b;      /* Amber warning */
+    --accent-danger: #ef4444;       /* Red Alert */
+    --accent-glow: rgba(2, 132, 199, 0.15);
+    
+    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --laptop-bg: #e2e8f0;
+    --laptop-border: #cbd5e1;
+    
+    /* UI Specifics */
+    --saas-bg: #f8fafc;
+    --saas-card-bg: #ffffff;
+    --saas-sidebar-bg: #0f172a;
+    --saas-sidebar-text: #94a3b8;
+    --saas-border: #e2e8f0;
+}
+
+[data-theme="dark"] {
+    /* Dark Mode Palette */
+    --bg-primary: #060a12;
+    --bg-secondary: #0c1220;
+    --bg-tertiary: #121b2d;
+    
+    --border-color: #1e293b;
+    --border-glow: rgba(0, 210, 255, 0.15);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --accent-primary: #00d2ff;      /* Electric Cyan */
+    --accent-secondary: #a855f7;    /* Electric Purple */
+    --accent-success: #34d399;      /* Emerald */
+    --accent-warning: #fbbf24;      /* Amber */
+    --accent-danger: #f87171;       /* Rose */
+    --accent-glow: rgba(0, 210, 255, 0.25);
+    
+    --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(255, 255, 255, 0.02);
+    --glass-bg: rgba(12, 18, 32, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.04);
+    --laptop-bg: #1e293b;
+    --laptop-border: #334155;
+    
+    /* UI Specifics */
+    --saas-bg: #0b0f19;
+    --saas-card-bg: #131a26;
+    --saas-sidebar-bg: #080c14;
+    --saas-sidebar-text: #64748b;
+    --saas-border: #1e293b;
+}
+
+/* ==========================================
+   BASE & RESET STYLES
+   ========================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+    outline: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Grid & Layout Utilities */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.btn-accent {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: #ffffff;
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+}
+
+/* Section Common */
+.section-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem auto;
+}
+
+.section-header h2 {
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.section-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--accent-glow);
+    color: var(--accent-primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+/* ==========================================
+   NAVIGATION BAR
+   ========================================== */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.logo-icon {
+    margin-right: 0.5rem;
+    font-size: 1.7rem;
+}
+
+.logo-text span {
+    color: var(--accent-primary);
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.nav-links a:hover {
+    color: var(--accent-primary);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.theme-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+/* Mobile Nav Styles (Simple support) */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+}
+
+/* ==========================================
+   HERO SECTION
+   ========================================== */
+.hero-section {
+    position: relative;
+    padding: 10rem 0 6rem 0;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Glowing backdrops */
+.glow-orb {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15;
+    z-index: -1;
+}
+
+.glow-1 {
+    background: var(--accent-primary);
+    top: -100px;
+    left: -100px;
+}
+
+.glow-2 {
+    background: var(--accent-secondary);
+    bottom: -100px;
+    right: -100px;
+}
+
+.hero-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+}
+
+.badge-new {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+}
+
+.hero-title span {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 650px;
+    margin-bottom: 2.5rem;
+}
+
+.hero-ctas {
+    display: flex;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    .hero-ctas {
+        flex-direction: column;
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   DEMO TOUR SECTION & LAPTOP DEVICE
+   ========================================== */
+.demo-section {
+    padding: 6rem 0;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Progress indicator steps */
+.steps-progress-wrapper {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto 3.5rem auto;
+    padding: 0 1rem;
+}
+
+.steps-progress-line {
+    position: absolute;
+    top: 20px;
+    left: 2rem;
+    right: 2rem;
+    height: 4px;
+    background-color: var(--border-color);
+    z-index: 1;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.steps-progress-container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+}
+
+.step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+}
+
+.step-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+    text-align: center;
+}
+
+.step-node.active .step-circle {
+    border-color: var(--accent-primary);
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.step-node.active .step-title {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.step-node.passed .step-circle {
+    border-color: var(--accent-secondary);
+    background-color: var(--accent-secondary);
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .step-title {
+        display: none;
+    }
+    .steps-progress-line {
+        top: 15px;
+    }
+    .step-circle {
+        width: 34px;
+        height: 34px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Device Mockup (Laptop Browser) */
+.device-mockup {
+    max-width: 1000px;
+    margin: 0 auto;
+    border-radius: 12px;
+    background-color: var(--laptop-bg);
+    border: 1px solid var(--laptop-border);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+
+.device-header {
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 80px 1fr 150px;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+}
+
+.device-dots {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.device-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot-red { background-color: #ef4444; }
+.dot-yellow { background-color: #f59e0b; }
+.dot-green { background-color: #10b981; }
+
+.device-tabs {
+    display: flex;
+}
+
+.device-tab {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.device-address-bar {
+    grid-column: 2 / 3;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.25rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 450px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.device-screen {
+    background-color: var(--saas-bg);
+    height: 480px;
+    position: relative;
+    overflow-y: auto;
+}
+
+.device-controls {
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+}
+
+.btn-ctrl {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-ctrl:hover:not(:disabled) {
+    background-color: var(--bg-primary);
+}
+
+.btn-ctrl:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.step-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+/* ==========================================
+   BENTO GRID FEATURES
+   ========================================== */
+.features-section {
+    padding: 6rem 0;
+}
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.bento-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.bento-large {
+    grid-column: span 2;
+    background: linear-gradient(135deg, var(--bg-secondary) 60%, var(--bg-tertiary));
+}
+
+.bento-medium {
+    grid-column: span 2;
+}
+
+.bento-icon {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.bento-card h3 {
+    font-size: 1.35rem;
+}
+
+.bento-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Glow Card Effect */
+.card-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(800px circle at var(--x, 0) var(--y, 0), var(--border-glow), transparent 40%);
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.card-glow:hover::before {
+    opacity: 1;
+}
+
+.card-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+@media (max-width: 900px) {
+    .bento-grid {
+        grid-template-columns: 1fr;
+    }
+    .bento-large, .bento-medium {
+        grid-column: span 1;
+    }
+}
+
+/* ==========================================
+   REGULATORY COMPLIANCE HIGHLIGHT
+   ========================================== */
+.compliance-section {
+    padding: 6rem 0;
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.compliance-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.compliance-text h2 {
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+}
+
+.compliance-text p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+}
+
+.compliance-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.compliance-list li {
+    font-size: 0.95rem;
+}
+
+/* Audit Card visual */
+.audit-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+}
+
+.audit-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--accent-success);
+    padding: 0.15rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+}
+
+.audit-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.check-green {
+    color: var(--accent-success);
+    font-weight: bold;
+}
+
+.audit-gauge {
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 3px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+}
+
+.gauge-bar {
+    height: 100%;
+    width: 100%;
+    background-color: var(--accent-success);
+}
+
+@media (max-width: 768px) {
+    .compliance-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+/* ==========================================
+   PRICING SECTION
+   ========================================== */
+.pricing-section {
+    padding: 6rem 0;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    align-items: stretch;
+    margin-top: 2rem;
+}
+
+.pricing-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--card-shadow);
+}
+
+.pricing-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-family: var(--font-title);
+}
+
+.price span {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.plan-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    min-height: 48px;
+}
+
+.pricing-features {
+    list-style: none;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex-grow: 1;
+}
+
+.pricing-features li {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pricing-card .btn {
+    width: 100%;
+}
+
+.plan-featured {
+    border: 2px solid var(--accent-primary);
+    transform: scale(1.03);
+    z-index: 2;
+}
+
+.featured-tag {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+    .plan-featured {
+        transform: scale(1);
+    }
+}
+
+/* ==========================================
+   CONTACT SECTION
+   ========================================== */
+.contact-section {
+    padding: 6rem 0;
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+}
+
+.contact-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.contact-info h2 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.contact-info p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.contact-meta {
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.contact-form {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group input {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-group input:focus {
+    border-color: var(--accent-primary);
+}
+
+@media (max-width: 768px) {
+    .contact-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+.main-footer {
+    padding: 2rem 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    background-color: var(--bg-primary);
+}
+
+.footer-container p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* ==========================================
+   SIMULATED SAAS APPLICATION STYLES
+   ========================================== */
+.saas-dashboard {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    height: 100%;
+    width: 100%;
+    color: var(--text-primary);
+    text-align: left;
+    font-size: 0.85rem;
+}
+
+.saas-sidebar {
+    background-color: var(--saas-sidebar-bg);
+    color: #ffffff;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border-right: 1px solid var(--saas-border);
+}
+
+.saas-logo {
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.saas-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.saas-nav-item {
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    color: var(--saas-sidebar-text);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.saas-nav-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.saas-content {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.saas-header {
+    background-color: var(--saas-card-bg);
+    border-bottom: 1px solid var(--saas-border);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saas-breadcrumb {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.saas-branch {
+    font-weight: 700;
+    font-size: 0.8rem;
+    background-color: var(--saas-bg);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--saas-border);
+}
+
+.saas-body {
+    padding: 1.25rem;
+    background-color: var(--saas-bg);
+    flex-grow: 1;
+}
+
+.saas-title {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.saas-split-layout {
+    display: flex;
+    gap: 1rem;
+}
+
+.saas-flex-1 { flex: 1; }
+.saas-flex-2 { flex: 2; }
+
+/* Dashboard UI components inside screens */
+.saas-card {
+    background-color: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.saas-card h5 {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--saas-border);
+    padding-bottom: 0.5rem;
+}
+
+.saas-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem;
+    border-bottom: 1px solid var(--saas-border);
+}
+
+.saas-list-item:last-child {
+    border-bottom: none;
+}
+
+.saas-list-item.highlight {
+    background-color: rgba(245, 158, 11, 0.05);
+    border-left: 3px solid var(--accent-warning);
+}
+
+.saas-list-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.saas-list-info span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.saas-badge {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--accent-success);
+}
+
+.badge-warning {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--accent-warning);
+}
+
+.badge-info {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.saas-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.saas-form-group label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.saas-form-group input, .saas-select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--saas-border);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    background-color: var(--saas-bg);
+    color: var(--text-primary);
+}
+
+.saas-btn {
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.saas-btn-primary {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+.saas-btn-success {
+    background-color: var(--accent-success);
+    color: #ffffff;
+}
+
+/* Patient info bar */
+.saas-patient-bar {
+    background-color: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+}
+
+/* Simulated Data Table */
+.saas-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.saas-table th, .saas-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--saas-border);
+}
+
+.saas-table th {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.saas-text-box {
+    background-color: var(--saas-bg);
+    border: 1px solid var(--saas-border);
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-height: 48px;
+}
+
+.mt-1 { margin-top: 1rem; }
+.my-1 { margin-top: 1rem; margin-bottom: 1rem; }
+.w-100 { width: 100%; }
+
+/* Cart POS items */
+.saas-cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--saas-border);
+}
+
+.saas-cart-desc {
+    display: flex;
+    flex-direction: column;
+}
+
+.saas-cart-price {
+    font-weight: 700;
+}
+
+.saas-cart-item.discount {
+    background-color: rgba(239, 68, 68, 0.03);
+}
+
+.text-danger {
+    color: var(--accent-danger);
+}
+
+.saas-price-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.saas-summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+}
+
+.saas-summary-line.total {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+/* Invoice details */
+.saas-invoice-preview {
+    border: 1px dashed var(--saas-border);
+    padding: 1rem;
+    border-radius: 4px;
+    background-color: var(--saas-bg);
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+
+.saas-invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.saas-invoice-table {
+    width: 100%;
+}
+
+.saas-invoice-table th {
+    border-bottom: 1px solid var(--saas-border);
+}
+
+.text-right { text-align: right; }
+
+.saas-payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.saas-pay-option {
+    border: 1px solid var(--saas-border);
+    padding: 0.4rem;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.saas-pay-option.active {
+    border-color: var(--accent-primary);
+    background-color: rgba(0, 210, 255, 0.05);
+    color: var(--accent-primary);
+}
+
+/* Kanban */
+.saas-kanban {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    height: 320px;
+}
+
+.saas-kanban-col {
+    background-color: var(--saas-card-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.saas-kanban-col h6 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--saas-border);
+    padding-bottom: 0.35rem;
+}
+
+.saas-kanban-empty {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 1.5rem 0;
+    border: 1px dashed var(--saas-border);
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+.saas-kanban-item {
+    background-color: var(--saas-bg);
+    border: 1px solid var(--saas-border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.saas-kanban-item.active {
+    border-left: 3px solid var(--accent-primary);
+}
+
+.saas-kanban-item.ready {
+    border-left: 3px solid var(--accent-success);
+}
+
+.saas-progress-bar-mini {
+    height: 4px;
+    background-color: var(--saas-border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0.25rem 0;
+}
+
+.saas-progress-fill-mini {
+    height: 100%;
+    background-color: var(--accent-primary);
+}
+
+.saas-mini-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Compliance and Audits */
+.success-row {
+    background-color: rgba(16, 185, 129, 0.02);
+}
+
+.saas-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.saas-checklist li {
+    font-size: 0.8rem;
+}
+
+.saas-score-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    background-color: var(--saas-bg);
+    border: 1px solid var(--saas-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saas-score-panel strong {
+    font-size: 1rem;
+}
+
+/* Signature & Delivery */
+.saas-signature-pad {
+    border: 1px solid var(--saas-border);
+    border-radius: 6px;
+    background-color: var(--saas-bg);
+    height: 100px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.saas-signature-text {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    margin-top: 1.5rem;
+}
+
+.saas-signature-line {
+    width: 80%;
+    height: 1px;
+    background-color: var(--text-muted);
+    position: absolute;
+    bottom: 20px;
+}
+
+.saas-signature-sub {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    position: absolute;
+    bottom: 4px;
+}
+
+/* Screen Transitions */
+.saas-dashboard {
+    animation: saasFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes saasFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
