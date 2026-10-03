@@ -12,16 +12,16 @@
 
 ## Proposed File Structure
 
-*   `d:\OPTICAS\index.html` - Semantics, layout structures, and mock screen HTML layouts.
-*   `d:\OPTICAS\landing.css` - Design system colors (HSL based), resets, typography (Outfit & Inter), glassmorphism, responsive grid layout, and layout styles.
-*   `d:\OPTICAS\landing.js` - Tab switching logic, dynamic progress bar highlighting, light/dark mode toggling, and input simulation for the steps.
+*   `landing/index.html` - Semantics, layout structures, and mock screen HTML layouts.
+*   `landing/landing.css` - Design system colors (HSL based), resets, typography (Outfit & Inter), glassmorphism, responsive grid layout, and layout styles.
+*   `landing/landing.js` - Tab switching logic, dynamic progress bar highlighting, light/dark mode toggling, and input simulation for the steps.
 
 ---
 
 ### Task 1: Foundation and Styling System
 
 **Files:**
-- Create: `d:\OPTICAS\landing.css`
+- Create: `landing/landing.css`
 
 - [ ] **Step 1: Set up HSL Design Tokens (Dark & Light) and Resets**
   Add the core layout resets, scroll behavior, custom typography (import Outfit and Inter from Google Fonts), and the central theme variables (cyan accents, slate backgrounds).
@@ -89,8 +89,8 @@
 ### Task 2: Landing Skeleton, Header, and Hero Section
 
 **Files:**
-- Create: `d:\OPTICAS\index.html`
-- Modify: `d:\OPTICAS\landing.css`
+- Create: `landing/index.html`
+- Modify: `landing/landing.css`
 
 - [ ] **Step 1: Set up HTML boilerplate and Navbar**
   Create basic structure in `index.html` with a modern floating navbar containing the brand logo, link items, dark mode trigger, and Call to Action.
@@ -151,9 +151,9 @@
 ### Task 3: Interactive Demo Frame & Layout Setup
 
 **Files:**
-- Modify: `d:\OPTICAS\index.html`
-- Modify: `d:\OPTICAS\landing.css`
-- Create: `d:\OPTICAS\landing.js`
+- Modify: `landing/index.html`
+- Modify: `landing/landing.css`
+- Create: `landing/landing.js`
 
 - [ ] **Step 1: Create Demo Section & Laptop device container**
   Define the wrapper for the step-by-step tour, including the timeline of the 7 steps (Registration to Delivery) and the desktop device mockup.
@@ -202,9 +202,9 @@
 ### Task 4: Implement Demo Screens 1 - 4
 
 **Files:**
-- Modify: `d:\OPTICAS\index.html`
-- Modify: `d:\OPTICAS\landing.css`
-- Modify: `d:\OPTICAS\landing.js`
+- Modify: `landing/index.html`
+- Modify: `landing/landing.css`
+- Modify: `landing/landing.js`
 
 - [ ] **Step 1: Code HTML templates for screens 1 (Registro) & 2 (Consulta)**
   Create UI components:
@@ -225,9 +225,9 @@
 ### Task 5: Implement Demo Screens 5 - 7
 
 **Files:**
-- Modify: `d:\OPTICAS\index.html`
-- Modify: `d:\OPTICAS\landing.css`
-- Modify: `d:\OPTICAS\landing.js`
+- Modify: `landing/index.html`
+- Modify: `landing/landing.css`
+- Modify: `landing/landing.js`
 
 - [ ] **Step 1: Code HTML templates for screens 5 (Laboratorio) & 6 (Sec. Salud)**
   Create UI layouts:
@@ -246,8 +246,8 @@
 ### Task 6: Bento Features, Pricing, and Footer Sections
 
 **Files:**
-- Modify: `d:\OPTICAS\index.html`
-- Modify: `d:\OPTICAS\landing.css`
+- Modify: `landing/index.html`
+- Modify: `landing/landing.css`
 
 - [ ] **Step 1: Add Features Section (Bento Grid) in HTML & CSS**
   Implement the key cards layout showing control panels, analytics charts, encrypted patient data.
@@ -260,8 +260,8 @@
 ### Task 7: Theme Switcher & Animation Polish
 
 **Files:**
-- Modify: `d:\OPTICAS\landing.js`
-- Modify: `d:\OPTICAS\landing.css`
+- Modify: `landing/landing.js`
+- Modify: `landing/landing.css`
 
 - [ ] **Step 1: Implement Theme Switcher**
   Add state-saving logic to `localStorage` so client selection persists across page refresh, and toggle appropriate attributes on the root `<html>`.
