@@ -80,5 +80,8 @@ jobs:
       - name: Generar AUTH_SECRET efímero (solo E2E, sin valor real)
         run: echo "AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
 
-      - name: Pruebas E2E (/login, /nucleo, demo)
+      - name: Generar cuentas locales de desarrollo (PLT-10, T05)
+        run: npm run seed:dev
+
+      - name: Pruebas E2E (/login, /nucleo, demo, entornos)
         run: npm run test:e2e

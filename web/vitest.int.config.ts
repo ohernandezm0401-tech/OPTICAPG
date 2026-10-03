@@ -18,5 +18,10 @@ export default defineConfig({
     include: ['tests/int/**/*.test.ts'],
     environment: 'node',
     testTimeout: 15000,
+    // PLT-10 (T05): un solo proceso. Cada archivo migra en su `beforeAll` y
+    // Drizzle no serializa migraciones concurrentes contra una base fresca
+    // (carrera `pg_type_typname_nsp_index`); en serie son idempotentes.
+    pool: 'forks',
+    poolOptions: { forks: { singleFork: true } },
   },
 });

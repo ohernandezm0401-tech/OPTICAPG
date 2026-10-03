@@ -27,21 +27,22 @@ npm run dev
 
 Abre `http://localhost:3000/login`.
 
-Con las variables de Supabase vacías, el login usa las cuentas de desarrollo de `web/lib/dev-credentials.ts`. Esas cuentas son ficticias y dejan de usarse en cuanto configuras Supabase.
+Para el modo de demostración (solo datos sintéticos, nunca en producción),
+genere cuentas locales con contraseñas aleatorias:
+
+```bash
+cd web
+npm run seed:dev
+```
 
 ## Cuentas de desarrollo
 
-Solo para `npm run dev`. No las uses en un entorno con datos reales.
+Solo para `npm run dev` con `APP_MODE=demo`. No las use en un entorno con datos reales.
 
-| Correo | Contraseña | Rol | A dónde entra |
-| --- | --- | --- | --- |
-| `admin@visiontotal.com` | `admin123` | Administrador de Ópticas Visión Total | `/dashboard/admin` |
-| `carlos@visiontotal.com` | `asesor123` | Asesor, sede Norte | `/dashboard/asesor` |
-| `dra.vega@visiontotal.com` | `opto123` | Optómetra, sede Norte | `/dashboard/optometra` |
-| `admin@opticentro.com` | `admin123` | Administrador de OptiCentro Express | `/dashboard/admin` |
-| `owner@optisaas.co` | `owner123` | Owner de la plataforma | `/dashboard/owner` |
-
-El administrador de Visión Total puede cambiar entre Sucursal Norte y Sucursal Sur desde el encabezado. OptiCentro solo ve la sede de Medellín.
+`npm run seed:dev` genera las cuentas sintéticas en
+`.credenciales-desarrollo.local.json` (no versionado) y muestra cada
+contraseña una vez en su terminal. En producción el inicio de sesión de
+demostración no existe. Ver [`docs/ENTORNOS.md`](docs/ENTORNOS.md).
 
 ## Comprobar el proyecto
 
@@ -57,7 +58,7 @@ Abre `landing/index.html` en el navegador. No comparte el servidor de Next.js.
 
 ## Base de datos más adelante
 
-El esquema está en [`web/supabase_init.sql`](web/supabase_init.sql). El bloque del usuario owner es una semilla de desarrollo: no lo ejecutes en producción. Los pasos que faltan están en [`PENDIENTES.md`](PENDIENTES.md).
+El esquema está en [`web/supabase_init.sql`](web/supabase_init.sql) (sin semillas: se retiraron en T05; use `npm run seed:demo`). Los pasos que faltan están en [`PENDIENTES.md`](PENDIENTES.md).
 
 ## Stack
 

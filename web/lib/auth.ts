@@ -1,7 +1,8 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { DEV_ONLY_CREDENTIALS } from './dev-credentials';
+import { cargarCredencialesDesarrollo } from './credenciales-desarrollo';
 import { getUsuarioByEmail } from './mock-data';
+import { esProduccion } from './entorno';
 import { esModoDemo } from './modo';
 import type { Usuario } from './types';
 
@@ -28,8 +29,14 @@ function toAuthUser(user: Usuario) {
   };
 }
 
+// PLT-10 (T05) — Las cuentas de demostración son sintéticas y locales: las
+// genera `npm run seed:dev` en un archivo no versionado (ver
+// `lib/credenciales-desarrollo.ts`). Nunca existen en producción: el arranque
+// con `APP_ENV=produccion` las rechaza (ver `lib/entorno.ts`).
 function authenticateDevUser(email: string, password: string): Usuario | null {
-  const expected = DEV_ONLY_CREDENTIALS[email];
+  if (esProduccion()) return null;
+  const cuentas = cargarCredencialesDesarrollo();
+  const expected = cuentas[email];
   if (!expected || !passwordsMatch(password, expected)) return null;
   return getUsuarioByEmail(email) ?? null;
 }
@@ -49,8 +56,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!email || !password) return null;
 
         // T05 autentica contra la tabla `usuarios` de PostgreSQL. Mientras
-        // tanto, las credenciales de demostración solo existen con
-        // `APP_MODE=demo` (AC-PLT-02-4; ver `lib/modo.ts`).
+        // tanto, las cuentas de demostración solo existen con
+        // `APP_MODE=demo` (AC-PLT-02-4; ver `lib/modo.ts`) y jamás en
+        // producción (AC-PLT-10-1; ver `lib/entorno.ts`).
         if (!esModoDemo()) return null;
 
         const mockUser = authenticateDevUser(email, password);

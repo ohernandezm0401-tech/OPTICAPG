@@ -4,11 +4,11 @@ La aplicación corre con datos ficticios. Esto es lo que hay que cerrar antes de
 
 ## Secretos y acceso
 
-- Generar un `AUTH_SECRET` nuevo (`openssl rand -base64 32`) y no reutilizar el valor de `.env.example`.
-- Borrar el bloque de semilla del owner en `web/supabase_init.sql` antes de ejecutar el script en una base real. La contraseña `owner123` es solo de desarrollo.
-- Crear los usuarios en Supabase Auth. Con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` definidas, el login deja de aceptar las cuentas mock.
+- Generar un `AUTH_SECRET` nuevo (`openssl rand -base64 32`) y no reutilizar el valor de `.env.example`. Con `APP_ENV=produccion` el arranque aborta si sigue el valor de ejemplo (ver `docs/ENTORNOS.md`).
+- Las semillas de desarrollo se retiraron del repo (T05): `web/supabase_init.sql` ya no trae cuentas ni datos ficticios. Para desarrollo use `npm run seed:demo` (datos sintéticos idempotentes) y `npm run seed:dev` (cuentas locales con contraseñas aleatorias).
+- Crear los usuarios en Supabase Auth. Con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` definidas, el login deja de aceptar las cuentas de demostración.
 - Guardar `SUPABASE_SERVICE_ROLE_KEY` solo en el servidor. No usar la clave de servicio en el navegador ni en scripts versionados.
-- Quitar el aviso de credenciales: ya está oculto fuera de `npm run dev`, pero el archivo `web/lib/dev-credentials.ts` no debe desplegarse en un build que apunte a datos reales. Conviene eliminarlo o dejarlo detrás de un flag que en producción sea imposible de activar.
+- El aviso de credenciales de `/login` solo se muestra con `npm run dev` y ya no incluye contraseñas (T05: las genera `npm run seed:dev` fuera del repo).
 
 ## Datos clínicos
 
@@ -25,4 +25,4 @@ La aplicación corre con datos ficticios. Esto es lo que hay que cerrar antes de
 - Los paneles de admin, asesor y optómetra ya están en `web/app/dashboard`. Parte de la UI sigue armada dentro de la página en lugar de los componentes sueltos que proponía `docs/implementation_plan.md`.
 - El cambio de sede actualiza la sesión y los tableros principales. Algunas pantallas internas todavía no filtran cada lista por la sede activa.
 - No hay pasarela de pago real. Los botones de Stripe son una simulación.
-- `npm run build` de producción no muestra las contraseñas de prueba en el login. Siguen existiendo en el código de desarrollo hasta que se retire `dev-credentials.ts`.
+- `npm run build` de producción no muestra las contraseñas de prueba en el login. Las cuentas de demostración se retiraron del código en T05 (`npm run seed:dev`).

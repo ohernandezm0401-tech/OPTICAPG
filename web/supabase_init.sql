@@ -478,78 +478,12 @@ CREATE TRIGGER on_auth_user_created
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- =========================================================================
--- 4. CUENTA OWNER DE DEMOSTRACIÓN — SOLO DESARROLLO
+-- 4. SEMILLAS — RETIRADAS (PLT-10, T05)
 -- =========================================================================
--- NO ejecutar este bloque en una base de producción.
--- Contraseña de demostración: owner123 (ver PENDIENTES.md).
--- 4.1 Inserción en la tabla de Auth de Supabase (clave de desarrollo: owner123)
-
--- Eliminar usuario preexistente si lo hubiera para evitar fallos de clave duplicada (por id o email)
-DELETE FROM auth.users WHERE id = '00000000-0000-0000-0000-000000000000' OR email = 'owner@optisaas.co';
-DELETE FROM public.usuarios WHERE id = '00000000-0000-0000-0000-000000000000' OR email = 'owner@optisaas.co';
-
-INSERT INTO auth.users (
-    instance_id, id, aud, role, email, encrypted_password, 
-    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, 
-    created_at, updated_at, confirmation_token, email_change, 
-    email_change_token_new, recovery_token
-)
-VALUES (
-    '00000000-0000-0000-0000-000000000000',
-    '00000000-0000-0000-0000-000000000000', -- UUID Estático para usr0
-    'authenticated',
-    'authenticated',
-    'owner@optisaas.co',
-    '$2b$10$Qy.6BDpw5m.1Cln0r74HnuvNNn2XD.y6OiJWuLOaCyAL68ODoNxcu', -- SOLO DESARROLLO: hash de owner123. Borrar este seed en producción.
-    NOW(),
-
-    '{"provider":"email","providers":["email"]}',
-    '{"nombre":"Owner de plataforma (demo)","role":"owner","empresaId":""}',
-    NOW(),
-    NOW(),
-    '',
-    '',
-    '',
-    ''
-) ON CONFLICT (id) DO NOTHING;
-
--- 4.2 Inserción de perfil de usuario público correspondiente
-INSERT INTO public.usuarios (id, email, nombre, role, empresa_id, sedes_access)
-VALUES (
-    '00000000-0000-0000-0000-000000000000',
-    'owner@optisaas.co',
-    'Owner de plataforma (demo)',
-    'owner',
-    '', -- Sin empresa porque gobierna la plataforma completa
-    ARRAY['sede1', 'sede2', 'sede3']
-) ON CONFLICT (id) DO NOTHING;
-
-
--- =========================================================================
--- 5. SEMILLA DE DATOS FICTICIOS (SEEDS)
--- =========================================================================
-
--- Inserción de Empresas ficticias
-INSERT INTO public.empresas (id, nombre, nit, plan, stripe_customer_id, stripe_subscription_id, subscription_status, next_billing_date, estado_cuenta, whatsapp_habilitado)
-VALUES 
-('emp1', 'Ópticas Visión Total S.A.S', '900.123.456-7', 'enterprise', 'cus_demo_visiontotal', 'sub_demo_visiontotal', 'active', '2026-06-15', 'activo', true),
-('emp2', 'OptiCentro Express', '901.555.210-3', 'premium', 'cus_demo_opticentro', 'sub_demo_opticentro', 'active', '2026-07-01', 'activo', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Inserción de Sedes ficticias
-INSERT INTO public.sedes (id, empresa_id, nombre, ciudad, direccion, habilitacion_salud, estado)
-VALUES 
-('sede1', 'emp1', 'Sucursal Norte', 'Bogotá', 'Calle 127 # 14-54', '11001-08234-01', 'activa'),
-('sede2', 'emp1', 'Sucursal Sur', 'Bogotá', 'Autopista Sur # 34-12', '11001-08234-02', 'activa'),
-('sede3', 'emp2', 'Sede Centro', 'Medellín', 'Carrera 43A # 1-50', '05001-01990-01', 'activa')
-ON CONFLICT (id) DO NOTHING;
-
--- Inserción de Productos de Inventario ficticios (Monturas, Lentes contacto, Insumos)
-INSERT INTO public.inventario (id, empresa_id, categoria, marca, modelo, color, stock, min_stock, precio, precio_compra, precio_venta, codigo_barras)
-VALUES
-('inv1', 'emp1', 'Monturas', 'Ray-Ban', 'Clubmaster RB3016', 'Negro/Dorado', 15, 3, 450000.00, 200000.00, 450000.00, '8053672166677'),
-('inv2', 'emp1', 'Monturas', 'Oakley', 'Holbrook OO9102', 'Negro Mate/Gris', 8, 2, 520000.00, 250000.00, 520000.00, '888392491953'),
-('inv3', 'emp1', 'Lentes de Contacto', 'Acuvue', 'Oasys 2-Week', 'Transparente', 24, 5, 120000.00, 60000.00, 120000.00, '0733905148677'),
-('inv4', 'emp1', 'Insumos', 'Opti-Free', 'PureMoist 300ml', 'Líquido', 30, 10, 450000.00, 22000.00, 45000.00, '300650359056')
-ON CONFLICT (id) DO NOTHING;
+-- Este script ya no incluye semillas: la cuenta de demostración y los datos
+-- ficticios se retiraron del repositorio. Para desarrollo/pruebas use
+-- `npm run seed:demo` (datos sintéticos idempotentes en
+-- `db/seeds/sinteticos/`, cada fila con `es_sintetico=true`) y
+-- `npm run seed:dev` (cuentas locales con contraseñas aleatorias).
+-- Ver `docs/ENTORNOS.md`. En producción no se siembra nada.
 

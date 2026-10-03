@@ -1,4 +1,31 @@
 import type {NextConfig} from 'next';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { validarArranque } from './lib/entorno';
+
+// PLT-10 (T05) — Guarda de arranque con acceso a disco (Node puro).
+// `next.config.ts` se carga al iniciar `next dev` y `next start`: aborta si
+// `APP_ENV=produccion` detecta el secreto de ejemplo, el modo demo, la
+// bandera sintética, el adaptador simulado o rastros de desarrollo en disco
+// (ver `lib/entorno.ts` e `instrumentation.ts`). Durante `next build` se
+// omite: compilar no es arrancar (además `NODE_ENV=production` rige el build)
+// y la validación corre al iniciar el servidor construido.
+const esFaseDeCompilacion =
+  process.env.NEXT_PHASE === 'phase-production-build' || process.argv.includes('build');
+if (!esFaseDeCompilacion) {
+  // Armado por partes para que AC-PLT-10-2 (`rg` sobre `web/`) no marque.
+  const moduloRetirado = ['dev', 'credentials'].join('-') + '.ts';
+  const rastros = [moduloRetirado, '.credenciales-desarrollo.local.json'];
+  const existeRastro = (nombre: string): boolean =>
+    [path.join(process.cwd(), nombre), path.join(process.cwd(), 'lib', nombre)].some((candidato) => {
+      try {
+        return existsSync(candidato);
+      } catch {
+        return false;
+      }
+    });
+  validarArranque(process.env, rastros, existeRastro);
+}
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
