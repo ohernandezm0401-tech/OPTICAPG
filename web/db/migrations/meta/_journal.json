@@ -190,6 +190,13 @@
       "when": 1791076000000,
       "tag": "0026_seg09_retencion",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791078000000,
+      "tag": "0027_plt07_respaldos",
+      "breakpoints": true
     }
   ]
 }

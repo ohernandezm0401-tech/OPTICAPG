@@ -67,7 +67,7 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 - Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La autenticación de SEG-01 está en T07 y T08. La firma del documento de ejemplo (SEG-08, T14) llama `exigirMfaParaFirmarAtencion`.
 - Bitácora (SEG-03, T10): tabla `auditoria` (migración `0009`), cadena SHA-256 en `web/lib/auditoria/cadena.mjs` (`node:crypto`). Verificador `npm run auditoria:verificar` (alias `audit:verify`). La lectura de HC reutilizable está en `web/lib/auditoria/lecturas.ts` (recurso de prueba `R3`; la atención real es OPT-01). Vista `/dashboard/auditoria` y CSV en `/api/auditoria/csv`. TODO(Q-07): sin plazo de conservación ni umbral de lecturas anómalas.
-- Respaldos cifrados y restauración probada (PLT-07). El cifrado de anexos y secretos está en SEG-12 (T11); el respaldo del volumen sigue siendo infraestructura.
+- Respaldos cifrados (PLT-07, T28): `npm run backup:run` y `npm run backup:restore-test` en `web/`. AES-256-GCM de T11, clave en `BACKUP_KEY`, credencial de administración en `DATABASE_URL_RESPALDO` (no es `optisaas_app`). Runbook en `docs/RESPALDOS.md`. TODO(Q-07): RPO y RTO siguen nulos. El cifrado de anexos y secretos sigue en SEG-12 (T11).
 - Alta de tenant con contrato de encargo (PLT-03).
 
 ## 6. Aislamiento multi-tenant (PLT-01, T04)

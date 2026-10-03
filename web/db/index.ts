@@ -30,6 +30,7 @@ import * as sedesHabilitacion from './esquema/sedes-habilitacion';
 import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
 import * as prescripciones from './esquema/prescripciones';
+import * as respaldos from './esquema/respaldos';
 import * as retencion from './esquema/retencion';
 import * as tratamiento from './esquema/tratamiento';
 
@@ -55,6 +56,7 @@ const esquema = {
   ...consentimientos,
   ...limitesCaptura,
   ...prescripciones,
+  ...respaldos,
   ...retencion,
 };
 

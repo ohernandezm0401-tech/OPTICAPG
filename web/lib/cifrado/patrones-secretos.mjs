@@ -68,6 +68,10 @@ const PATRONES = [
     id: 'master-key-asignada',
     re: patron(['APP_MASTER_KEY', '\\s*=\\s*', '["\']?', '[A-Za-z0-9+/=]{16,}']),
   },
+  {
+    id: 'backup-key-asignada',
+    re: patron(['BACKUP_KEY', '\\s*=\\s*', '["\']?', '[A-Za-z0-9+/=]{16,}']),
+  },
 ];
 
 /**

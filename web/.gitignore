@@ -16,3 +16,5 @@ playwright-report/
 kek.local
 # SEG-08: PDFs cifrados en disco local (no son públicos ni se versionan)
 .almacen-firma/
+# PLT-07: respaldos locales (cifrados o volcados). Nunca se versionan.
+var/respaldos/

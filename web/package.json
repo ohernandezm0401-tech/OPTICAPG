@@ -28,6 +28,8 @@
     "auditoria:verificar": "node scripts/auditoria-verificar.mjs",
     "inmutabilidad:verificar": "node scripts/inmutabilidad-verificar.mjs",
     "audit:verify": "node scripts/auditoria-verificar.mjs",
+    "backup:run": "node scripts/respaldo.mjs run",
+    "backup:restore-test": "node scripts/respaldo.mjs restore-test",
     "seed:demo": "node scripts/seed-demo.mjs",
     "seed:dev": "node scripts/seed-dev.mjs",
     "clean": "next clean"

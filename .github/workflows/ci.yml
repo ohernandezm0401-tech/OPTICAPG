@@ -62,6 +62,9 @@ jobs:
       - name: Pruebas (node:test de T01 + unitarias Vitest)
         run: npm test
 
+      - name: Cliente PostgreSQL (pg_dump y psql, licencia PostgreSQL)
+        run: sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client
+
       - name: Pruebas de integración (PostgreSQL real)
         run: npm run test:int
 
