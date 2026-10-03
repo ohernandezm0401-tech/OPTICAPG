@@ -70,3 +70,48 @@ export async function renderizarPdfFirma(datos: DatosPdfFirma): Promise<Buffer> 
   const buffer = await renderToBuffer(<DocumentoPdf datos={datos} />);
   return Buffer.from(buffer);
 }
+
+export interface DatosPdfConsentimiento {
+  titulo: string;
+  cuerpo: string;
+  procedimiento: string;
+  version: number;
+  hashTexto: string;
+  firmante: string;
+  nombre: string;
+  documento: string;
+  horaBogota: string;
+  ip: string;
+  trazoDataUrl: string;
+}
+
+function PdfConsentimiento({ datos }: { datos: DatosPdfConsentimiento }) {
+  return (
+    <Document title={datos.titulo} author={datos.nombre}>
+      <Page size="A4" style={estilos.pagina}>
+        <Text style={estilos.aviso}>BORRADOR – requiere revisión jurídica</Text>
+        <Text style={estilos.aviso}>{AVISO_PDF_A}</Text>
+        <Text style={estilos.titulo}>{datos.titulo}</Text>
+        <Text>Procedimiento: {datos.procedimiento}</Text>
+        <Text>Versión de la plantilla: {String(datos.version)}</Text>
+        <Text>Hash del texto: {datos.hashTexto}</Text>
+        <Text style={estilos.bloque}>{datos.cuerpo}</Text>
+        <View style={estilos.bloque}>
+          <Text>Firma de {datos.firmante}: {datos.nombre}</Text>
+          <Text>Documento: {datos.documento}</Text>
+          <Text>Hora (America/Bogota): {datos.horaBogota}</Text>
+          <Text>IP: {datos.ip}</Text>
+          <Text>{TEXTO_ACUERDO_FIRMA}</Text>
+          {/* No es un <img> de HTML: @react-pdf/renderer no tiene alt. */}
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          <Image src={datos.trazoDataUrl} style={{ width: 180, height: 60, marginTop: 8 }} />
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+export async function renderizarPdfConsentimiento(datos: DatosPdfConsentimiento): Promise<Buffer> {
+  const buffer = await renderToBuffer(<PdfConsentimiento datos={datos} />);
+  return Buffer.from(buffer);
+}

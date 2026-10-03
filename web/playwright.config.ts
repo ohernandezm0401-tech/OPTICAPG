@@ -18,6 +18,9 @@ const SECRETO_SOLO_E2E_LOCAL = 'secreto-solo-e2e-local-sin-valor-real';
 // KEK efímera del servidor E2E. No es una clave real y no se versiona:
 // se genera al arrancar Playwright (o se reutiliza APP_MASTER_KEY del entorno).
 const KEK_SOLO_E2E = process.env.APP_MASTER_KEY ?? randomBytes(32).toString('base64');
+// El mismo proceso de pruebas cifra el documento sintético que el servidor descifra.
+if (!process.env.APP_MASTER_KEY) process.env.APP_MASTER_KEY = KEK_SOLO_E2E;
+if (!process.env.APP_MASTER_KEY_ID) process.env.APP_MASTER_KEY_ID = 'e2e';
 
 export default defineConfig({
   testDir: './tests/e2e',

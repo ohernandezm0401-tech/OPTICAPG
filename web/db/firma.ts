@@ -1,5 +1,5 @@
 // SEG-08 (T14) — Servicio de firma electrónica simple sobre un documento
-// de ejemplo. Las historias, prescripciones y consentimientos llegan después.
+// de ejemplo. El consentimiento clínico (T22) usa `consentimiento_clinico`.
 // TODO(Q-22): sello de tiempo externo nulo; el sellado propio es SHA-256
 // más la hora del servidor. PDF/A no garantizado.
 // BORRADOR – requiere revisión jurídica.
@@ -36,7 +36,7 @@ import { exigirMfaParaFirmarAtencion } from '../lib/auth/mfa/flujo';
 import { evaluarMfaParaFirma } from '../lib/auth/mfa/reciente';
 import { registrarEvento } from '../lib/auditoria/servicio';
 import { crearAlmacenBdCifrada, crearAlmacenDiscoCifrado } from '../lib/firma/almacen';
-import { renderizarPdfFirma } from '../lib/firma/pdf';
+import { renderizarPdfConsentimiento, renderizarPdfFirma } from '../lib/firma/pdf';
 import {
   crearSelloNulo,
   crearSelloServidor,
@@ -382,6 +382,28 @@ export async function crearDocumentoAutorizacion(ctx: ContextoFirma, entrada: { 
   return { id };
 }
 
+/** Documento del consentimiento informado (OPT-04). Lo firma el paciente o su representante. */
+export async function crearDocumentoConsentimiento(ctx: ContextoFirma, entrada: { titulo: string; cuerpo: string }) {
+  if (!puedeRecogerFirmaPaciente(ctx.rol)) {
+    throw new ErrorFirma('permiso', 'No puede preparar la firma del consentimiento.');
+  }
+  const titulo = entrada.titulo.trim();
+  const cuerpo = entrada.cuerpo.trim();
+  if (!titulo || titulo.length > 160) throw new ErrorFirma('validacion', 'El título es obligatorio.');
+  if (!cuerpo || cuerpo.length > 20000) throw new ErrorFirma('validacion', 'El texto del consentimiento es obligatorio.');
+  const id = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<{ id: string }>(
+      `insert into documentos_firma (tenant_id, sede_id, tipo, estado, titulo, cuerpo)
+       values ($1, $2, 'consentimiento_clinico', 'pendiente', $3, $4)
+       returning id`,
+      [ctx.tenant_id, ctx.sede_id, titulo, cuerpo],
+    );
+    return filas.rows[0]?.id;
+  });
+  if (!id) throw new ErrorFirma('validacion', 'No se pudo crear el documento del consentimiento.');
+  return { id };
+}
+
 async function leerDocumento(ctx: ContextoFirma, documentoId: string): Promise<FilaDocumento | null> {
   return conApp(ctx, async (cliente) => {
     const filas = await cliente.query<FilaDocumento>(
@@ -655,6 +677,90 @@ export async function sellarDocumento(
     sello_tsa_token: tsa.token,
     nombre: profesionalGate.nombre,
   };
+}
+
+export async function sellarConsentimientoPaciente(
+  ctx: ContextoFirma,
+  documentoId: string,
+  extra: { procedimiento: string; version: number; hashTexto: string; firmante: string },
+  ahora = new Date(),
+  almacen: AlmacenamientoPort = almacenPorNombre(null),
+) {
+  if (!puedeRecogerFirmaPaciente(ctx.rol)) {
+    throw new ErrorFirma('permiso', 'No puede sellar el consentimiento.');
+  }
+  const documento = await leerDocumento(ctx, documentoId);
+  if (!documento) throw new ErrorFirma('no_encontrado', 'No se encontró el documento.');
+  if (documento.tipo !== 'consentimiento_clinico') {
+    throw new ErrorFirma('estado', 'El documento no es un consentimiento clínico.');
+  }
+  if (documento.estado !== 'pendiente') {
+    throw new ErrorFirma('estado', 'El consentimiento ya fue sellado.');
+  }
+  const firmasFila = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<FilaFirma>(
+      `select id, tipo_firmante, nombre_firmante, nombre_cifrado, documento_cifrado, registro_profesional,
+              trazo_png_cifrado, trazo_puntos_cifrado, otp_verificado, otp_canal, otp_verificado_en, ip, firmado_en
+         from firmas where documento_id = $1 and tipo_firmante = 'paciente'`,
+      [documentoId],
+    );
+    return filas.rows[0] ?? null;
+  });
+  if (!firmasFila?.trazo_png_cifrado || !firmasFila.nombre_cifrado || !firmasFila.documento_cifrado || !firmasFila.ip) {
+    throw new ErrorFirma('estado', 'Falta la firma del paciente o del representante.');
+  }
+  const nombre = (await descifrar(ctx.tenant_id, firmasFila.nombre_cifrado)).toString('utf8');
+  const documentoFirmante = (await descifrar(ctx.tenant_id, firmasFila.documento_cifrado)).toString('utf8');
+  const trazo = await descifrar(ctx.tenant_id, firmasFila.trazo_png_cifrado);
+  const pdf = await renderizarPdfConsentimiento({
+    titulo: documento.titulo,
+    cuerpo: documento.cuerpo,
+    procedimiento: extra.procedimiento,
+    version: extra.version,
+    hashTexto: extra.hashTexto,
+    firmante: extra.firmante,
+    nombre,
+    documento: documentoFirmante,
+    horaBogota: presentarBogota(new Date(firmasFila.firmado_en)),
+    ip: firmasFila.ip,
+    trazoDataUrl: `data:image/png;base64,${trazo.toString('base64')}`,
+  });
+  const hash = hashSha256(pdf);
+  const guardado = await almacen.guardar({
+    tenantId: ctx.tenant_id,
+    nombre: `${documentoId}.pdf`,
+    mime: 'application/pdf',
+    contenido: pdf,
+  });
+  if (guardado.hash !== hash) {
+    throw new ErrorFirma('estado', 'El almacén no conservó el hash del PDF.');
+  }
+  await conApp(ctx, async (cliente) => {
+    await cliente.query(
+      `update documentos_firma set estado = 'firmado', actualizado_en = now() where id = $1 and estado = 'pendiente'`,
+      [documentoId],
+    );
+    const propio = await crearSelloServidor().sellar(hash, ahora);
+    const tsa = await crearSelloNulo().sellar(hash, ahora);
+    await cliente.query(
+      `update documentos_firma
+          set estado = 'sellado',
+              hash_documento = $2,
+              almacen_adaptador = $3,
+              almacen_id = $4,
+              sello_tsa_proveedor = $5,
+              sello_tsa_token = $6,
+              sellado_en = $7,
+              actualizado_en = now()
+        where id = $1`,
+      [documentoId, hash, almacen.nombre, guardado.id, tsa.proveedor, tsa.token, propio.sellado_en],
+    );
+    await cliente.query(`update firmas set hash_documento = $2 where documento_id = $1 and hash_documento is null`, [
+      documentoId,
+      hash,
+    ]);
+  });
+  return { hash, anexo_id: guardado.id, firma_id: firmasFila.id };
 }
 
 export async function verificarDocumento(ctx: ContextoFirma, pdf: Buffer): Promise<boolean> {

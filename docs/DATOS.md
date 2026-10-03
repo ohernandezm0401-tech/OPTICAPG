@@ -165,9 +165,11 @@ Las tablas de historia clínica todavía no existen. La tarea que las cree debe 
 
 `atencion_adendas` (T21, OPT-02) es la adenda de la atención firmada. Nace con RLS `ENABLE`+`FORCE` (migración `0020`) y llama `aplicar_marco_inmutabilidad`. El estado guardado es `firmada`. `motivo` y `nuevo_valor` van cifrados. `valor_anterior_ref` apunta al examen original o a la adenda anterior; no copia el valor en claro. La fila de `atenciones` no se actualiza. La tabla genérica `adendas` sigue sin cifrar y no recibe el motivo clínico: el historial de la HC lee `atencion_adendas`. El PDF reutilizable está en `renderizarPdfHistoriaClinica` (`web/lib/historia/pdf-hc.tsx`); T25 (OPT-06) debe usarlo junto con `documentoHistoriaFirmada` para la copia al paciente.
 
+`plantillas_consentimiento`, `consentimientos` y `consentimientos_revocatorias` (T22, OPT-04) nacen con RLS `ENABLE`+`FORCE` (migración `0021`). `consentimientos` llama `aplicar_marco_inmutabilidad`. El texto firmado queda en `contenido` y no se reescribe cuando sale otra versión de la plantilla. La revocatoria es un INSERT: no hay `UPDATE` ni `DELETE` del original. TODO(Q-17): el borrador no fija la base legal. TODO(Q-22): el PDF del anexo no es PDF/A. OPT-07, OPT-18 y OPT-21 deben llamar `puedeIniciarProcedimiento` antes de abrir su módulo.
+
 ## 10. Firma electrónica (SEG-08, T14)
 
-Servicio genérico. Las historias, prescripciones y consentimientos todavía no existen: el tipo persistido es `ejemplo_sintetico`.
+Servicio genérico. El tipo `consentimiento_clinico` (T22) se sella con la firma del paciente o del representante y el PDF queda en `anexos`. El ejemplo sintético sigue siendo `ejemplo_sintetico`. TODO(Q-22): no es PDF/A.
 
 | Pieza | Ruta | Notas |
 |---|---|---|

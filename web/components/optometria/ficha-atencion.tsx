@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type Resolver } from 'react-hook-form';
 
 import { PanelAdenda } from '@/components/optometria/adenda-atencion';
+import { PanelConsentimiento } from '@/components/optometria/panel-consentimiento';
 import type { HistorialProyectado } from '@/dominio/adenda-atencion';
 import {
   AUTOGUARDADO_MS,
@@ -47,6 +48,7 @@ const SECCIONES = [
   ['salud', 'Salud ocular'],
   ['diagnostico', 'Diagnóstico'],
   ['plan', 'Plan'],
+  ['consentimiento', 'Consentimiento'],
 ] as const;
 
 const CLASE_CAMPO =
@@ -622,6 +624,8 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
           </button>
         </div>
       </form>
+
+      <PanelConsentimiento atencionId={atencionId} />
 
       {firmada && atencionId ? <PanelAdenda atencionId={atencionId} onHistorial={alHistorial} /> : null}
 
