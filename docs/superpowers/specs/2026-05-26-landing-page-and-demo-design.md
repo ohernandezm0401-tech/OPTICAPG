@@ -13,11 +13,11 @@ Esta especificación detalla el diseño, la estructura y el comportamiento de la
 
 ## 2. Arquitectura de Archivos Propuesta
 
-Crearemos la landing page directamente en la raíz de `d:\OPTICAS` de forma independiente a la app de Next.js, facilitando su despliegue autónomo:
+La landing vive en `landing/`, aparte de la app de Next.js en `web/`, para poder desplegarla sola:
 
-*   `d:\OPTICAS\index.html`: Estructura semántica de la landing y maquetas de la aplicación.
-*   `d:\OPTICAS\landing.css`: Estilos visuales premium, variables CSS, Dark/Light mode y animaciones.
-*   `d:\OPTICAS\landing.js`: Control del carrusel interactivo, simulación de datos y toggle de tema.
+*   `landing/index.html`: Estructura semántica de la landing y maquetas de la aplicación.
+*   `landing/landing.css`: Estilos visuales premium, variables CSS, Dark/Light mode y animaciones.
+*   `landing/landing.js`: Control del carrusel interactivo, simulación de datos y toggle de tema.
 
 ---
 
