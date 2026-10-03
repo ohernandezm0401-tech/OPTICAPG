@@ -169,6 +169,13 @@
       "when": 1791070000000,
       "tag": "0023_opt05_verificacion_prescripcion",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791072000000,
+      "tag": "0024_opt06_entregas_hc",
+      "breakpoints": true
     }
   ]
 }

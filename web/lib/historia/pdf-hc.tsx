@@ -16,25 +16,36 @@ const estilos = StyleSheet.create({
   linea: { marginBottom: 2 },
 });
 
-function DocumentoPdf({ lineas, titulo }: { lineas: string[]; titulo: string }) {
+function DocumentoCopia({ paginas }: { paginas: { lineas: string[]; titulo: string }[] }) {
   return (
-    <Document title={titulo}>
-      <Page size="A4" style={estilos.pagina}>
-        <Text style={estilos.aviso}>{AVISO_PDF_A}</Text>
-        <Text style={estilos.titulo}>{titulo}</Text>
-        {lineas.map((linea, indice) => (
-          <Text key={`${indice}-${linea.slice(0, 24)}`} style={estilos.linea}>
-            {linea}
-          </Text>
-        ))}
-      </Page>
+    <Document title="Historia clínica">
+      {paginas.map((documento, indice) => (
+        <Page key={`atencion-${indice}`} size="A4" style={estilos.pagina}>
+          <Text style={estilos.aviso}>{AVISO_PDF_A}</Text>
+          <Text style={estilos.titulo}>{documento.titulo}</Text>
+          {documento.lineas.map((linea, numero) => (
+            <Text key={`${indice}-${numero}-${linea.slice(0, 24)}`} style={estilos.linea}>
+              {linea}
+            </Text>
+          ))}
+        </Page>
+      ))}
     </Document>
   );
 }
 
-/** Genera el PDF de la HC. T25 reutiliza esta función para la copia al paciente. */
-export async function renderizarPdfHistoriaClinica(entrada: EntradaPdfHistoria): Promise<Buffer> {
-  const documento = armarDocumentoHistoriaClinica(entrada);
-  const buffer = await renderToBuffer(<DocumentoPdf lineas={documento.lineas} titulo={documento.titulo} />);
+/**
+ * Genera el PDF de una atención o de la copia cronológica.
+ * T25 pasa las atenciones ya ordenadas; esta función no reordena ni reimplementa el listado.
+ */
+export async function renderizarPdfHistoriaClinica(
+  entrada: EntradaPdfHistoria | readonly EntradaPdfHistoria[],
+): Promise<Buffer> {
+  const entradas = Array.isArray(entrada) ? entrada : [entrada];
+  if (entradas.length === 0) {
+    throw new Error('La copia no tiene atenciones.');
+  }
+  const paginas = entradas.map((item) => armarDocumentoHistoriaClinica(item));
+  const buffer = await renderToBuffer(<DocumentoCopia paginas={paginas} />);
   return Buffer.from(buffer);
 }

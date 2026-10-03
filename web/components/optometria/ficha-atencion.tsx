@@ -10,6 +10,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 
 import { PanelAdenda } from '@/components/optometria/adenda-atencion';
 import { PanelConsentimiento } from '@/components/optometria/panel-consentimiento';
+import { PanelCopiaHc } from '@/components/optometria/panel-copia-hc';
 import { PanelPrescripcion } from '@/components/optometria/panel-prescripcion';
 import type { HistorialProyectado } from '@/dominio/adenda-atencion';
 import {
@@ -628,6 +629,8 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
       </form>
 
       <PanelConsentimiento atencionId={atencionId} />
+
+      <PanelCopiaHc />
 
       <section id="seccion-prescripcion" aria-labelledby="titulo-prescripcion" className="space-y-3 rounded-md border border-neutral-300 p-4">
         <h2 id="titulo-prescripcion" className="text-lg font-semibold">

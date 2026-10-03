@@ -11,6 +11,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
 import * as atencionAdendas from './esquema/atencion-adendas';
+import * as entregasHc from './esquema/entregas-hc';
 import * as atenciones from './esquema/atenciones';
 import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
@@ -47,6 +48,7 @@ const esquema = {
   ...catalogos,
   ...atenciones,
   ...atencionAdendas,
+  ...entregasHc,
   ...consentimientos,
   ...limitesCaptura,
   ...prescripciones,
