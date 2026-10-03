@@ -1,8 +1,6 @@
-// Constantes compartidas para OptiSaaS
-// Centraliza valores que se repiten en múltiples archivos
-
-/** Tasa de IVA Colombia (19%) */
-export const IVA_RATE = 0.19;
+// Constantes compartidas para OptiSaaS.
+// PLT-11 (T06): no hay tasa de IVA en código. TODO(Q-31) la tarifa vive en
+// `tarifas_impuesto` y nace sin valor por defecto.
 
 /** Días de trial predeterminado */
 export const DEFAULT_TRIAL_DAYS = 15;

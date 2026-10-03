@@ -15,6 +15,20 @@
       "when": 1791006300000,
       "tag": "0001_rls_aislamiento_tenant",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791034367464,
+      "tag": "0002_plt11_parametros",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791034500000,
+      "tag": "0003_rls_parametros",
+      "breakpoints": true
     }
   ]
 }

@@ -18,12 +18,12 @@ function leer(relativa: string): string {
 
 function migracionRls(): { nombre: string; contenido: string } {
   const dir = path.join(RAIZ_WEB, 'db', 'migrations');
-  const archivo = readdirSync(dir)
+  const archivos = readdirSync(dir)
     .filter((n) => n.endsWith('.sql') && n !== '0000_nosy_union_jack.sql')
-    .sort()
-    .at(-1);
-  expect(archivo, 'falta la migración RLS posterior a 0000').toBeDefined();
-  return { nombre: archivo as string, contenido: readFileSync(path.join(dir, archivo as string), 'utf8') };
+    .sort();
+  expect(archivos.length, 'falta la migración RLS posterior a 0000').toBeGreaterThan(0);
+  const contenido = archivos.map((nombre) => readFileSync(path.join(dir, nombre), 'utf8')).join('\n');
+  return { nombre: archivos.join(', '), contenido };
 }
 
 describe('AC-PLT-01-2: verificador db:check-rls cableado', () => {

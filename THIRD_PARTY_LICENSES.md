@@ -7,6 +7,10 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T06 (PLT-11) no agrega dependencias. El calendario hábil, el CSV de festivos
+  y las tarifas usan la biblioteca estándar y las dependencias ya auditadas
+  (`drizzle-orm` Apache-2.0, `zod` MIT, `pg` MIT). No hubo paquete nuevo que
+  verificar en el registro npm.
 - Método: `npm view <paquete>@<versión declarada> license` (campo `license` del registro npm)
   para las directas cambiadas en T01 (`tailwindcss@3.4.17` → MIT; `@types/node@^22` → MIT),
   en T02 (`vitest@2.1.9` → MIT; `@playwright/test@1.63.0` → Apache-2.0; `pg@8.23.1` → MIT;

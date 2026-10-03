@@ -117,7 +117,7 @@ export default function LandingPage() {
     },
     {
       question: "¿El módulo de punto de venta (POS) está integrado con la facturación electrónica DIAN?",
-      answer: "Sí. Para cumplir con la regulación fiscal en Colombia, cada venta generada en el POS calcula de manera automática el desglosado de impuestos, aplicando la tasa estándar del IVA del 19% sobre las monturas y lentes correctivos que califiquen como dispositivos médicos gravados. El sistema genera un código CUFE simulado y produce un documento XML y PDF formateado de acuerdo con las especificaciones técnicas vigentes de la DIAN para facturación electrónica."
+      answer: "El punto de venta desglosa el impuesto con la tarifa que configure el tenant. No hay un porcentaje fijo en el sistema: hasta que el contador la confirme, la tarifa nace vacía. El código CUFE de esta demostración es simulado."
     },
     {
       question: "¿Se pueden cargar catálogos y recetas de lentes oftálmicos de laboratorios externos?",
@@ -440,7 +440,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">DIAN</div>
-                  <div className="text-xs text-slate-500 mt-1 font-semibold">Facturación Electrónica e IVA 19% Incorporado</div>
+                  <div className="text-xs text-slate-500 mt-1 font-semibold">Facturación electrónica (IVA configurable)</div>
                 </div>
                 <div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">XML/RIPS</div>
@@ -551,7 +551,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Facturación & POS</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Punto de venta especializado en óptica. Desglose automático de IVA del 19% en monturas e integración simulada DIAN con CUFE y XML.
+                Punto de venta especializado en óptica. El IVA sale de la tarifa configurada del tenant, sin porcentaje fijo, con integración simulada DIAN (CUFE y XML).
               </p>
             </div>
 
@@ -615,7 +615,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-black">$250.000</span>
                   <span className="text-sm font-semibold text-slate-500">COP/mes</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1.5 font-bold">Exento de IVA • Facturación Básica</div>
+                <div className="text-[10px] text-slate-500 mt-1.5 font-bold">IVA según tarifa configurada • Facturación básica</div>
                 
                 <ul className="mt-8 space-y-4 text-sm text-slate-600">
                   <li className="flex items-center gap-3">
@@ -658,7 +658,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-black">$450.000</span>
                   <span className="text-sm font-semibold text-slate-500">COP/mes</span>
                 </div>
-                <div className="text-[10px] text-blue-600 mt-1.5 font-bold">+19% IVA Desglosado en Factura</div>
+                <div className="text-[10px] text-blue-600 mt-1.5 font-bold">IVA según tarifa configurada</div>
 
                 <ul className="mt-8 space-y-4 text-sm text-slate-700">
                   <li className="flex items-center gap-3">
@@ -701,7 +701,7 @@ export default function LandingPage() {
                   <span className="text-4xl font-black">$850.000</span>
                   <span className="text-sm font-semibold text-slate-500">COP/mes</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1.5 font-bold">+19% IVA Desglosado en Factura</div>
+                <div className="text-[10px] text-slate-500 mt-1.5 font-bold">IVA según tarifa configurada</div>
 
                 <ul className="mt-8 space-y-4 text-sm text-slate-600">
                   <li className="flex items-center gap-3">

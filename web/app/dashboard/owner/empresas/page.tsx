@@ -30,8 +30,6 @@ import { PLANES_CONFIG } from '@/lib/plans-config';
 import { toast } from '@/lib/toast-store';
 import { Empresa } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
-import { IVA_RATE } from '@/lib/constants';
-
 function EmpresasPageContent() {
   const { empresas, sedes, usuarios, addEmpresa, updateEmpresa } = useClinicStore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -903,12 +901,12 @@ function EmpresasPageContent() {
                           <span className="font-mono text-foreground">$ {PLANES_CONFIG[nuevoPlan].priceCOP.toLocaleString('es-CO')}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Impuesto IVA (19% local):</span>
-                          <span className="font-mono text-foreground">$ {Math.round(PLANES_CONFIG[nuevoPlan].priceCOP * IVA_RATE).toLocaleString('es-CO')}</span>
+                          <span className="text-muted-foreground">Impuesto IVA:</span>
+                          <span className="font-mono text-foreground">Sin tarifa configurada</span>
                         </div>
                         <div className="flex justify-between items-center text-sm font-black border-t border-border/40 pt-2 text-foreground">
-                          <span>Total Mensual Neto (COP):</span>
-                          <span className="font-mono text-primary">$ {Math.round(PLANES_CONFIG[nuevoPlan].priceCOP * (1 + IVA_RATE)).toLocaleString('es-CO')} COP</span>
+                          <span>Total mensual (base, COP):</span>
+                          <span className="font-mono text-primary">$ {PLANES_CONFIG[nuevoPlan].priceCOP.toLocaleString('es-CO')} COP</span>
                         </div>
                       </div>
                     </div>

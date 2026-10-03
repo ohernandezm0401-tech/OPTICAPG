@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { useClinicStore } from '@/lib/store';
 import { PLANES_CONFIG } from '@/lib/plans-config';
-import { IVA_RATE } from '@/lib/constants';
 import { toast } from '@/lib/toast-store';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -51,7 +50,7 @@ interface MockInvoice {
   date: string;
   concept: string;
   net: number;
-  tax: number;
+  tax: number | null;
   total: number;
   status: 'pagado' | 'pendiente' | 'fallido';
 }
@@ -293,8 +292,9 @@ export default function AdminConfiguracionPage() {
     if (!empresa) return [];
     const planDetails = PLANES_CONFIG[empresa.plan];
     const basePrice = planDetails.priceCOP;
-    const tax = Math.round(basePrice * IVA_RATE);
-    const total = basePrice + tax;
+    // TODO(Q-31): la tarifa de IVA no tiene valor por defecto.
+    const tax = null;
+    const total = basePrice;
 
     const invoices: MockInvoice[] = [
       {
@@ -451,17 +451,9 @@ export default function AdminConfiguracionPage() {
       </cac:PartyTaxScheme>
     </cac:Party>
   </cac:AccountingCustomerParty>
+  <!-- TODO(Q-31): IVA sin tarifa configurada; no se declara porcentaje -->
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="COP">${invoice.tax}</cbc:TaxAmount>
-    <cac:TaxSubtotal>
-      <cbc:TaxableAmount currencyID="COP">${invoice.net}</cbc:TaxableAmount>
-      <cbc:Percent>19.00</cbc:Percent>
-      <cac:TaxCategory>
-        <cac:TaxScheme>
-          <cbc:Name>IVA</cbc:Name>
-        </cac:TaxScheme>
-      </cac:TaxCategory>
-    </cac:TaxSubtotal>
+    <cbc:TaxAmount currencyID="COP">${invoice.tax ?? ''}</cbc:TaxAmount>
   </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
     <cbc:LineExtensionAmount currencyID="COP">${invoice.net}</cbc:LineExtensionAmount>
@@ -503,7 +495,7 @@ Detalle del Cargo:
 - ${invoice.concept}
 
 Subtotal (Neto): $ ${invoice.net.toLocaleString('es-CO')} COP
-IVA 19%:         $ ${invoice.tax.toLocaleString('es-CO')} COP
+IVA:             sin tarifa configurada
 TOTAL COBRADO:   $ ${invoice.total.toLocaleString('es-CO')} COP
 -----------------------------------------
 Método de Pago: Pasarela Stripe Colombia (PSE/Débito)
@@ -1086,7 +1078,7 @@ Representación Gráfica. DIAN Resolución 3100.
                           $ {conf.priceCOP.toLocaleString('es-CO')}
                           <span className="text-xs text-muted-foreground font-normal"> COP/mes</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">+ 19% IVA aplicable</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">IVA: sin tarifa configurada</p>
                       </div>
 
                       <ul className="text-xs text-muted-foreground space-y-2 border-t border-border/50 pt-4">
@@ -1161,7 +1153,7 @@ Representación Gráfica. DIAN Resolución 3100.
                     <th className="px-6 py-3.5">Fecha</th>
                     <th className="px-6 py-3.5">Factura ID</th>
                     <th className="px-6 py-3.5">Concepto</th>
-                    <th className="px-6 py-3.5">Base + IVA</th>
+                    <th className="px-6 py-3.5">Base</th>
                     <th className="px-6 py-3.5">Estado</th>
                     <th className="px-6 py-3.5 text-right">Documentos Legales</th>
                   </tr>
@@ -1174,7 +1166,7 @@ Representación Gráfica. DIAN Resolución 3100.
                       <td className="px-6 py-4 text-xs text-muted-foreground">{inv.concept}</td>
                       <td className="px-6 py-4">
                         <div className="text-foreground font-mono font-bold">$ {inv.total.toLocaleString('es-CO')} COP</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">IVA: $ {inv.tax.toLocaleString('es-CO')} COP</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">IVA: sin tarifa configurada</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
@@ -1254,12 +1246,12 @@ Representación Gráfica. DIAN Resolución 3100.
                     <span className="font-mono text-foreground">$ {PLANES_CONFIG[selectedPlanKey].priceCOP.toLocaleString('es-CO')} COP</span>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground font-semibold">
-                    <span>Impuesto IVA (19%):</span>
-                    <span className="font-mono text-foreground">$ {Math.round(PLANES_CONFIG[selectedPlanKey].priceCOP * IVA_RATE).toLocaleString('es-CO')} COP</span>
+                    <span>Impuesto IVA:</span>
+                    <span className="font-mono text-foreground">Sin tarifa configurada</span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-border/50 pt-2 font-black text-foreground">
-                    <span>Total a Pagar (COP):</span>
-                    <span className="font-mono text-primary">$ {(Math.round(PLANES_CONFIG[selectedPlanKey].priceCOP * (1 + IVA_RATE))).toLocaleString('es-CO')} COP</span>
+                    <span>Total a pagar (base, COP):</span>
+                    <span className="font-mono text-primary">$ {PLANES_CONFIG[selectedPlanKey].priceCOP.toLocaleString('es-CO')} COP</span>
                   </div>
                 </div>
 
