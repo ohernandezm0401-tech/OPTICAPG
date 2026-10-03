@@ -7,6 +7,9 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T10 (SEG-03) no agrega dependencias npm. El hash encadenado usa `node:crypto`
+  (biblioteca estándar de Node.js, no es un paquete del registro). No hubo
+  paquete nuevo que verificar.
 - T09 (SEG-02) agrega `@casl/ability@6.8.1` (MIT, verificado con `npm view @casl/ability@6.8.1 license`).
   Transitivas directas, también verificadas en el registro: `@ucast/mongo2js@1.4.1`,
   `@ucast/core@1.10.2`, `@ucast/js@3.1.0` y `@ucast/mongo@2.4.3` (todas Apache-2.0).

@@ -1,6 +1,6 @@
 // SEG-02 (T09) — Excepciones de permiso e intentos de acceso denegado.
 // Tablas nuevas con tenant_id: RLS ENABLE + FORCE en la migración 0008.
-// Solo datos sintéticos. La bitácora encadenada de lecturas es T10.
+// Solo datos sintéticos. El intento persistido también entra en `auditoria` (T10).
 import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 

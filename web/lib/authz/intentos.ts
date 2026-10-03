@@ -1,6 +1,7 @@
 // SEG-02 (T09) — Registro de denegaciones con límite de ruido operativo.
 // No es un plazo legal: descarta el mismo intento (actor, recurso, acción, id)
-// a partir del sexto dentro de 60 minutos. La bitácora encadenada es T10.
+// a partir del sexto dentro de 60 minutos. Esta memoria no es la bitácora:
+// la cadena se escribe al persistir el intento (T10).
 // Fechas en UTC.
 
 export interface IntentoDenegado {

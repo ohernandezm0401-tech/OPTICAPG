@@ -94,6 +94,14 @@ async function registrar(entrada: {
       entrada.ahora.toISOString(),
     ],
   );
+  const { anexarBitacoraAutenticacion } = await import('../../auditoria/servicio');
+  await anexarBitacoraAutenticacion({
+    tenantId: entrada.tenantId,
+    usuarioId: entrada.usuarioId,
+    tipo: entrada.tipo,
+    direccionIp: entrada.direccionIp,
+    ahora: entrada.ahora,
+  });
 }
 
 async function correoDe(usuarioId: string): Promise<string> {
