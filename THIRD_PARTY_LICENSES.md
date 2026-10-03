@@ -8,9 +8,10 @@
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
 - Método: `npm view <paquete>@<versión declarada> license` (campo `license` del registro npm)
-  para las directas cambiadas en T01 (`tailwindcss@3.4.17` → MIT; `@types/node@^22` → MIT);
-  el resto de directas conserva la verificación de T00 (3-oct-2026). El árbol transitivo
-  se audita con `npm run licenses:check`, que lee `package-lock.json` (518 paquetes).
+  para las directas cambiadas en T01 (`tailwindcss@3.4.17` → MIT; `@types/node@^22` → MIT)
+  y en T02 (`vitest@2.1.9` → MIT; `@playwright/test@1.63.0` → Apache-2.0; `pg@8.23.1` → MIT;
+  `@types/pg@8.23.1` → MIT); el resto de directas conserva la verificación de T00 (3-oct-2026). El árbol transitivo
+  se audita con `npm run licenses:check`, que lee `package-lock.json` (618 paquetes tras T02).
 - Licencias permitidas por la regla 2: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
   (más las admitidas para datos/herramientas según PLT-09: 0BSD, MIT-0, BlueOak-1.0.0,
   CC0-1.0, Unlicense, Python-2.0, CC-BY-4.0 solo datos).
@@ -60,6 +61,10 @@
 | `eslint-config-next` | `16.0.8` | MIT | dev |
 | `tailwindcss` | `^3.4.17` | MIT | dev |
 | `typescript` | `5.9.3` | Apache-2.0 | dev |
+| `vitest` | `^2.1.8` (instalado 2.1.9) | MIT | dev (pruebas unitarias e integración; T02) |
+| `@playwright/test` | `^1.63.0` | Apache-2.0 | dev (pruebas E2E; T02) |
+| `pg` | `^8.23.1` | MIT | dev (solo pruebas de integración contra PostgreSQL real, sin mocks de BD; T02) |
+| `@types/pg` | `^8.23.1` | MIT | dev (tipos de `pg` para `tsc --noEmit`; T02) |
 
 Cambios de T01 respecto a T00: `tailwindcss` 4.1.11 → `^3.4.17` (MIT, verificado en el
 registro npm el 3-oct-2026; elimina `lightningcss` MPL-2.0 del árbol); retirados
@@ -67,9 +72,17 @@ registro npm el 3-oct-2026; elimina `lightningcss` MPL-2.0 del árbol); retirado
 sin uso: nunca se importó su CSS); `@types/node` `^20` → `^22` (MIT; coherente con
 `engines: node >=22.12`).
 
-## Auditoría transitiva (`package-lock.json`, 518 paquetes)
+Cambios de T02 respecto a T01: se agregan `vitest` `^2.1.8` (MIT), `@playwright/test`
+`^1.63.0` (Apache-2.0), `pg` `^8.23.1` (MIT, solo pruebas de integración) y `@types/pg`
+`^8.23.1` (MIT), verificados en el registro npm el 3-oct-2026. Decisión de versión:
+primero se probó `vitest@5.0.3` (MIT), pero su `vite@8.3.2` trae `lightningcss@1.33.0`
+(MPL-2.0, 12 errores en `licenses:check`); se bajó a `vitest@2.1.9` (MIT, con Vite 5
+basado en esbuild) y el árbol quedó limpio (618 paquetes, 0 errores). Ver
+`docs/DECISIONES.md` (ADR-011).
 
-Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026).
+## Auditoría transitiva (`package-lock.json`, 618 paquetes)
+
+Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T02).
 
 | Paquete(s) | Licencia | Estado | Origen |
 |---|---|---|---|

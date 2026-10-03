@@ -10,8 +10,27 @@ on:
 
 jobs:
   calidad:
-    name: lint + typecheck + pruebas + licencias + build
+    name: lint + typecheck + pruebas + licencias + build + e2e
     runs-on: ubuntu-latest
+    # PLT-09 (T02): PostgreSQL real para las pruebas de integración
+    # (imagen postgres:16, licencia PostgreSQL). Sin secretos de pago ni
+    # servicios de terceros.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: optisaas_pruebas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/optisaas_pruebas
     defaults:
       run:
         working-directory: web
@@ -35,11 +54,23 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Pruebas
+      - name: Pruebas (node:test de T01 + unitarias Vitest)
         run: npm test
+
+      - name: Pruebas de integración (PostgreSQL real)
+        run: npm run test:int
 
       - name: Auditoría de licencias (PLT-09)
         run: npm run licenses:check
 
       - name: Build de producción
         run: npm run build
+
+      - name: Instalar Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Generar AUTH_SECRET efímero (solo E2E, sin valor real)
+        run: echo "AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+
+      - name: Pruebas E2E (/login)
+        run: npm run test:e2e
