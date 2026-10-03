@@ -16,6 +16,7 @@ import * as autorizacion from './esquema/autorizacion';
 import * as cifrado from './esquema/cifrado';
 import * as firma from './esquema/firma';
 import * as inmutabilidad from './esquema/inmutabilidad';
+import * as invitaciones from './esquema/invitaciones';
 import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
 import * as sedesHabilitacion from './esquema/sedes-habilitacion';
@@ -35,6 +36,7 @@ const esquema = {
   ...cifrado,
   ...firma,
   ...inmutabilidad,
+  ...invitaciones,
   ...tratamiento,
 };
 

@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { ErrorFirma, type ContextoFirma } from '../../db/firma';
+import { codigoHttpFirma } from '../../dominio/firma';
 import { auth } from '../auth';
 
 const Uuid = z.uuid();
@@ -38,14 +39,7 @@ export async function contextoFirmaHttp(): Promise<ContextoFirma> {
 
 export function respuestaFirma(error: unknown) {
   if (error instanceof ErrorFirma) {
-    const status =
-      error.codigo === 'permiso' || error.codigo === 'mfa' || error.codigo === 'tarjeta'
-        ? error.message.startsWith('Debe iniciar')
-          ? 401
-          : 403
-        : error.codigo === 'no_encontrado'
-          ? 404
-          : 400;
+    const status = codigoHttpFirma(error.codigo, error.message);
     return NextResponse.json({ error: error.message, codigo: error.codigo }, { status });
   }
   console.error('No se pudo completar la firma.');

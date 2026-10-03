@@ -38,10 +38,8 @@ test('AC-SEG-08-2 E: firmar sin MFA reciente se rechaza en pantalla', async ({ p
   await page.mouse.move(caja.x + 120, caja.y + 80);
   await page.mouse.up();
 
-  await page.getByRole('button', { name: 'Firmar como profesional' }).click();
-  await expect(page.getByRole('alert').first()).toContainText(
-    /segundo factor reciente|tarjeta profesional vigente|sesión de demostración/i,
-  );
+  await expect(page.getByRole('button', { name: 'Firmar como profesional' })).toHaveCount(0);
+  await expect(page.getByText(/registro profesional vigente|tarjeta profesional/i).first()).toBeVisible();
 });
 
 test('S y E: el verificador interno no acepta un PDF desconocido y exige sesión', async ({ page, request }) => {
