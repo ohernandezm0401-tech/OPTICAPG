@@ -18,12 +18,14 @@ import * as firma from './esquema/firma';
 import * as inmutabilidad from './esquema/inmutabilidad';
 import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
+import * as sedesHabilitacion from './esquema/sedes-habilitacion';
 import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
 import * as tratamiento from './esquema/tratamiento';
 
 const esquema = {
   ...nucleo,
+  ...sedesHabilitacion,
   ...pacientes,
   ...parametros,
   ...autenticacion,

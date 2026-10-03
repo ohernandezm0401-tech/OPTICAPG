@@ -7,7 +7,7 @@
 // esquema deja `tenant_id` y los índices listos para esas políticas.
 // TODO(Q-06): valor por defecto aplicado — PostgreSQL estándar + Drizzle, sin
 // SDK propietario, de modo que el hosting sea intercambiable.
-import { check, index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { check, date, index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Estados de la spec: PLT-03 (`onboarding → activo → suspendido → en_cierre →
@@ -71,14 +71,25 @@ export const sedes = pgTable(
     nombre: text('nombre').notNull(),
     ciudad: text('ciudad').notNull(),
     direccion: text('direccion'),
+    // `tipo` es el tipo de establecimiento de ADM-01 (spec §10.3). No se
+    // duplica como `tipo_establecimiento`: el prompt de T16 dice «laboratorio»
+    // y la spec/AC-ADM-01-4 usan `laboratorio_oftalmico`. Se conserva este enum.
     tipo: text('tipo').notNull().default('optica_sin_consultorio'),
+    // TODO(Q-20): código REPS libre. Sin catálogo ni valor por defecto.
     reps_codigo: text('reps_codigo'),
+    // TODO(Q-19): director científico y responsable de tecnovigilancia. Sin
+    // ellos la sede queda incompleta; no se bloquea la atención clínica.
+    director_cientifico_id: uuid('director_cientifico_id'),
+    responsable_tecnovigilancia_id: uuid('responsable_tecnovigilancia_id'),
+    certificado_numero: text('certificado_numero'),
+    certificado_vence: date('certificado_vence', { mode: 'string' }),
     estado: text('estado').notNull().default('activa'),
     creado_en: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
     actualizado_en: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
   },
   (tabla) => [
     index('sedes_tenant_id_idx').on(tabla.tenant_id),
+    index('sedes_director_cientifico_idx').on(tabla.tenant_id, tabla.director_cientifico_id),
     check('sedes_tipo_valido', sql`${tabla.tipo} in (${listaSql(TIPOS_SEDE)})`),
     check('sedes_estado_valido', sql`${tabla.estado} in (${listaSql(ESTADOS_SEDE)})`),
   ],
