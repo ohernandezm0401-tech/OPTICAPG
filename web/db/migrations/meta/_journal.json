@@ -8,6 +8,13 @@
       "when": 1791003853517,
       "tag": "0000_nosy_union_jack",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791006300000,
+      "tag": "0001_rls_aislamiento_tenant",
+      "breakpoints": true
     }
   ]
 }
