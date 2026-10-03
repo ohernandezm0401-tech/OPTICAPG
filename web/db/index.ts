@@ -27,6 +27,7 @@ import * as nucleo from './esquema/nucleo';
 import * as sedesHabilitacion from './esquema/sedes-habilitacion';
 import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
+import * as prescripciones from './esquema/prescripciones';
 import * as tratamiento from './esquema/tratamiento';
 
 const esquema = {
@@ -48,6 +49,7 @@ const esquema = {
   ...atencionAdendas,
   ...consentimientos,
   ...limitesCaptura,
+  ...prescripciones,
 };
 
 export function leerUrlBd(): string {

@@ -115,3 +115,36 @@ export async function renderizarPdfConsentimiento(datos: DatosPdfConsentimiento)
   const buffer = await renderToBuffer(<PdfConsentimiento datos={datos} />);
   return Buffer.from(buffer);
 }
+
+export interface DatosPdfPrescripcion {
+  lineas: string[];
+  nombreProfesional: string;
+  registroProfesional: string;
+  lineaProfesional: string;
+}
+
+function PdfPrescripcion({ datos }: { datos: DatosPdfPrescripcion }) {
+  return (
+    <Document title="Prescripcion" author={datos.nombreProfesional}>
+      <Page size="A4" style={estilos.pagina}>
+        <Text style={estilos.aviso}>BORRADOR – requiere revisión jurídica</Text>
+        <Text style={estilos.aviso}>{AVISO_PDF_A}</Text>
+        <Text style={estilos.titulo}>Prescripción</Text>
+        {datos.lineas.map((linea, indice) => (
+          <Text key={`${indice}-${linea.slice(0, 24)}`} style={estilos.bloque}>
+            {linea}
+          </Text>
+        ))}
+        <Text style={estilos.sello}>{datos.lineaProfesional}</Text>
+        <Text>Nombre completo: {datos.nombreProfesional}</Text>
+        <Text>Registro profesional: {datos.registroProfesional}</Text>
+      </Page>
+    </Document>
+  );
+}
+
+/** PDF de la prescripción. TODO(Q-22): no es PDF/A. T24 puede ampliar la pantalla. */
+export async function renderizarPdfPrescripcion(datos: DatosPdfPrescripcion): Promise<Buffer> {
+  const buffer = await renderToBuffer(<PdfPrescripcion datos={datos} />);
+  return Buffer.from(buffer);
+}

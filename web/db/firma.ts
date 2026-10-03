@@ -1,5 +1,6 @@
 // SEG-08 (T14) — Servicio de firma electrónica simple sobre un documento
 // de ejemplo. El consentimiento clínico (T22) usa `consentimiento_clinico`.
+// La prescripción (T23) usa `prescripcion`.
 // TODO(Q-22): sello de tiempo externo nulo; el sellado propio es SHA-256
 // más la hora del servidor. PDF/A no garantizado.
 // BORRADOR – requiere revisión jurídica.
@@ -36,7 +37,7 @@ import { exigirMfaParaFirmarAtencion } from '../lib/auth/mfa/flujo';
 import { evaluarMfaParaFirma } from '../lib/auth/mfa/reciente';
 import { registrarEvento } from '../lib/auditoria/servicio';
 import { crearAlmacenBdCifrada, crearAlmacenDiscoCifrado } from '../lib/firma/almacen';
-import { renderizarPdfConsentimiento, renderizarPdfFirma } from '../lib/firma/pdf';
+import { renderizarPdfConsentimiento, renderizarPdfFirma, renderizarPdfPrescripcion } from '../lib/firma/pdf';
 import {
   crearSelloNulo,
   crearSelloServidor,
@@ -379,6 +380,28 @@ export async function crearDocumentoAutorizacion(ctx: ContextoFirma, entrada: { 
     return filas.rows[0]?.id;
   });
   if (!id) throw new ErrorFirma('validacion', 'No se pudo crear el documento de autorización.');
+  return { id };
+}
+
+/** Documento de la prescripción (OPT-05). Lo firma el profesional con `firmarProfesional`. */
+export async function crearDocumentoPrescripcion(ctx: ContextoFirma, entrada: { titulo: string; cuerpo: string }) {
+  if (!puedeFirmarComoProfesional(ctx.rol)) {
+    throw new ErrorFirma('permiso', 'No puede preparar la firma de la prescripción.');
+  }
+  const titulo = entrada.titulo.trim();
+  const cuerpo = entrada.cuerpo.trim();
+  if (!titulo || titulo.length > 160) throw new ErrorFirma('validacion', 'El título es obligatorio.');
+  if (!cuerpo || cuerpo.length > 20000) throw new ErrorFirma('validacion', 'El contenido de la prescripción es obligatorio.');
+  const id = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<{ id: string }>(
+      `insert into documentos_firma (tenant_id, sede_id, tipo, estado, titulo, cuerpo)
+       values ($1, $2, 'prescripcion', 'pendiente', $3, $4)
+       returning id`,
+      [ctx.tenant_id, ctx.sede_id, titulo, cuerpo],
+    );
+    return filas.rows[0]?.id;
+  });
+  if (!id) throw new ErrorFirma('validacion', 'No se pudo crear el documento de la prescripción.');
   return { id };
 }
 
@@ -761,6 +784,76 @@ export async function sellarConsentimientoPaciente(
     ]);
   });
   return { hash, anexo_id: guardado.id, firma_id: firmasFila.id };
+}
+
+/** Sella el PDF de la prescripción ya firmada por el profesional. No pide firma del paciente. */
+export async function sellarPrescripcionProfesional(
+  ctx: ContextoFirma,
+  documentoId: string,
+  lineas: string[],
+  ahora = new Date(),
+  almacen: AlmacenamientoPort = almacenPorNombre(null),
+) {
+  const profesionalGate = await gateProfesional(ctx, ahora);
+  const documento = await leerDocumento(ctx, documentoId);
+  if (!documento) throw new ErrorFirma('no_encontrado', 'No se encontró el documento.');
+  if (documento.tipo !== 'prescripcion') {
+    throw new ErrorFirma('estado', 'El documento no es una prescripción.');
+  }
+  if (documento.estado !== 'firmado') {
+    throw new ErrorFirma('estado', 'La prescripción solo se sella después de la firma del profesional.');
+  }
+  const profesional = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<FilaFirma>(
+      `select id, tipo_firmante, nombre_firmante, nombre_cifrado, documento_cifrado, registro_profesional,
+              trazo_png_cifrado, trazo_puntos_cifrado, otp_verificado, otp_canal, otp_verificado_en, ip, firmado_en
+         from firmas where documento_id = $1 and tipo_firmante = 'profesional'`,
+      [documentoId],
+    );
+    return filas.rows[0] ?? null;
+  });
+  if (!profesional?.nombre_firmante || !profesional.registro_profesional) {
+    throw new ErrorFirma('estado', 'Falta la firma del profesional.');
+  }
+  const hora = new Date(profesional.firmado_en);
+  const pdf = await renderizarPdfPrescripcion({
+    lineas,
+    nombreProfesional: profesional.nombre_firmante,
+    registroProfesional: profesional.registro_profesional,
+    lineaProfesional: lineaSelloProfesional(profesional.nombre_firmante, profesional.registro_profesional, hora),
+  });
+  const hash = hashSha256(pdf);
+  const guardado = await almacen.guardar({
+    tenantId: ctx.tenant_id,
+    nombre: `${documentoId}.pdf`,
+    mime: 'application/pdf',
+    contenido: pdf,
+  });
+  if (guardado.hash !== hash) {
+    throw new ErrorFirma('estado', 'El almacén no conservó el hash del PDF.');
+  }
+  const propio = await crearSelloServidor().sellar(hash, ahora);
+  const tsa = await crearSelloNulo().sellar(hash, ahora);
+  await conApp(ctx, async (cliente) => {
+    await cliente.query(
+      `update documentos_firma
+          set estado = 'sellado',
+              hash_documento = $2,
+              almacen_adaptador = $3,
+              almacen_id = $4,
+              sello_tsa_proveedor = $5,
+              sello_tsa_token = $6,
+              sellado_en = $7,
+              actualizado_en = now()
+        where id = $1 and estado = 'firmado'`,
+      [documentoId, hash, almacen.nombre, guardado.id, tsa.proveedor, tsa.token, propio.sellado_en],
+    );
+    await cliente.query(`update firmas set hash_documento = $2 where documento_id = $1 and hash_documento is null`, [
+      documentoId,
+      hash,
+    ]);
+  });
+  return { hash, anexo_id: guardado.id, firma_id: profesional.id, nombre: profesionalGate.nombre };
 }
 
 export async function verificarDocumento(ctx: ContextoFirma, pdf: Buffer): Promise<boolean> {
