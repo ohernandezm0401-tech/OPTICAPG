@@ -52,6 +52,7 @@ export const authConfig = {
         session.user.empresaId = (token.empresaId as string) ?? '';
         session.user.sedeId = (token.sedeId as string) ?? '';
         session.user.role = (token.role as string) ?? '';
+        session.user.sedesAccess = Array.isArray(token.sedesAccess) ? token.sedesAccess : [];
         session.user.sesionId = typeof token.sesionId === 'string' ? token.sesionId : undefined;
         session.user.devLocal = token.devLocal === true;
       }

@@ -57,6 +57,13 @@
       "when": 1791037300000,
       "tag": "0007_rls_mfa",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791040000000,
+      "tag": "0008_seg02_autorizacion",
+      "breakpoints": true
     }
   ]
 }

@@ -5,13 +5,6 @@ import { authConfig } from '@/lib/auth/borde';
 
 const { auth } = NextAuth(authConfig);
 
-const ROLE_ALLOWED_PATHS: Record<string, string> = {
-  owner: '/dashboard/owner',
-  admin: '/dashboard/admin',
-  asesor: '/dashboard/asesor',
-  optometra: '/dashboard/optometra',
-};
-
 const COOKIES_SESION = [
   'authjs.session-token',
   '__Secure-authjs.session-token',
@@ -42,6 +35,14 @@ async function sesionVigenteEnServidor(req: { url: string; headers: Headers }): 
   }
 }
 
+// SEG-02: el middleware solo redirige a login. La autorización de datos vive
+// en el servidor (CASL). La ruta se reenvía para que el layout decida.
+function continuar(req: { headers: Headers; nextUrl: { pathname: string } }) {
+  const encabezados = new Headers(req.headers);
+  encabezados.set('x-optisaas-ruta', req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: encabezados } });
+}
+
 export default auth(async (req) => {
   const pathname = req.nextUrl.pathname;
   const isAuthPage = pathname.startsWith('/login');
@@ -54,7 +55,7 @@ export default auth(async (req) => {
       if (pathname.startsWith('/dashboard')) {
         return borrarCookies(NextResponse.redirect(new URL('/login', req.url)));
       }
-      return borrarCookies(NextResponse.next());
+      return borrarCookies(continuar(req));
     }
   }
 
@@ -65,25 +66,14 @@ export default auth(async (req) => {
     if (autenticado) {
       return NextResponse.redirect(new URL('/dashboard/admin', req.url));
     }
-    return null;
+    return continuar(req);
   }
 
   if (!autenticado && pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (autenticado && pathname.startsWith('/dashboard/')) {
-    const role = req.auth?.user?.role;
-    if (role && role in ROLE_ALLOWED_PATHS) {
-      const allowedPath = ROLE_ALLOWED_PATHS[role];
-      if (role === 'owner') return null;
-      if (!pathname.startsWith(allowedPath)) {
-        return NextResponse.redirect(new URL(allowedPath, req.url));
-      }
-    }
-  }
-
-  return null;
+  return continuar(req);
 });
 
 export const config = {
