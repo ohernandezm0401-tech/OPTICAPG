@@ -88,6 +88,7 @@ export interface ExportacionFirma {
 
 interface FilaDocumento {
   id: string;
+  tipo: string;
   estado: string;
   titulo: string;
   cuerpo: string;
@@ -336,10 +337,32 @@ export async function crearDocumentoEjemplo(ctx: ContextoFirma, entrada: { titul
   return { id, aviso: AVISO_DOCUMENTO_EJEMPLO };
 }
 
+/** Documento de la autorización de datos (SEG-05). No es el ejemplo sintético. */
+export async function crearDocumentoAutorizacion(ctx: ContextoFirma, entrada: { titulo: string; cuerpo: string }) {
+  if (!puedeRecogerFirmaPaciente(ctx.rol)) {
+    throw new ErrorFirma('permiso', 'No puede preparar la firma de la autorización.');
+  }
+  const titulo = entrada.titulo.trim();
+  const cuerpo = entrada.cuerpo.trim();
+  if (!titulo || titulo.length > 160) throw new ErrorFirma('validacion', 'El título es obligatorio.');
+  if (!cuerpo || cuerpo.length > 20000) throw new ErrorFirma('validacion', 'El texto de la autorización es obligatorio.');
+  const id = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<{ id: string }>(
+      `insert into documentos_firma (tenant_id, sede_id, tipo, estado, titulo, cuerpo)
+       values ($1, $2, 'autorizacion_datos', 'pendiente', $3, $4)
+       returning id`,
+      [ctx.tenant_id, ctx.sede_id, titulo, cuerpo],
+    );
+    return filas.rows[0]?.id;
+  });
+  if (!id) throw new ErrorFirma('validacion', 'No se pudo crear el documento de autorización.');
+  return { id };
+}
+
 async function leerDocumento(ctx: ContextoFirma, documentoId: string): Promise<FilaDocumento | null> {
   return conApp(ctx, async (cliente) => {
     const filas = await cliente.query<FilaDocumento>(
-      `select id, estado, titulo, cuerpo, hash_documento, almacen_adaptador, almacen_id,
+      `select id, tipo, estado, titulo, cuerpo, hash_documento, almacen_adaptador, almacen_id,
               sello_tsa_proveedor, sellado_en
          from documentos_firma where id = $1`,
       [documentoId],
@@ -372,11 +395,12 @@ export async function firmarProfesional(ctx: ContextoFirma, documentoId: string,
       `insert into firmas
          (tenant_id, sede_id, tipo_firmante, firmante_id, documento_tipo, documento_id,
           nombre_firmante, registro_profesional, otp_verificado, acuerdo_aceptado, sesion_id, firmado_en)
-       values ($1, $2, 'profesional', $3, 'ejemplo_sintetico', $4, $5, $6, false, true, $7, $8)`,
+       values ($1, $2, 'profesional', $3, $4, $5, $6, $7, false, true, $8, $9)`,
       [
         ctx.tenant_id,
         ctx.sede_id,
         ctx.usuario_id,
+        documento.tipo,
         documentoId,
         profesional.nombre,
         profesional.registro,
@@ -496,10 +520,11 @@ export async function firmarPaciente(
          (tenant_id, sede_id, tipo_firmante, documento_tipo, documento_id, trazo_png_cifrado,
           trazo_puntos_cifrado, nombre_cifrado, documento_cifrado, otp_verificado, otp_canal,
           otp_verificado_en, ip, agente, acuerdo_aceptado, firmado_en)
-       values ($1,$2,'paciente','ejemplo_sintetico',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,$13)`,
+       values ($1,$2,'paciente',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,true,$14)`,
       [
         ctx.tenant_id,
         ctx.sede_id,
+        documento.tipo,
         entrada.documentoId,
         trazoCifrado,
         puntosCifrado,

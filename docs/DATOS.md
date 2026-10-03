@@ -16,7 +16,7 @@
 | — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa` con sobre AES-256-GCM (T11). |
 | — | `permisos_extra`, `intentos_autorizacion` | Excepciones de permiso e intentos denegados (SEG-02). | ✅ T09. RLS ENABLE+FORCE. El intento persistido entra en `auditoria` (T10). |
 | — | `auditoria` | Bitácora append-only con hash SHA-256 por tenant (SEG-03). | ✅ T10. RLS ENABLE+FORCE. Sin UPDATE/DELETE. No guarda contenido clínico. |
-| `pacientes` | `pacientes` + `representantes` + `pacientes_representantes` | Campos de identificación del art. 9; tipos `CC, TI, RC, CE, PA, PE, PPT, NUIP`. `num_doc` cifrado (T11) y `num_doc_hash` HMAC. Autorizaciones siguen en SEG-05. | ✅ T13 |
+| `pacientes` | `pacientes` + `representantes` + `pacientes_representantes` + `autorizaciones` | Campos de identificación del art. 9; tipos `CC, TI, RC, CE, PA, PE, PPT, NUIP`. `num_doc` cifrado (T11) y `num_doc_hash` HMAC. Autorizaciones de tratamiento (SEG-05, T15) en `autorizaciones`, textos en `textos_legales` y política en `politicas_tratamiento`. | ✅ T13 + T15 |
 | `citas` (con HC embebida y factura) | `citas` + `atenciones` + `documentos_electronicos` | Separar clínica de facturación. | ⏳ siguiente PR |
 | `historias_clinicas` | `atenciones` (+ adendas) | El contenido de demostración en memoria no se migra. | ⏳ siguiente PR |
 | `inventario` | `productos` + `lotes` + `stock_movimientos` | Existencias por sede y lote (saldo = SUM). | ⏳ siguiente PR |
@@ -35,6 +35,7 @@
 | Entornos | `web/lib/entorno.ts` + `web/instrumentation.ts` | `APP_ENV` validado con Zod; en `produccion` el arranque aborta (PLT-10, T05; ver `docs/ENTORNOS.md`). |
 | Semillas sintéticas | `web/db/seeds/sinteticos/` | JSON + sembrador idempotente (`npm run seed:demo` para el núcleo; `sembrarDatosSinteticos` también inserta pacientes sintéticos de T13). Cuentas locales con `npm run seed:dev` (PLT-10, T05). |
 | Pacientes | `web/db/esquema/pacientes.ts`, `web/db/pacientes.ts`, `web/dominio/pacientes.ts` | Recepción en `web/components/pacientes/recepcion-pacientes.tsx`. RLS en `0012_ase01_pacientes.sql`. TODO(Q-17) en `negativa_autorizacion`. |
+| Autorización de datos | `web/db/esquema/tratamiento.ts`, `web/db/autorizaciones.ts`, `web/dominio/autorizacion-datos.ts` | SEG-05 (T15). Plantillas versionadas, evidencia, revocatoria de contacto y política por tenant. RLS en `0014_seg05_autorizacion.sql`. Textos con rótulo de borrador jurídico. `puedeAbrirAtencion` y `puedeContactarComercialmente` quedan para las atenciones y para SEG-16. |
 | Acciones | `web/db/nucleo.ts` | CRUD validado con Zod; exigen `tenant_id` explícito hasta que PLT-01 aporte `withTenantTx`. |
 | Validación | `web/db/validacion/nucleo.ts` | DTOs de entrada/salida; nada fiscal con valor quemado. |
 | Migraciones | `web/db/migrations/` | Solo `drizzle-kit generate`/`migrate`; ningún DDL manual. |

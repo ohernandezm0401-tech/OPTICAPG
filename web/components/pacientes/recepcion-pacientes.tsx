@@ -7,9 +7,9 @@ import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 
 import { accionAbrirPaciente, accionBuscarPacientes, accionGuardarPaciente } from '@/app/acciones/pacientes';
+import { PanelAutorizacionPaciente } from '@/components/autorizacion/panel-autorizacion';
 import {
   MARCA_NO_APLICA,
-  NOTA_Q17,
   TIPOS_DOCUMENTO,
   TIPOS_VINCULACION,
   type PacienteEntrada,
@@ -94,6 +94,7 @@ export function RecepcionPacientes() {
   const [diagnosticos, setDiagnosticos] = useState<string[] | null>(null);
   const [abierto, setAbierto] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [pacienteId, setPacienteId] = useState<string | undefined>(undefined);
   const form = useForm<Valores>({ defaultValues: VACIO });
 
   async function cargar(q = '') {
@@ -144,6 +145,7 @@ export function RecepcionPacientes() {
     setErrores([]);
     setEditando(true);
     setAbierto(true);
+    setPacienteId(ficha.id);
   }
 
   async function onSubmit(valores: Valores) {
@@ -209,6 +211,7 @@ export function RecepcionPacientes() {
             className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold"
             onClick={() => {
               form.reset(VACIO);
+              setPacienteId(undefined);
               setEditando(false);
               setAbierto(true);
               setHistorial([]);
@@ -391,10 +394,7 @@ export function RecepcionPacientes() {
             </label>
           </fieldset>
 
-          <label className="text-sm flex gap-2 items-start" htmlFor="negativa_autorizacion">
-            <input id="negativa_autorizacion" type="checkbox" {...form.register('negativa_autorizacion')} />
-            <span>{NOTA_Q17}</span>
-          </label>
+          <PanelAutorizacionPaciente pacienteId={pacienteId} />
 
           {veDiagnosticos && diagnosticos ? (
             <section aria-label="Diagnósticos">

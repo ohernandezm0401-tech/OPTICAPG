@@ -99,6 +99,13 @@
       "when": 1791050000000,
       "tag": "0013_seg08_firma",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791052000000,
+      "tag": "0014_seg05_autorizacion",
+      "breakpoints": true
     }
   ]
 }
