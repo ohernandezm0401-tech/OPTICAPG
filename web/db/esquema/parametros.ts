@@ -31,7 +31,7 @@ export const parametrosTenant = pgTable(
       .notNull()
       .references(() => tenants.id),
     clave: text('clave').notNull(),
-    valor: jsonb('valor').$type<string | number | null>(),
+    valor: jsonb('valor').$type<string | number | boolean | null>(),
     rotulo: text('rotulo'),
     vigente_desde: timestamp('vigente_desde', { withTimezone: true }).notNull().defaultNow(),
     vigente_hasta: timestamp('vigente_hasta', { withTimezone: true }),
@@ -125,8 +125,8 @@ export const bitacoraParametros = pgTable(
       .notNull()
       .references(() => tenants.id),
     clave: text('clave').notNull(),
-    valor_anterior: jsonb('valor_anterior').$type<string | number | null>(),
-    valor_nuevo: jsonb('valor_nuevo').$type<string | number | null>(),
+    valor_anterior: jsonb('valor_anterior').$type<string | number | boolean | null>(),
+    valor_nuevo: jsonb('valor_nuevo').$type<string | number | boolean | null>(),
     rotulo: text('rotulo'),
     registrado_en: timestamp('registrado_en', { withTimezone: true }).notNull().defaultNow(),
   },

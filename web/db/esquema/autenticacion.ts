@@ -4,7 +4,7 @@
 // y solo lo inserta la función de servidor; la política del rol de aplicación
 // no lo muestra. Nunca se guarda la contraseña en claro: solo hashes Argon2id
 // en `historial_contrasenas` y el tipo de evento (sin secreto) aquí.
-// MFA/TOTP es la tarea T08: esta tabla no guarda secretos TOTP.
+// Los secretos TOTP no van aquí: viven en `factores_totp` (T08).
 import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
@@ -19,6 +19,10 @@ export const TIPOS_EVENTO_AUTENTICACION = [
   'cierre_todas',
   'limite_ip',
   'contrasena_actualizada',
+  'mfa_alta',
+  'mfa_baja',
+  'mfa_fallo',
+  'mfa_ok',
 ] as const;
 
 export const historialContrasenas = pgTable(
@@ -57,7 +61,7 @@ export const eventosAutenticacion = pgTable(
     index('eventos_autenticacion_ip_idx').on(tabla.direccion_ip),
     check(
       'eventos_autenticacion_tipo_valido',
-      sql`${tabla.tipo} in ('inicio_fallido', 'cuenta_bloqueada', 'inicio_ok', 'sesion_revocada', 'sesion_rotada', 'cierre_todas', 'limite_ip', 'contrasena_actualizada')`,
+      sql`${tabla.tipo} in ('inicio_fallido', 'cuenta_bloqueada', 'inicio_ok', 'sesion_revocada', 'sesion_rotada', 'cierre_todas', 'limite_ip', 'contrasena_actualizada', 'mfa_alta', 'mfa_baja', 'mfa_fallo', 'mfa_ok')`,
     ),
   ],
 );

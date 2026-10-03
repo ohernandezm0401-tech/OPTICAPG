@@ -12,7 +12,8 @@
 | `empresas` | `tenants` | Se quitan `stripe_*`; `estado` con el flujo `onboarding → activo → suspendido → en_cierre → cerrado` (PLT-03). | ✅ T03 |
 | `sedes` | `sedes` | `habilitacion_salud` (texto libre) → `tipo` (catálogo §10.3), `reps_codigo`; certificados a `certificados_sede` (ADM-01). | ✅ T03 (núcleo; certificados en ADM-01) |
 | `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). | ✅ T03 (núcleo; perfiles en ADM-02) |
-| — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 (Argon2id, revocación, rotación, inactividad; MFA en T08) |
+| — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 + T08 (`mfa_verificada_en`, pase de un solo uso) |
+| — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa`; hoy es identidad (sin cifrado envelope). TODO(T11): quien lea la columna o un respaldo obtiene el secreto. |
 | `pacientes` | `pacientes` + `representantes` + `autorizaciones` | Añadir campos de Res. 1995 art. 9; tipo `RC`. | ⏳ siguiente PR |
 | `citas` (con HC embebida y factura) | `citas` + `atenciones` + `documentos_electronicos` | Separar clínica de facturación. | ⏳ siguiente PR |
 | `historias_clinicas` | `atenciones` (+ adendas) | El contenido de demostración en memoria no se migra. | ⏳ siguiente PR |
@@ -59,7 +60,7 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 ## 5. Qué falta (no es de esta tarea)
 
-- Autorización por sede (SEG-02). La autenticación de SEG-01 (Argon2id, sesiones revocables, `AuthPort`) está en T07; MFA queda en T08.
+- Autorización por sede (SEG-02). La autenticación de SEG-01 (Argon2id, sesiones revocables, `AuthPort`, TOTP, códigos de recuperación y passkeys) está en T07 y T08. La firma clínica que debe llamar `exigirMfaParaFirmarAtencion` llega con SEG-08.
 - Respaldos cifrados y restauración probada (PLT-07); secretos y cifrado (SEG-12).
 - Alta de tenant con contrato de encargo (PLT-03).
 
