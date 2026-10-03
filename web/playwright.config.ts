@@ -2,6 +2,7 @@
 // Corre contra la app construida (`npm run build` y luego `npm run test:e2e`;
 // en CI lo hace el workflow después del paso de build). Si ya hay un servidor
 // en el puerto, se reutiliza fuera de CI.
+import { randomBytes } from 'node:crypto';
 import { defineConfig, devices } from '@playwright/test';
 
 const PUERTO_E2E = Number(process.env.PUERTO_E2E ?? 3100);
@@ -13,6 +14,9 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PUERTO_E
 // efímero (`openssl rand -base64 32`); en producción T05 exige uno generado
 // (AC-PLT-10-1) y este valor nunca debe usarse allí.
 const SECRETO_SOLO_E2E_LOCAL = 'secreto-solo-e2e-local-sin-valor-real';
+// Clave maestra efímera del proceso E2E. No se versiona: se genera al
+// arrancar Playwright y solo vive en el entorno del servidor de prueba.
+const CLAVE_MAESTRA_SOLO_E2E = randomBytes(32).toString('base64');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -39,6 +43,8 @@ export default defineConfig({
       // `tests/unit/plt-02-guardas.test.ts`).
       APP_MODE: 'demo',
       DATABASE_URL: process.env.DATABASE_URL ?? process.env.DATABASE_URL_TEST ?? '',
+      APP_MASTER_KEY: process.env.APP_MASTER_KEY ?? CLAVE_MAESTRA_SOLO_E2E,
+      APP_MASTER_KEY_VERSION: process.env.APP_MASTER_KEY_VERSION ?? '1',
     },
   },
 });

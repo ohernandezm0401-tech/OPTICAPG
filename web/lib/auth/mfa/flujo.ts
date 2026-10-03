@@ -34,7 +34,7 @@ import {
 } from '../puerto';
 import { NOMBRE_RP } from './webauthn';
 import { banderaAsesorActiva, CLAVE_MFA_ASESOR, debePedirSegundoFactor, mfaEsObligatoria } from './politica';
-import { proteccionIdentidad } from './proteccion';
+import { proteccionEnvelope } from './proteccion';
 import { svgQr } from './qr';
 import { evaluarMfaParaFirma } from './reciente';
 import {
@@ -274,7 +274,7 @@ export async function prepararEnrolamientoTotp(ticket: string, ahora: Date = new
   }
   const correo = await correoDe(desafio.usuario_id);
   if (desafio.secreto_pendiente) {
-    const secreto = proteccionIdentidad.revelar(desafio.secreto_pendiente);
+    const secreto = await proteccionEnvelope.revelar(desafio.secreto_pendiente, desafio.tenant_id);
     return {
       ok: true,
       secreto,
@@ -290,7 +290,7 @@ export async function prepararEnrolamientoTotp(ticket: string, ahora: Date = new
     await tx
       .update(desafiosMfa)
       .set({
-        secreto_pendiente: proteccionIdentidad.proteger(secreto),
+        secreto_pendiente: await proteccionEnvelope.proteger(secreto, desafio.tenant_id),
         codigos_hash: codigos.map(hashearCodigoRecuperacion),
         codigos_entregados: 1,
       })
@@ -383,7 +383,7 @@ export async function confirmarSegundoFactor(entrada: {
 
   if (desafio.proposito === 'enrolar') {
     if (!desafio.secreto_pendiente) return falloMfa();
-    const secreto = proteccionIdentidad.revelar(desafio.secreto_pendiente);
+    const secreto = await proteccionEnvelope.revelar(desafio.secreto_pendiente, desafio.tenant_id);
     const totp = verificarTotp(secreto, entrada.codigo, ahora, null);
     if (!totp.valido) {
       await anotarFallo(desafio.usuario_id, desafio.tenant_id, correo, desafio.direccion_ip, ahora);
@@ -426,7 +426,7 @@ export async function confirmarSegundoFactor(entrada: {
   let aceptado = false;
   if (factor) {
     const totp = verificarTotp(
-      proteccionIdentidad.revelar(factor.secreto_protegido),
+      await proteccionEnvelope.revelar(factor.secreto_protegido, desafio.tenant_id),
       entrada.codigo,
       ahora,
       factor.ultimo_paso,
@@ -522,7 +522,7 @@ async function aceptarCodigoDeUsuario(usuarioId: string, tenantId: string, codig
   });
   if (factor) {
     const totp = verificarTotp(
-      proteccionIdentidad.revelar(factor.secreto_protegido),
+      await proteccionEnvelope.revelar(factor.secreto_protegido, tenantId),
       codigo,
       ahora,
       factor.ultimo_paso,

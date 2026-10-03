@@ -3,7 +3,7 @@
 // AC-SEG-01-4: firmar con MFA de más de 10 min exige reautenticación.
 // La firma clínica (SEG-08) todavía no existe: se prueba la función reutilizable.
 // S: fuerza bruta del segundo factor, no enumeración y pase de un solo uso.
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -16,6 +16,8 @@ import { cerrarPool, obtenerPool } from '../../db';
 import { asignarMembresia, crearSede, crearTenant, crearUsuario } from '../../db/nucleo';
 
 const MIGRACIONES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'db', 'migrations');
+process.env.APP_MASTER_KEY ??= randomBytes(32).toString('base64');
+process.env.APP_MASTER_KEY_VERSION ??= '1';
 const CLAVE = 'una-frase-larga-local';
 const AHORA = new Date('2026-10-03T18:00:00.000Z');
 
@@ -88,7 +90,9 @@ describe('SEG-01 MFA en PostgreSQL real', () => {
       'select secreto_protegido from factores_totp where usuario_id = $1',
       [usuario.id],
     );
-    expect(factor.rows[0].secreto_protegido).toBe(alta.secreto);
+    expect(factor.rows[0].secreto_protegido).not.toBe(alta.secreto);
+    expect(factor.rows[0].secreto_protegido.startsWith('optisaas1.')).toBe(true);
+    expect(factor.rows[0].secreto_protegido).not.toContain(alta.secreto);
 
     const despues = new Date(AHORA.getTime() + 31_000);
     const segundo = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora: despues });
