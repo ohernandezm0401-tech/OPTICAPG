@@ -65,6 +65,10 @@ antes de abrir sesión (T08).
 
 ## 3.1 Passkeys (opcional)
 
+`PRESCRIPCION_VERIFICACION_BASE_URL` no es un secreto. Si falta, el PDF de la
+prescripción imprime la ruta `/verificar/prescripcion/<hash>` y no inventa un
+dominio. Si se define, debe ser un origen `http` o `https` sin ruta.
+
 `WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN` no son secretos. Si ambas están definidas,
 el origen de la petición tiene que coincidir. Si faltan, fuera de producción
 solo se acepta `localhost` o `127.0.0.1`. El navegador no registra una llave

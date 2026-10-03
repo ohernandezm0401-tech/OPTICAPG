@@ -10,6 +10,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 
 import { PanelAdenda } from '@/components/optometria/adenda-atencion';
 import { PanelConsentimiento } from '@/components/optometria/panel-consentimiento';
+import { PanelPrescripcion } from '@/components/optometria/panel-prescripcion';
 import type { HistorialProyectado } from '@/dominio/adenda-atencion';
 import {
   AUTOGUARDADO_MS,
@@ -49,6 +50,7 @@ const SECCIONES = [
   ['diagnostico', 'Diagnóstico'],
   ['plan', 'Plan'],
   ['consentimiento', 'Consentimiento'],
+  ['prescripcion', 'Prescripción'],
 ] as const;
 
 const CLASE_CAMPO =
@@ -626,6 +628,17 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
       </form>
 
       <PanelConsentimiento atencionId={atencionId} />
+
+      <section id="seccion-prescripcion" aria-labelledby="titulo-prescripcion" className="space-y-3 rounded-md border border-neutral-300 p-4">
+        <h2 id="titulo-prescripcion" className="text-lg font-semibold">
+          Prescripción
+        </h2>
+        {firmada && atencionId ? (
+          <PanelPrescripcion atencionInicial={atencionId} />
+        ) : (
+          <p className="text-sm">La prescripción se escribe después de firmar la atención.</p>
+        )}
+      </section>
 
       {firmada && atencionId ? <PanelAdenda atencionId={atencionId} onHistorial={alHistorial} /> : null}
 

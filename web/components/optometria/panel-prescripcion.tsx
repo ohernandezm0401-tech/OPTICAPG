@@ -217,9 +217,19 @@ export function PanelPrescripcion({ atencionInicial }: { atencionInicial: string
         </p>
       ) : null}
       {prescripcionId ? (
-        <a data-testid="prescripcion-pdf" href={`/api/prescripciones/${prescripcionId}/pdf`}>
-          Descargar PDF
-        </a>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <a data-testid="prescripcion-pdf" href={`/api/prescripciones/${prescripcionId}/pdf`}>
+            Descargar PDF
+          </a>
+          <a
+            data-testid="prescripcion-imprimir"
+            href={`/api/prescripciones/${prescripcionId}/pdf?medio=impresion`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Imprimir
+          </a>
+        </div>
       ) : null}
     </section>
   );

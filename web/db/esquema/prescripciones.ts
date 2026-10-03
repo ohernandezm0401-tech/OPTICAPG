@@ -83,6 +83,7 @@ export const prescripciones = pgTable(
     firma_id: uuid('firma_id').references(() => firmas.id),
     documento_firma_id: uuid('documento_firma_id').references(() => documentosFirma.id),
     hash_pdf: text('hash_pdf'),
+    hash_verificacion: text('hash_verificacion'),
     creado_en: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   },
   (tabla) => [
@@ -95,6 +96,10 @@ export const prescripciones = pgTable(
     check('prescripciones_estado_valido', sql`${tabla.estado} in ('borrador', 'firmada')`),
     check('prescripciones_numero_formato', sql`${tabla.numero} is null or ${tabla.numero} ~ '^RX-[0-9]{4}-[0-9]{6}$'`),
     check('prescripciones_hash_pdf', sql`${tabla.hash_pdf} is null or ${tabla.hash_pdf} ~ '^[a-f0-9]{64}$'`),
+    check(
+      'prescripciones_hash_verificacion',
+      sql`${tabla.hash_verificacion} is null or ${tabla.hash_verificacion} ~ '^[a-f0-9]{64}$'`,
+    ),
     check(
       'prescripciones_cantidad_rango',
       sql`${tabla.cantidad_num} is null or (${tabla.cantidad_num} >= 1 and ${tabla.cantidad_num} <= 999999)`,

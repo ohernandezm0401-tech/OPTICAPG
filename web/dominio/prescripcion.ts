@@ -9,7 +9,7 @@
 // `ROLES_FIRMA_PROFESIONAL` (T14): optómetra u oftalmólogo con registro vigente.
 
 import { fechaCivilEnZona, parsearFechaIso } from './fechas';
-import { puedeFirmarComoProfesional, tarjetaDeclaradaVigente, ZONA_FIRMA } from './firma';
+import { hashSha256, puedeFirmarComoProfesional, tarjetaDeclaradaVigente, ZONA_FIRMA } from './firma';
 import { MARCA_NO_APLICA } from './pacientes';
 import { ZONA_HORARIA_INICIAL } from './parametros-iniciales';
 
@@ -422,32 +422,98 @@ export function esDispensable(entrada: {
   return { dispensable: true, motivo: 'vigente' };
 }
 
+/**
+ * Los 15 elementos del art. 17, en castellano y sin siglas.
+ * Cada cadena es un renglón del PDF. (a) prestador y contacto · (b) lugar y fecha
+ * · (c) paciente y documento · (d) historia clínica · (e) tipo de usuario
+ * · (f) dispositivo · (g) agudeza visual · (h) forma de uso · (i) distancia pupilar
+ * · (j) filtro · (k) duración · (l) cantidad en números y letras · (m) indicaciones
+ * · (n) vigencia · (o) nombre, firma y registro del prescriptor.
+ */
+export function textosElementosArt17(datos: PrescripcionNormalizada & { numero: string }): readonly string[] {
+  return [
+    `Prestador o profesional: ${datos.prestador_nombre}. Dirección: ${datos.direccion}. Teléfono: ${datos.telefono}. Correo: ${datos.correo}.`,
+    `Lugar: ${datos.lugar}. Fecha: ${datos.fecha}.`,
+    `Paciente: ${datos.paciente_nombre}. Documento: ${datos.paciente_documento}.`,
+    `Número de historia clínica: ${datos.numero_hc}.`,
+    `Tipo de usuario: ${datos.tipo_usuario}.`,
+    `Dispositivo prescrito: ${datos.dispositivo}.`,
+    `Agudeza visual: ${datos.agudeza_visual}.`,
+    `Forma de uso: ${datos.forma_uso}.`,
+    `Distancia pupilar: ${datos.distancia_pupilar}.`,
+    `Filtro: ${datos.filtro}.`,
+    `Duración del tratamiento: ${datos.duracion_tratamiento}.`,
+    `Cantidad total: ${datos.cantidad_num} (${datos.cantidad_letras}).`,
+    `Indicaciones: ${datos.indicaciones}.`,
+    `Vigencia: ${datos.vigencia_hasta}.`,
+    `Nombre completo del prescriptor: ${datos.nombre_prescriptor}. Registro profesional: ${datos.registro_profesional}. Firma: electrónica del prescriptor.`,
+  ];
+}
+
+/** Hash del texto canónico, antes de dibujar la URL o el código QR. */
+export function hashVerificacionPrescripcion(lineas: readonly string[]): string {
+  return hashSha256(Buffer.from(lineas.join('\n'), 'utf8'));
+}
+
+/**
+ * Ruta propia de la app. Sin base, queda el camino relativo: no hay dominio por defecto.
+ * `PRESCRIPCION_VERIFICACION_BASE_URL` solo se antepone si quien despliega la define.
+ */
+export function urlVerificacionPrescripcion(hash: string, base?: string | null): string {
+  if (!/^[a-f0-9]{64}$/.test(hash)) {
+    throw new Error('El hash de verificación no tiene el formato esperado.');
+  }
+  const ruta = `/verificar/prescripcion/${hash}`;
+  const origen = (base ?? '').trim().replace(/\/+$/, '');
+  if (!origen) return ruta;
+  if (!/^https?:\/\/[^\s/]+(?::\d+)?$/i.test(origen)) {
+    throw new Error('PRESCRIPCION_VERIFICACION_BASE_URL debe ser un origen http o https, sin ruta.');
+  }
+  return `${origen}${ruta}`;
+}
+
+export function presentarFechaEmision(iso: string): string {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!partes) return iso.trim();
+  return `${partes[3]}/${partes[2]}/${partes[1]}`;
+}
+
+export interface VerificacionPublicaPrescripcion {
+  coincide: boolean;
+  numero?: string;
+  fecha_emision?: string;
+  nombre_prescriptor?: string;
+  registro_profesional?: string;
+}
+
+function textoPublico(fila: Record<string, unknown>, clave: string): string {
+  const valor = fila[clave];
+  return typeof valor === 'string' ? valor.trim() : '';
+}
+
+/** Solo los cuatro datos públicos. Ignora cualquier otro campo que traiga la fila. */
+export function respuestaVerificacion(fila: Record<string, unknown> | null): VerificacionPublicaPrescripcion {
+  if (!fila) return { coincide: false };
+  const numero = textoPublico(fila, 'numero');
+  const fecha = textoPublico(fila, 'fecha_emision');
+  const nombre = textoPublico(fila, 'nombre_prescriptor');
+  const registro = textoPublico(fila, 'registro_profesional');
+  if (!numero || !fecha || !nombre || !registro) return { coincide: false };
+  return {
+    coincide: true,
+    numero,
+    fecha_emision: presentarFechaEmision(fecha),
+    nombre_prescriptor: nombre,
+    registro_profesional: registro,
+  };
+}
+
 export function lineasPrescripcion(datos: PrescripcionNormalizada & { numero: string }): string[] {
   return [
     ROTULO_PRESCRIPCION,
     NOTA_Q18,
-    `Numero: ${datos.numero}`,
-    `Prestador: ${datos.prestador_nombre}`,
-    `Direccion: ${datos.direccion}`,
-    `Telefono: ${datos.telefono}`,
-    `Correo: ${datos.correo}`,
-    `Lugar: ${datos.lugar}`,
-    `Fecha: ${datos.fecha}`,
-    `Paciente: ${datos.paciente_nombre}`,
-    `Documento: ${datos.paciente_documento}`,
-    `Numero HC: ${datos.numero_hc}`,
-    `Tipo de usuario: ${datos.tipo_usuario}`,
-    `Dispositivo: ${datos.dispositivo}`,
-    `Agudeza visual: ${datos.agudeza_visual}`,
-    `Forma de uso: ${datos.forma_uso}`,
-    `Distancia pupilar: ${datos.distancia_pupilar}`,
-    `Filtro: ${datos.filtro}`,
-    `Duracion del tratamiento: ${datos.duracion_tratamiento}`,
-    `Cantidad: ${datos.cantidad_num} (${datos.cantidad_letras})`,
-    `Indicaciones: ${datos.indicaciones}`,
-    `Vigencia: ${datos.vigencia_hasta}`,
-    `Prescriptor: ${datos.nombre_prescriptor}`,
-    `Registro profesional: ${datos.registro_profesional}`,
+    `Número de la prescripción: ${datos.numero}`,
+    ...textosElementosArt17(datos),
     `Tipo: ${datos.tipo}`,
   ];
 }

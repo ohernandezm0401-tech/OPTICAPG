@@ -11,14 +11,17 @@ import { crearDocumentoPrescripcion, ErrorFirma, exportarDocumento, firmarProfes
 import { obtenerPool } from './index';
 import { hashDocumento } from '../dominio/documento-hash';
 import { codigoHttpFirma } from '../dominio/firma';
+import { registrarEvento } from '../lib/auditoria/servicio';
 import {
   contenidoPrescripcion,
   esDispensable,
   estadoVisiblePrescripcion,
   fechaDeFirma,
   formatearNumeroPrescripcion,
+  hashVerificacionPrescripcion,
   lineasPrescripcion,
   puedeFirmarPrescripcion,
+  urlVerificacionPrescripcion,
   validarFirmaPrescripcion,
   type EstadoVisiblePrescripcion,
   type PrescripcionFirmaEntrada,
@@ -65,6 +68,8 @@ export interface PrescripcionVista {
   cantidad_num: number | null;
   cantidad_letras: string | null;
   hash_pdf: string | null;
+  hash_verificacion: string | null;
+  verificacion_url: string | null;
   hash_contenido: string | null;
   sustituye_a: string | null;
   dispensacion: ResultadoDispensacion;
@@ -221,6 +226,7 @@ interface FilaPrescripcion {
   cantidad_num: number | null;
   cantidad_letras: string | null;
   hash_pdf: string | null;
+  hash_verificacion: string | null;
   hash_contenido: string | null;
   sustituye_a: string | null;
   documento_firma_id: string | null;
@@ -249,7 +255,7 @@ interface FilaPrescripcion {
 const SELECT_VISTA = `
   select p.id, p.atencion_id, p.paciente_id, p.profesional_id, p.numero, p.tipo, p.estado,
          p.numero_hc, p.vigencia_hasta::text as vigencia_hasta, p.cantidad_num, p.cantidad_letras,
-         p.hash_pdf, p.hash_contenido, p.sustituye_a::text as sustituye_a, p.documento_firma_id,
+         p.hash_pdf, p.hash_verificacion, p.hash_contenido, p.sustituye_a::text as sustituye_a, p.documento_firma_id,
          p.registro_profesional, pf.vigente_hasta::text as registro_vigente_hasta,
          p.prestador_nombre, p.direccion, p.telefono, p.correo, p.lugar, p.fecha::text as fecha,
          p.paciente_nombre, p.paciente_documento, p.tipo_usuario, p.dispositivo, p.agudeza_visual,
@@ -295,6 +301,10 @@ function vistaDe(fila: FilaPrescripcion, ahora: Date, zona: string): Prescripcio
     cantidad_num: fila.cantidad_num,
     cantidad_letras: fila.cantidad_letras,
     hash_pdf: fila.hash_pdf,
+    hash_verificacion: fila.hash_verificacion,
+    verificacion_url: fila.hash_verificacion
+      ? urlVerificacionPrescripcion(fila.hash_verificacion, process.env.PRESCRIPCION_VERIFICACION_BASE_URL)
+      : null,
     hash_contenido: fila.hash_contenido,
     sustituye_a: fila.sustituye_a,
     dispensacion,
@@ -513,15 +523,18 @@ async function emitir(
   }
   const conNumero = { ...datos, numero };
   const lineas = lineasPrescripcion(conNumero);
+  const hashVerificacion = hashVerificacionPrescripcion(lineas);
+  const urlVerificacion = urlVerificacionPrescripcion(hashVerificacion, process.env.PRESCRIPCION_VERIFICACION_BASE_URL);
   const firmaCtx = contextoFirma(ctx);
   let sellado: { hash: string; firma_id: string };
+  let idPrescripcion = '';
   try {
     const documento = await crearDocumentoPrescripcion(firmaCtx, {
       titulo: `Prescripcion ${numero}`.slice(0, 160),
       cuerpo: lineas.join('\n'),
     });
     await firmarProfesional(firmaCtx, documento.id, ahora);
-    sellado = await sellarPrescripcionProfesional(firmaCtx, documento.id, lineas, ahora);
+    sellado = await sellarPrescripcionProfesional(firmaCtx, documento.id, lineas, { url: urlVerificacion }, ahora);
     const id = await conApp(ctx, async (cliente) => {
       const nuevo = await insertarBorrador(cliente, ctx, {
         atencionId,
@@ -561,7 +574,8 @@ async function emitir(
            registro_profesional = $28,
            firma_id = $29,
            documento_firma_id = $30,
-           hash_pdf = $31
+           hash_pdf = $31,
+           hash_verificacion = $32
          where id = $1 and estado = 'borrador'`,
         [
           nuevo,
@@ -595,11 +609,33 @@ async function emitir(
           sellado.firma_id,
           documento.id,
           sellado.hash,
+          hashVerificacion,
         ],
       );
       if ((cambio.rowCount ?? 0) === 0) throw new ErrorPrescripcion(409, 'La prescripción firmada es inmutable.');
+      idPrescripcion = nuevo;
       return nuevo;
     });
+    await registrarEvento(
+      {
+        tenant_id: ctx.tenant_id,
+        usuario_id: ctx.usuario_id,
+        sede_id: ctx.sede_id,
+        sedes: ctx.sedes,
+        rol: ctx.rol,
+      },
+      {
+        actor_id: ctx.usuario_id,
+        rol: ctx.rol,
+        sede_id: ctx.sede_id,
+        recurso: 'prescripcion',
+        recurso_id: idPrescripcion,
+        accion: 'firmar',
+        resultado: 'ok',
+        ip: ctx.ip,
+        agente: ctx.agente,
+      },
+    );
     return await conApp(ctx, async (cliente) => {
       const fila = await leerFila(cliente, id);
       if (!fila) throw new ErrorPrescripcion(404, 'No se encontró la prescripción.');
@@ -682,7 +718,11 @@ export async function leerPrescripcion(ctx: ContextoPrescripcion, id: string, ah
   }
 }
 
-export async function leerPdfPrescripcion(ctx: ContextoPrescripcion, id: string) {
+export async function leerPdfPrescripcion(
+  ctx: ContextoPrescripcion,
+  id: string,
+  medio: 'descarga' | 'impresion' = 'descarga',
+) {
   exigir(ctx, 'exportar');
   exigirUuid(ctx);
   if (!z.uuid().safeParse(id).success) throw new ErrorPrescripcion(400, 'La prescripción no es válida.');
@@ -692,7 +732,28 @@ export async function leerPdfPrescripcion(ctx: ContextoPrescripcion, id: string)
       return fila?.documento_firma_id ?? null;
     });
     if (!documentoId) throw new ErrorPrescripcion(404, 'No se encontró el PDF de la prescripción.');
-    return await exportarDocumento(contextoFirma(ctx), documentoId);
+    const archivo = await exportarDocumento(contextoFirma(ctx), documentoId);
+    await registrarEvento(
+      {
+        tenant_id: ctx.tenant_id,
+        usuario_id: ctx.usuario_id,
+        sede_id: ctx.sede_id,
+        sedes: ctx.sedes,
+        rol: ctx.rol,
+      },
+      {
+        actor_id: ctx.usuario_id,
+        rol: ctx.rol,
+        sede_id: ctx.sede_id,
+        recurso: 'prescripcion',
+        recurso_id: id,
+        accion: medio,
+        resultado: 'ok',
+        ip: ctx.ip,
+        agente: ctx.agente,
+      },
+    );
+    return archivo;
   } catch (error) {
     traducir(error);
   }

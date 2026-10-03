@@ -7,6 +7,7 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T24 (OPT-05) no agrega dependencias npm. El PDF sigue con `@react-pdf/renderer@4.9.0` (MIT, ya verificado en T14 con `npm view @react-pdf/renderer@4.9.0 license`). El código QR reutiliza el generador propio de T08 (`web/lib/auth/mfa/qr.ts`), sin paquete del registro. No se instaló `qrcode` ni otra librería. No hubo paquete nuevo que verificar con `npm view`.
 - T23 (OPT-05) no agrega dependencias npm. Reutiliza `zod@4.6.5` (MIT, ya verificado en T03 con `npm view zod@4.6.5 license`) y `@react-pdf/renderer@4.9.0` (MIT, ya verificado en T14). No hubo paquete nuevo que verificar con `npm view`.
 - T20 (OPT-01) no agrega dependencias npm. Reutiliza `react-hook-form@7.65.0` (MIT, verificado en T13), `@hookform/resolvers@5.2.1` (MIT, ya en el inventario) y `zod@4.6.5` (MIT, ya verificado en T03). No hubo paquete nuevo que verificar con `npm view`. La prueba axe sigue usando el `axe-core` transitivo ya exceptuado.
 - T19 (OPT-01, OPT-24) no agrega dependencias npm. Reutiliza `zod@4.6.5` (MIT, ya verificado en T03 con `npm view zod@4.6.5 license`). No hubo paquete nuevo que verificar con `npm view`.

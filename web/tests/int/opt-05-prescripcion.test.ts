@@ -19,9 +19,10 @@ import {
 } from '../../db/prescripciones';
 import { guardarPerfilProfesional } from '../../db/firma';
 import { sembrarParametrosIniciales } from '../../db/parametros';
-import { cantidadEnLetras } from '../../dominio/prescripcion';
+import { cantidadEnLetras, textosElementosArt17 } from '../../dominio/prescripcion';
 import { fechaDeFirma } from '../../dominio/prescripcion';
-import { textoVisiblePdf } from '../../dominio/firma';
+import { hashSha256, textoVisiblePdf } from '../../dominio/firma';
+import { verificarPrescripcionPublica } from '../../db/verificacion-prescripcion';
 import { MARCA_NO_APLICA, type PacienteEntrada } from '../../dominio/pacientes';
 import { fijarRegistroKekParaPruebas } from '../../lib/cifrado/kek.mjs';
 
@@ -195,7 +196,7 @@ describe('prescripciones en PostgreSQL', () => {
     await cerrarPool();
   });
 
-  it('AC-OPT-05-1 a 05-3, 05-5 y 05-6: firma, inmutabilidad, asesor, vigencia y RLS', async () => {
+  it('AC-OPT-05-1, AC-OPT-05-2, AC-OPT-05-3, AC-OPT-05-4, AC-OPT-05-5 y AC-OPT-05-6: firma, PDF, inmutabilidad, asesor, vigencia y RLS', async () => {
     const catalogo = await obtenerPool().query<{ tabla: string; rls: boolean; forzado: boolean; politicas: string }>(
       `select c.relname as tabla, c.relrowsecurity as rls, c.relforcerowsecurity as forzado,
               (select count(*) from pg_policy p where p.polrelid = c.oid)::text as politicas
@@ -313,14 +314,62 @@ describe('prescripciones en PostgreSQL', () => {
       expect(fila.letras, String(fila.n)).toBe(cantidadEnLetras(Number(fila.n)));
     }
 
+    await expect(leerPdfPrescripcion(ctx('asesor', ASESOR), corregida.id)).rejects.toMatchObject({ status: 403 });
     const pdf = await leerPdfPrescripcion(ctx(), corregida.id);
     const binario = Buffer.from(pdf.pdf_base64, 'base64');
     expect(binario.subarray(0, 4).toString()).toBe('%PDF');
+    expect(hashSha256(binario)).toBe(pdf.hash_documento);
     expect(pdf.hash_documento).toBe(corregida.hash_pdf);
     const texto = textoVisiblePdf(binario);
-    expect(texto).toContain(`Numero HC: ${guardado.num_hc}`);
-    expect(texto).toContain('Vigencia: 2027-04-01');
+    const elementos = textosElementosArt17({
+      ...cuerpo(String(guardado.num_hc), '2027-04-01'),
+      cantidad_num: 3,
+      cantidad_letras: 'tres',
+      numero: corregida.numero ?? '',
+      tipo: 'lentes_oftalmicos',
+    });
+    expect(elementos).toHaveLength(15);
+    for (const elemento of elementos) expect(texto, elemento).toContain(elemento);
+    expect(texto).toContain('Nombre completo del prescriptor: Optometra Sintetico T23');
     expect(texto).toContain('Registro profesional: RP-SINTETICO-23');
+    const guardadoHash = await obtenerPool().query<{
+      hash_verificacion: string;
+      paciente_nombre: string;
+      paciente_documento: string;
+    }>(
+      `select hash_verificacion, paciente_nombre, paciente_documento from prescripciones where id = $1`,
+      [corregida.id],
+    );
+    expect(texto).toContain(guardadoHash.rows[0]?.hash_verificacion ?? '');
+    const publica = await verificarPrescripcionPublica(guardadoHash.rows[0]?.hash_verificacion ?? '');
+    expect(publica.coincide).toBe(true);
+    expect(publica.numero).toBe(corregida.numero);
+    expect(publica.fecha_emision).toBe('03/10/2026');
+    expect(publica.nombre_prescriptor).toBe('Optometra Sintetico T23');
+    expect(publica.registro_profesional).toBe('RP-SINTETICO-23');
+    expect(JSON.stringify(publica)).not.toContain(guardadoHash.rows[0]?.paciente_nombre ?? 'Ana');
+    expect(JSON.stringify(publica)).not.toContain(DOCUMENTO);
+    expect(await verificarPrescripcionPublica('ab'.repeat(32))).toEqual({ coincide: false });
+    const columnas = await obtenerPool().query<{ nombres: string[]; definicion: string }>(
+      `select p.proargnames as nombres, pg_get_functiondef(p.oid) as definicion
+         from pg_proc p
+        where p.proname = 'verificar_prescripcion_por_hash'`,
+    );
+    expect(columnas.rows[0]?.nombres).toEqual([
+      'p_hash',
+      'numero',
+      'fecha_emision',
+      'nombre_prescriptor',
+      'registro_profesional',
+    ]);
+    expect(columnas.rows[0]?.definicion ?? '').not.toContain('paciente_nombre');
+    expect(columnas.rows[0]?.definicion ?? '').not.toContain('paciente_documento');
+    await leerPdfPrescripcion(ctx(), corregida.id, 'impresion');
+    const auditoria = await obtenerPool().query<{ accion: string }>(
+      `select accion from auditoria where recurso = 'prescripcion' and recurso_id = $1 order by id`,
+      [corregida.id],
+    );
+    expect(auditoria.rows.map((fila) => fila.accion)).toEqual(expect.arrayContaining(['firmar', 'descarga', 'impresion']));
 
     const reducido = await leerPrescripcion(ctx('asesor', ASESOR), corregida.id, AHORA);
     expect(reducido.reducido).toBe(true);

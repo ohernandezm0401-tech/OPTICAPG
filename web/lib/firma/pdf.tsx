@@ -5,6 +5,7 @@ import React from 'react';
 import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer';
 
 import { AVISO_DOCUMENTO_EJEMPLO, AVISO_PDF_A, TEXTO_ACUERDO_FIRMA } from '../../dominio/firma';
+import { matrizQr } from '../auth/mfa/qr';
 
 const estilos = StyleSheet.create({
   pagina: { padding: 40, fontSize: 11, fontFamily: 'Helvetica', lineHeight: 1.4 },
@@ -121,29 +122,89 @@ export interface DatosPdfPrescripcion {
   nombreProfesional: string;
   registroProfesional: string;
   lineaProfesional: string;
+  urlVerificacion: string;
+}
+
+const CELDA_QR = 3;
+
+function codigoQr(url: string) {
+  let matriz: boolean[][];
+  try {
+    matriz = matrizQr(url);
+  } catch {
+    return <Text>TODO: código QR no generado. Use la URL de verificación impresa arriba.</Text>;
+  }
+  return (
+    <View style={{ marginTop: 8 }}>
+      {matriz.map((fila, y) => {
+        const tramos: { x: number; ancho: number }[] = [];
+        let inicio = -1;
+        fila.forEach((oscuro, x) => {
+          if (oscuro && inicio < 0) inicio = x;
+          if (!oscuro && inicio >= 0) {
+            tramos.push({ x: inicio, ancho: x - inicio });
+            inicio = -1;
+          }
+        });
+        if (inicio >= 0) tramos.push({ x: inicio, ancho: fila.length - inicio });
+        return (
+          <View key={`qr-${y}`} style={{ height: CELDA_QR, position: 'relative' }}>
+            {tramos.map((tramo) => (
+              <View
+                key={`qr-${y}-${tramo.x}`}
+                style={{
+                  position: 'absolute',
+                  left: tramo.x * CELDA_QR,
+                  width: tramo.ancho * CELDA_QR,
+                  height: CELDA_QR,
+                  backgroundColor: '#000000',
+                }}
+              />
+            ))}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function sinCorte(palabra: string): string[] {
+  return [palabra];
 }
 
 function PdfPrescripcion({ datos }: { datos: DatosPdfPrescripcion }) {
   return (
-    <Document title="Prescripcion" author={datos.nombreProfesional}>
+    <Document title="Prescripción" author={datos.nombreProfesional}>
       <Page size="A4" style={estilos.pagina}>
-        <Text style={estilos.aviso}>BORRADOR – requiere revisión jurídica</Text>
-        <Text style={estilos.aviso}>{AVISO_PDF_A}</Text>
-        <Text style={estilos.titulo}>Prescripción</Text>
+        <Text style={estilos.aviso} hyphenationCallback={sinCorte}>
+          BORRADOR – requiere revisión jurídica
+        </Text>
+        <Text style={estilos.aviso} hyphenationCallback={sinCorte}>
+          {AVISO_PDF_A}
+        </Text>
+        <Text style={estilos.titulo} hyphenationCallback={sinCorte}>
+          Prescripción
+        </Text>
         {datos.lineas.map((linea, indice) => (
-          <Text key={`${indice}-${linea.slice(0, 24)}`} style={estilos.bloque}>
+          <Text key={`${indice}-${linea.slice(0, 24)}`} style={estilos.bloque} hyphenationCallback={sinCorte}>
             {linea}
           </Text>
         ))}
-        <Text style={estilos.sello}>{datos.lineaProfesional}</Text>
-        <Text>Nombre completo: {datos.nombreProfesional}</Text>
-        <Text>Registro profesional: {datos.registroProfesional}</Text>
+        <Text style={estilos.sello} hyphenationCallback={sinCorte}>
+          {datos.lineaProfesional}
+        </Text>
+        <Text hyphenationCallback={sinCorte}>Nombre completo del prescriptor: {datos.nombreProfesional}</Text>
+        <Text hyphenationCallback={sinCorte}>Registro profesional: {datos.registroProfesional}</Text>
+        <Text style={estilos.bloque} hyphenationCallback={sinCorte}>
+          Verificación del hash: {datos.urlVerificacion}
+        </Text>
+        {codigoQr(datos.urlVerificacion)}
       </Page>
     </Document>
   );
 }
 
-/** PDF de la prescripción. TODO(Q-22): no es PDF/A. T24 puede ampliar la pantalla. */
+/** PDF A4 de la prescripción. TODO(Q-22): no es PDF/A. El QR reutiliza el generador de T08. */
 export async function renderizarPdfPrescripcion(datos: DatosPdfPrescripcion): Promise<Buffer> {
   const buffer = await renderToBuffer(<PdfPrescripcion datos={datos} />);
   return Buffer.from(buffer);

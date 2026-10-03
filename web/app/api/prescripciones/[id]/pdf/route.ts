@@ -1,5 +1,5 @@
-// OPT-05 (T23) — PDF sellado con el servicio de firma (T14).
-// TODO(Q-22): no es PDF/A. La pantalla completa de la fórmula es T24.
+// OPT-05 (T23/T24) — PDF sellado con el servicio de firma (T14).
+// TODO(Q-22): no es PDF/A. La descarga y la impresión quedan en la bitácora.
 import { NextResponse } from 'next/server';
 
 import { ErrorPrescripcion, leerPdfPrescripcion } from '@/db/prescripciones';
@@ -10,14 +10,15 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request, contexto: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await contexto.params;
+    const medio = new URL(request.url).searchParams.get('medio') === 'impresion' ? 'impresion' : 'descarga';
     const ctx = await contextoAtencionHttp(request);
-    const archivo = await leerPdfPrescripcion(ctx, id);
+    const archivo = await leerPdfPrescripcion(ctx, id, medio);
     const bytes = Buffer.from(archivo.pdf_base64, 'base64');
     return new NextResponse(new Uint8Array(bytes), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="prescripcion.pdf"',
+        'Content-Disposition': `${medio === 'impresion' ? 'inline' : 'attachment'}; filename="prescripcion.pdf"`,
         'X-Prescripcion-Hash': archivo.hash_documento,
       },
     });

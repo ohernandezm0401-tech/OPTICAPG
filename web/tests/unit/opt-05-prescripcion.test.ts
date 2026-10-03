@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { desplazarDias } from '../../dominio/fechas';
-import { textoVisiblePdf } from '../../dominio/firma';
+import { hashSha256, textoVisiblePdf } from '../../dominio/firma';
 import {
   CAMPOS_ART17,
   cantidadCoincide,
@@ -15,8 +15,12 @@ import {
   estadoVisiblePrescripcion,
   fechaDeFirma,
   formatearNumeroPrescripcion,
+  hashVerificacionPrescripcion,
   lineasPrescripcion,
   puedeFirmarPrescripcion,
+  respuestaVerificacion,
+  textosElementosArt17,
+  urlVerificacionPrescripcion,
   validarFirmaPrescripcion,
   type CampoArt17,
   type PrescripcionFirmaEntrada,
@@ -186,27 +190,77 @@ describe('P: cantidad, vigencia y dispensación', () => {
       ).toBe('vencida');
     }
   });
+
+  it('la URL de verificación no inventa un dominio y la respuesta pública no copia al paciente', () => {
+    const aleatorio = lcg(24);
+    const validacion = validarFirmaPrescripcion(completa(), AHORA);
+    expect(validacion.ok).toBe(true);
+    if (!validacion.ok) return;
+    for (let caso = 0; caso < 40; caso += 1) {
+      const n = (aleatorio() % 5000) + 1;
+      const datos: PrescripcionNormalizada & { numero: string } = {
+        ...validacion.datos,
+        cantidad_num: n,
+        cantidad_letras: cantidadEnLetras(n),
+        numero: formatearNumeroPrescripcion(2026, (caso % 999999) + 1),
+      };
+      expect(textosElementosArt17(datos)).toHaveLength(15);
+      const hash = hashVerificacionPrescripcion(lineasPrescripcion(datos));
+      const relativa = urlVerificacionPrescripcion(hash);
+      expect(relativa).toBe(`/verificar/prescripcion/${hash}`);
+      expect(relativa.includes('://')).toBe(false);
+      const absoluta = urlVerificacionPrescripcion(hash, 'http://127.0.0.1:3000');
+      expect(absoluta).toBe(`http://127.0.0.1:3000/verificar/prescripcion/${hash}`);
+      const publica = respuestaVerificacion({
+        numero: datos.numero,
+        fecha_emision: datos.fecha,
+        nombre_prescriptor: datos.nombre_prescriptor,
+        registro_profesional: datos.registro_profesional,
+        paciente_nombre: datos.paciente_nombre,
+        paciente_documento: datos.paciente_documento,
+      });
+      expect(Object.keys(publica).sort()).toEqual([
+        'coincide',
+        'fecha_emision',
+        'nombre_prescriptor',
+        'numero',
+        'registro_profesional',
+      ]);
+      expect(JSON.stringify(publica)).not.toContain(datos.paciente_nombre);
+      expect(JSON.stringify(publica)).not.toContain(datos.paciente_documento);
+    }
+    expect(respuestaVerificacion(null)).toEqual({ coincide: false });
+  });
 });
 
-describe('PDF de la prescripción', () => {
-  it('incluye número de HC, vigencia, cantidad y registro', async () => {
+describe('AC-OPT-05-4: PDF con los 15 elementos', () => {
+  it('compara el PDF con la lista de los 15 elementos, el prescriptor y la URL', async () => {
     const validacion = validarFirmaPrescripcion(completa(), AHORA);
     expect(validacion.ok).toBe(true);
     if (!validacion.ok) return;
     const datos: PrescripcionNormalizada & { numero: string } = { ...validacion.datos, numero: 'RX-2026-000001' };
+    const elementos = textosElementosArt17(datos);
+    expect(elementos).toHaveLength(15);
+    const lineas = lineasPrescripcion(datos);
+    const hash = hashVerificacionPrescripcion(lineas);
+    const url = urlVerificacionPrescripcion(hash, 'http://127.0.0.1:3000');
     const pdf = await renderizarPdfPrescripcion({
-      lineas: lineasPrescripcion(datos),
+      lineas,
       nombreProfesional: datos.nombre_prescriptor,
       registroProfesional: datos.registro_profesional,
-      lineaProfesional: 'Firmado electronicamente',
+      lineaProfesional: 'Firmado electrónicamente por Optometra Sintetico T23, registro profesional RP-SINTETICO-23',
+      urlVerificacion: url,
     });
     const texto = textoVisiblePdf(pdf);
-    expect(texto).toContain('Numero HC: 23');
-    expect(texto).toContain('Vigencia: 2027-04-01');
-    expect(texto).toContain('Cantidad: 2 (dos)');
+    for (const elemento of elementos) expect(texto, elemento).toContain(elemento);
+    expect(texto).toContain('Nombre completo del prescriptor: Optometra Sintetico T23');
     expect(texto).toContain('Registro profesional: RP-SINTETICO-23');
+    expect(texto).toContain('Cantidad total: 2 (dos)');
+    expect(texto).toContain(url);
     expect(texto).toContain('BORRADOR');
+    expect(texto).not.toContain('tachado');
     expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
+    expect(hashSha256(pdf)).toMatch(/^[a-f0-9]{64}$/);
   });
 });
 
@@ -221,5 +275,15 @@ describe('migración', () => {
     expect(sql).toContain("aplicar_marco_inmutabilidad('public.prescripciones'::regclass)");
     expect(sql).not.toMatch(/vigencia_hasta\s+date\s+default/i);
     expect(sql).toContain('TODO(Q-18)');
+    const verificacion = readFileSync(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../db/migrations/0023_opt05_verificacion_prescripcion.sql'),
+      'utf8',
+    );
+    expect(verificacion).toContain('verificar_prescripcion_por_hash');
+    expect(verificacion).not.toContain('DISABLE ROW LEVEL SECURITY');
+    expect(verificacion).not.toContain('BYPASSRLS');
+    expect(verificacion).toContain('nombre_prescriptor');
+    expect(verificacion).not.toContain('paciente_nombre');
+    expect(verificacion).not.toContain('paciente_documento');
   });
 });

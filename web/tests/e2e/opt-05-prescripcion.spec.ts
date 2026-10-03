@@ -5,7 +5,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { Client } from 'pg';
 
 import { hashDocumento } from '../../dominio/documento-hash';
-import { textoVisiblePdf } from '../../dominio/firma';
+import { hashSha256, textoVisiblePdf } from '../../dominio/firma';
+import { textosElementosArt17, type PrescripcionNormalizada } from '../../dominio/prescripcion';
 import { hashearContrasena } from '../../lib/auth/contrasena';
 import { codigoTotp } from '../../lib/auth/mfa/totp';
 import { cifrarParaTenant } from '../../lib/cifrado/almacen.mjs';
@@ -116,7 +117,7 @@ async function ingresar(page: Page, correo: string, clave: string, rol: 'optomet
   await expect(page).toHaveURL(new RegExp(`/dashboard/${rol}`));
 }
 
-test('AC-OPT-05-1 y AC-OPT-05-6 E: sin vigencia no firma; el PDF trae la HC y la vencida no es dispensable', async ({
+test('AC-OPT-05-1, AC-OPT-05-4 y AC-OPT-05-6 E: sin vigencia no firma; el PDF trae los 15 elementos y la vencida no es dispensable', async ({
   page,
 }) => {
   const cuenta = await sembrar('optometra');
@@ -163,19 +164,57 @@ test('AC-OPT-05-1 y AC-OPT-05-6 E: sin vigencia no firma; el PDF trae la HC y la
   await expect(page.getByTestId('prescripcion-numero')).toContainText(/RX-\d{4}-\d{6}/, { timeout: 20000 });
   await expect(page.getByTestId('prescripcion-dispensable')).toContainText('no (vencida)');
 
-  const descarga = page.waitForEvent('download');
-  await page.getByTestId('prescripcion-pdf').click();
-  const archivo = await descarga;
-  const ruta = await archivo.path();
-  if (!ruta) throw new Error('No se descargó el PDF.');
-  const { readFileSync } = await import('node:fs');
-  const pdf = readFileSync(ruta);
+  await expect(page.getByTestId('prescripcion-imprimir')).toBeVisible();
+  const enlace = await page.getByTestId('prescripcion-pdf').getAttribute('href');
+  expect(enlace).toBeTruthy();
+  const respuesta = await page.request.get(enlace ?? '');
+  expect(respuesta.status()).toBe(200);
+  const pdf = Buffer.from(await respuesta.body());
   expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
+  expect(respuesta.headers()['x-prescripcion-hash']).toBe(hashSha256(pdf));
   const texto = textoVisiblePdf(pdf);
-  expect(texto).toContain('Numero HC: 23');
-  expect(texto).toContain('Vigencia: 2020-01-01');
+  const datos: PrescripcionNormalizada & { numero: string } = {
+    prestador_nombre: await page.getByLabel('Prestador o profesional').inputValue(),
+    direccion: await page.getByLabel('Dirección').inputValue(),
+    telefono: await page.getByLabel('Teléfono').inputValue(),
+    correo: await page.getByLabel('Correo').inputValue(),
+    lugar: await page.getByLabel('Lugar').inputValue(),
+    fecha: await page.getByLabel('Fecha').inputValue(),
+    paciente_nombre: await page.getByLabel('Paciente', { exact: true }).inputValue(),
+    paciente_documento: await page.getByLabel('Documento del paciente').inputValue(),
+    numero_hc: await page.getByLabel('Número de historia clínica').inputValue(),
+    tipo_usuario: await page.getByLabel('Tipo de usuario').inputValue(),
+    dispositivo: await page.getByLabel('Dispositivo prescrito').inputValue(),
+    agudeza_visual: await page.getByLabel('Agudeza visual').inputValue(),
+    forma_uso: await page.getByLabel('Forma de uso').inputValue(),
+    distancia_pupilar: await page.getByLabel('Distancia pupilar').inputValue(),
+    filtro: await page.getByLabel('Filtro').inputValue(),
+    duracion_tratamiento: await page.getByLabel('Duración del tratamiento').inputValue(),
+    cantidad_num: Number(await page.getByLabel('Cantidad en números').inputValue()),
+    cantidad_letras: await page.getByLabel('Cantidad en letras').inputValue(),
+    indicaciones: await page.getByLabel('Indicaciones').inputValue(),
+    vigencia_hasta: await page.getByLabel('Vigencia').inputValue(),
+    nombre_prescriptor: await page.getByLabel('Nombre del prescriptor').inputValue(),
+    registro_profesional: await page.getByLabel('Registro profesional').inputValue(),
+    tipo: 'lentes_oftalmicos',
+    numero: 'RX-2026-000001',
+  };
+  const elementos = textosElementosArt17(datos);
+  expect(elementos).toHaveLength(15);
+  for (const elemento of elementos) expect(texto, elemento).toContain(elemento);
   expect(texto).toContain('Registro profesional: RP-E2E-23');
-  expect(texto).toContain('Cantidad: 2 (dos)');
+  expect(texto).toContain('Cantidad total: 2 (dos)');
+  const rutaHash = texto.match(/\/verificar\/prescripcion\/([a-f0-9]{64})/);
+  expect(rutaHash?.[0]).toBeTruthy();
+  await page.goto(rutaHash?.[0] ?? '/');
+  await expect(page.getByTestId('verificacion-numero')).toContainText(/RX-/);
+  await expect(page.getByTestId('verificacion-prescriptor')).toContainText('Optómetra E2E Sintética');
+  await expect(page.getByTestId('verificacion-registro')).toHaveText('RP-E2E-23');
+  const visible = await page.locator('main').innerText();
+  expect(visible).not.toContain('Elena');
+  expect(visible).not.toContain(DOCUMENTO);
+  await page.goto(`/verificar/prescripcion/${'ab'.repeat(32)}`);
+  await expect(page.getByTestId('verificacion-resultado')).toHaveText('El hash no coincide.');
 });
 
 test('AC-OPT-05-5 E: el asesor no crea ni modifica la prescripción', async ({ page }) => {

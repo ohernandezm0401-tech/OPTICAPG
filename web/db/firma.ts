@@ -791,6 +791,7 @@ export async function sellarPrescripcionProfesional(
   ctx: ContextoFirma,
   documentoId: string,
   lineas: string[],
+  verificacion: { url: string },
   ahora = new Date(),
   almacen: AlmacenamientoPort = almacenPorNombre(null),
 ) {
@@ -820,7 +821,8 @@ export async function sellarPrescripcionProfesional(
     lineas,
     nombreProfesional: profesional.nombre_firmante,
     registroProfesional: profesional.registro_profesional,
-    lineaProfesional: lineaSelloProfesional(profesional.nombre_firmante, profesional.registro_profesional, hora),
+    lineaProfesional: `Firmado electrónicamente por ${profesional.nombre_firmante}, registro profesional ${profesional.registro_profesional}, el ${presentarBogota(hora)}`,
+    urlVerificacion: verificacion.url,
   });
   const hash = hashSha256(pdf);
   const guardado = await almacen.guardar({

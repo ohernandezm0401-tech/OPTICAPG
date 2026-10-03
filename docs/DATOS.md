@@ -120,6 +120,7 @@ Valores iniciales (editables):
 - `retencion_historias_anios` = 15, rótulo «según Res. 839/2017 (verificada)».
 - `plazo_conservacion_logs`, `plazo_conservacion_facturas` y `plazo_aviso_incidente` nacen en null con rótulo «provisional». TODO(Q-07): ningún número se presenta como obligación legal.
 - TODO(Q-18): vigencia y cantidad de la prescripción no se siembran (las escribe el profesional en OPT-05).
+- T24 guarda `prescripciones.hash_verificacion` (SHA-256 del texto canónico, no del PDF). La ruta pública `/verificar/prescripcion/<hash>` llama `verificar_prescripcion_por_hash` y solo devuelve número, fecha de emisión, nombre y registro. El origen absoluto sale de `PRESCRIPCION_VERIFICACION_BASE_URL`; sin ella la URL es la ruta relativa. RLS de `prescripciones` sigue ENABLE+FORCE (no hay tabla nueva).
 
 La venta y el envío de mensajes todavía no existen. `cerrarLineaConImpuesto` guarda `impuesto_snapshot` y un disparador impide reescribirlo. `programarMensajeComercial(fecha, tenant)` es el predicado que usará SEG-16.
 
