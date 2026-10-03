@@ -172,7 +172,6 @@ export interface Cita {
   montoCobrado?: number;
   fechaPago?: string;
   metodoPago?: string;
-  historiaClinica?: HistoriaClinica;
   promocionAplicadaId?: string;
   descuentoAplicado?: number;
   productosVendidos?: { productoId: string; cantidad: number; precioUnitario: number }[];

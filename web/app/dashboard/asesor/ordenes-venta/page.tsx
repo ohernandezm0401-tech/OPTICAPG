@@ -167,35 +167,9 @@ export default function OrdenesVentaPage() {
 
   // Load patient HC formula when selected
   useEffect(() => {
-    if (selectedCita?.historiaClinica?.refraccion) {
-      const refraccion = selectedCita.historiaClinica.refraccion;
-      setFormulaOD({
-        esfera: refraccion.subjetivoOD.esfera || 'Plano',
-        cilindro: refraccion.subjetivoOD.cilindro || '0.00',
-        eje: refraccion.subjetivoOD.eje || '0',
-        adicion: refraccion.subjetivoOD.adicion || ''
-      });
-      setFormulaOI({
-        esfera: refraccion.subjetivoOI.esfera || 'Plano',
-        cilindro: refraccion.subjetivoOI.cilindro || '0.00',
-        eje: refraccion.subjetivoOI.eje || '0',
-        adicion: refraccion.subjetivoOI.adicion || ''
-      });
-      setFormulaDP(refraccion.dp || '62 mm');
-      setIsManualRx(false);
-      
-      // Auto-suggest lens design based on recipe addition
-      const hasAdd = parseDioptria(refraccion.subjetivoOD.adicion || '') > 0 || parseDioptria(refraccion.subjetivoOI.adicion || '') > 0;
-      setLensConfig(prev => ({
-        ...prev,
-        diseno: hasAdd ? 'progresivo' : 'monofocal',
-        fabricacion: hasAdd ? 'freeform' : 'terminado'
-      }));
-    } else {
-      setFormulaOD({ esfera: 'Plano', cilindro: '0.00', eje: '0', adicion: '' });
-      setFormulaOI({ esfera: 'Plano', cilindro: '0.00', eje: '0', adicion: '' });
-      setFormulaDP('62 mm');
-    }
+    setFormulaOD({ esfera: 'Plano', cilindro: '0.00', eje: '0', adicion: '' });
+    setFormulaOI({ esfera: 'Plano', cilindro: '0.00', eje: '0', adicion: '' });
+    setFormulaDP('62 mm');
   }, [selectedCita]);
 
   // Clinical Lens Suggestion Logic

@@ -9,17 +9,17 @@ import { motion } from 'motion/react';
 
 export default function FormulasPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { citas, pacientes } = useClinicStore();
+  const { pacientes } = useClinicStore();
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Get appointments that have a clinical history (meaning they have been completed and signed)
-  const formulasRaw = citas.filter(c => c.historiaClinica);
+  const formulasRaw: Cita[] = [];
 
   const formulas = formulasRaw.map(cita => {
     const paciente = pacientes.find(p => p.id === cita.pacienteId);
     const nombrePaciente = paciente ? `${paciente.apellido}, ${paciente.nombre}` : 'Paciente Desconocido';
-    const tipo = cita.recomendacion?.diseno || cita.historiaClinica?.recomendacion?.diseno || 'Gafas';
+    const tipo = cita.recomendacion?.diseno || 'Gafas';
     
     // Calculate if prescription is expired (more than 1 year old)
     const fechaEmision = new Date(cita.fechaHora);
@@ -157,7 +157,7 @@ export default function FormulasPage() {
         </div>
       </div>
 
-      {selectedCita && selectedCita.historiaClinica && (
+      {selectedCita ? (
         <HistoriaClinicaViewModal
           isOpen={isViewModalOpen}
           onClose={() => {
@@ -165,9 +165,8 @@ export default function FormulasPage() {
             setSelectedCita(null);
           }}
           pacienteInfo={pacientes.find(p => p.id === selectedCita.pacienteId)!}
-          hc={selectedCita.historiaClinica}
         />
-      )}
+      ) : null}
     </div>
   );
 }

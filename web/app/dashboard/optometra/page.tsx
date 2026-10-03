@@ -26,8 +26,8 @@ export default function OptometraDashboardPage() {
 
   // Dynamic metrics from store
   const citasSede = citas.filter(c => c.sedeId === sedeId);
-  const hcPendientesFirma = citasSede.filter(c => c.historiaClinica && !c.historiaClinica.diagnosticoPlan.firmaDigitalConfirmada).length;
-  const formulasEmitidas = citasSede.filter(c => c.historiaClinica?.diagnosticoPlan.firmaDigitalConfirmada).length;
+  const hcPendientesFirma = 0;
+  const formulasEmitidas = 0;
   const formulasAyer = 0; // Would come from historical data
 
   const handleIniciarConsulta = (id: string) => {

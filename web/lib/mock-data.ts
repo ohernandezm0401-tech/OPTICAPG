@@ -15,8 +15,6 @@ import {
   ConceptoSanitario,
   ServicioSaneamiento,
   CajaSesion,
-  HistoriaClinica,
-  OjoData,
   Alerta,
 } from './types';
 
@@ -25,10 +23,6 @@ function atHour(hour: number, minute = 0, dayOffset = 0) {
   date.setDate(date.getDate() + dayOffset);
   date.setHours(hour, minute, 0, 0);
   return date.toISOString();
-}
-
-function ojo(esfera: string, cilindro = '0.00', eje = '0', avLejos = '20/20', avCerca = '20/20'): OjoData {
-  return { esfera, cilindro, eje, avLejos, avCerca };
 }
 
 export const mockEmpresas: Empresa[] = [
@@ -209,65 +203,6 @@ export const mockPacientes: Paciente[] = [
   },
 ];
 
-function historiaFirmada(pacienteId: string, citaId: string): HistoriaClinica {
-  return {
-    pacienteId,
-    citaId,
-    fechaRegistro: atHour(9, 40, -1),
-    anamnesis: {
-      motivo: 'Control de miopía y fatiga visual frente a pantalla',
-      usoLentes: 'Monofocal',
-      antecedentes: {
-        ocularesPersonales: ['Miopía'],
-        ocularesFamiliares: ['Miopía'],
-        sistemicosPersonales: [],
-      },
-    },
-    refraccion: {
-      subjetivoOD: ojo('-2.25', '-0.75', '180'),
-      subjetivoOI: ojo('-1.75', '-0.50', '175'),
-      dp: '62',
-    },
-    saludOcular: {
-      biomicroscopiaOD: 'Segmento anterior sano',
-      biomicroscopiaOI: 'Segmento anterior sano',
-      oftalmoscopiaOD: 'Papila nítida, relación E/P 0.3',
-      oftalmoscopiaOI: 'Papila nítida, relación E/P 0.3',
-      presionIntraocularOD: 14,
-      presionIntraocularOI: 15,
-      tonometriaMetodo: 'Aire',
-    },
-    diagnosticoPlan: {
-      cie10Principal: 'H52.1',
-      cie10PrincipalNombre: 'Miopía',
-      planTratamiento: 'Actualizar progresivos free-form con filtro de luz azul',
-      firmaDigitalConfirmada: true,
-      nombreProfesional: 'Dra. Camila Vega',
-      registroMedico: 'OPT-2019-44821',
-    },
-    recomendacion: {
-      material: 'Policarbonato',
-      diseno: 'Progresivo',
-      tipo: 'Free Form',
-      sintomas: 'Fatiga visual en cerca',
-    },
-  };
-}
-
-function historiaPendiente(pacienteId: string, citaId: string): HistoriaClinica {
-  const hc = historiaFirmada(pacienteId, citaId);
-  return {
-    ...hc,
-    fechaRegistro: atHour(8, 20, 0),
-    diagnosticoPlan: {
-      ...hc.diagnosticoPlan,
-      firmaDigitalConfirmada: false,
-      cie10Principal: 'H52.0',
-      cie10PrincipalNombre: 'Hipermetropía',
-    },
-  };
-}
-
 export const mockCitas: Cita[] = [
   {
     id: 'cita-norte-1',
@@ -298,7 +233,6 @@ export const mockCitas: Cita[] = [
     motivoClinico: 'Visión borrosa de cerca',
     estadoComercial: 'en-consulta',
     prioridad: 'normal',
-    historiaClinica: historiaPendiente('pac3', 'cita-norte-3'),
   },
   {
     id: 'cita-norte-ayer',
@@ -313,7 +247,6 @@ export const mockCitas: Cita[] = [
     metodoPago: 'TARJETA',
     fechaPago: atHour(17, 10, -1),
     cufe: 'CUFE-DEMO-NORTE-001',
-    historiaClinica: historiaFirmada('pac1', 'cita-norte-ayer'),
     recomendacion: {
       material: 'Policarbonato',
       diseno: 'Progresivo',

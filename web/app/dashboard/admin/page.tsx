@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
   const cajaDeSede = cajaSesiones.filter(c => c.sedeId === sedeId);
   const citasPagadas = citasSede.filter(c => c.estadoComercial === 'pagado');
   const citasAtendidas = citasSede.filter(c => ['en-consulta', 'cotizando', 'pagado'].includes(c.estadoComercial));
-  const citasConHc = citasSede.filter(c => c.historiaClinica !== undefined);
+  const citasConHc: never[] = [];
 
   // Dynamic KPI Calculations
   const totalVentas = citasPagadas.reduce((sum, c) => sum + (c.montoCobrado || 0), 0);

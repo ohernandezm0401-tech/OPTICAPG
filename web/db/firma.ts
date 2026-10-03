@@ -338,6 +338,28 @@ export async function crearDocumentoEjemplo(ctx: ContextoFirma, entrada: { titul
   return { id, aviso: AVISO_DOCUMENTO_EJEMPLO };
 }
 
+/** Documento de la atención (OPT-01). Lo firma `firmarProfesional`; no es el ejemplo. */
+export async function crearDocumentoAtencion(ctx: ContextoFirma, entrada: { titulo: string; cuerpo: string }) {
+  if (!puedeFirmarComoProfesional(ctx.rol)) {
+    throw new ErrorFirma('permiso', 'No puede preparar la firma de la atención.');
+  }
+  const titulo = entrada.titulo.trim();
+  const cuerpo = entrada.cuerpo.trim();
+  if (!titulo || titulo.length > 160) throw new ErrorFirma('validacion', 'El título es obligatorio.');
+  if (!cuerpo || cuerpo.length > 20000) throw new ErrorFirma('validacion', 'El contenido de la atención es obligatorio.');
+  const id = await conApp(ctx, async (cliente) => {
+    const filas = await cliente.query<{ id: string }>(
+      `insert into documentos_firma (tenant_id, sede_id, tipo, estado, titulo, cuerpo)
+       values ($1, $2, 'atencion_clinica', 'pendiente', $3, $4)
+       returning id`,
+      [ctx.tenant_id, ctx.sede_id, titulo, cuerpo],
+    );
+    return filas.rows[0]?.id;
+  });
+  if (!id) throw new ErrorFirma('validacion', 'No se pudo crear el documento de la atención.');
+  return { id };
+}
+
 /** Documento de la autorización de datos (SEG-05). No es el ejemplo sintético. */
 export async function crearDocumentoAutorizacion(ctx: ContextoFirma, entrada: { titulo: string; cuerpo: string }) {
   if (!puedeRecogerFirmaPaciente(ctx.rol)) {

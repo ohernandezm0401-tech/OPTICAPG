@@ -44,7 +44,7 @@ const MATERIALES_OPTIONS = [
 
 export default function AdaptacionLcPage() {
   const router = useRouter();
-  const { citas, pacientes, updatePaciente } = useClinicStore();
+  const { pacientes, updatePaciente } = useClinicStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
   
@@ -110,17 +110,6 @@ export default function AdaptacionLcPage() {
     setSelectedPaciente(paciente);
     setSearchTerm('');
     // Prefill parameters if patient has an active appointment with subjectives
-    const pacienteCita = citas.find(c => c.pacienteId === paciente.id && c.historiaClinica);
-    if (pacienteCita?.historiaClinica?.refraccion) {
-      const subOD = pacienteCita.historiaClinica.refraccion.subjetivoOD;
-      const subOI = pacienteCita.historiaClinica.refraccion.subjetivoOI;
-      setOdEsfera(subOD.esfera);
-      setOdCilindro(subOD.cilindro || '');
-      setOdEje(subOD.eje || '');
-      setOiEsfera(subOI.esfera);
-      setOiCilindro(subOI.cilindro || '');
-      setOiEje(subOI.eje || '');
-    }
     toast.success(`Paciente seleccionado: ${paciente.nombre} ${paciente.apellido}`);
   };
 

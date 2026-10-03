@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Cita, StatusType, RecomendacionClinica, Paciente, HistoriaClinica, ProductoInventario, Empresa, Sede, Usuario, Promocion, OrdenTrabajo, OrderStatus, Garantia, EquipoMedico, LecturaAmbiental, IncidenteTecnovigilancia, RegistroResiduos, RegistroDesinfeccion, ConceptoSanitario, ServicioSaneamiento, TransaccionCaja, CajaSesion, DesgloseCaja, Proveedor, Compra, ConfiguracionMargenes, MensajeLog } from './types';
+import { Cita, StatusType, RecomendacionClinica, Paciente, ProductoInventario, Empresa, Sede, Usuario, Promocion, OrdenTrabajo, OrderStatus, Garantia, EquipoMedico, LecturaAmbiental, IncidenteTecnovigilancia, RegistroResiduos, RegistroDesinfeccion, ConceptoSanitario, ServicioSaneamiento, TransaccionCaja, CajaSesion, DesgloseCaja, Proveedor, Compra, ConfiguracionMargenes, MensajeLog } from './types';
 import { mockCitas, mockPacientes, mockInventario, mockEmpresas, mockSedes, mockUsuarios, mockPromociones, mockOrdenesTrabajo, mockGarantias, mockEquiposMedicos, mockLecturasAmbientales, mockRegistrosResiduos, mockRegistrosDesinfeccion, mockConceptoSanitario, mockSaneamientoLogs, mockCajaSesiones } from './mock-data';
 
 // PLT-02 (T03) — Capa demo en memoria: sin persistencia en el navegador para
@@ -46,7 +46,6 @@ interface ClinicStore {
   addPaciente: (paciente: Paciente) => void;
   updatePaciente: (id: string, data: Partial<Paciente>) => void;
   addCita: (cita: Cita) => void;
-  guardarHistoriaClinica: (citaId: string, hc: HistoriaClinica) => void;
   completeCitaPago: (citaId: string, pagoInfo: { cufe: string; pdfUrl: string; monto: number; metodoPago: string; promocionAplicadaId?: string; descuentoAplicado?: number; productosVendidos?: { productoId: string; cantidad: number; precioUnitario: number }[] }) => void;
   addProducto: (producto: ProductoInventario) => void;
   updateStock: (id: string, newStock: number) => void;
@@ -371,20 +370,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         cajaSesionActiva: updatedCaja
       };
     });
-  },
-  guardarHistoriaClinica: (citaId, hc) => {
-    set((state) => ({
-      citas: state.citas.map(cita => 
-        cita.id === citaId 
-          ? { 
-              ...cita, 
-              historiaClinica: hc, 
-              recomendacion: hc.recomendacion, 
-              estadoComercial: 'cotizando' 
-            } 
-          : cita
-      )
-    }));
   },
   completeCitaPago: (citaId, pagoInfo) => {
     const facturaId = `FAC-${Date.now()}`;

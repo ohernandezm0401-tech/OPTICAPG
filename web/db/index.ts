@@ -10,6 +10,7 @@ import 'server-only';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
+import * as atenciones from './esquema/atenciones';
 import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
 import * as autorizacion from './esquema/autorizacion';
@@ -40,6 +41,7 @@ const esquema = {
   ...invitaciones,
   ...tratamiento,
   ...catalogos,
+  ...atenciones,
 };
 
 export function leerUrlBd(): string {
