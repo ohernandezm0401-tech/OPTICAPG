@@ -124,7 +124,7 @@ export default function ComprasPage() {
       setPrecioVentaSugerido(sugerido);
       setPrecioVentaManual(sugerido);
     }
-  }, [costoUnitario, selectedProduct, newProductData.categoria]);
+  }, [costoUnitario, selectedProduct, newProductData.categoria, configuracionMargenes]);
 
   // Keypress listener for scanner emulation (fast input ending with Enter)
   const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

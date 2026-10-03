@@ -1,0 +1,118 @@
+{
+  "version_esquema": 1,
+  "nota": "BORRADOR – requiere revisión jurídica. Excepciones pendientes de decisión de Orlando (Q-09). Ninguna constituye aprobación definitiva.",
+  "pendiente_q09": [
+    {
+      "paquete": "axe-core",
+      "licencia": "MPL-2.0",
+      "alcance": "solo dev/pruebas (accesibilidad); no se distribuye con la tienda",
+      "origen": "transitiva vía eslint-config-next",
+      "motivo": "Nota de Orlando citada en la tarea T01: excepción aceptada solo para pruebas de accesibilidad, sin entregarlo ni publicarlo con la tienda. Pendiente de decisión definitiva Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-darwin-arm64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-darwin-x64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-arm",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-arm64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-ppc64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-riscv64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-s390x",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linux-x64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linuxmusl-arm64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-libvips-linuxmusl-x64",
+      "licencia": "LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "`npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-wasm32",
+      "licencia": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "Contiene componente LGPL-3.0-or-later. `npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-win32-arm64",
+      "licencia": "Apache-2.0 AND LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "Contiene componente LGPL-3.0-or-later. `npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-win32-ia32",
+      "licencia": "Apache-2.0 AND LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "Contiene componente LGPL-3.0-or-later. `npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    },
+    {
+      "paquete": "@img/sharp-win32-x64",
+      "licencia": "Apache-2.0 AND LGPL-3.0-or-later",
+      "alcance": "binario opcional de `next` (optimización de imágenes, desactivada con `images.unoptimized`)",
+      "origen": "transitiva vía next → sharp (dependencia opcional)",
+      "motivo": "Contiene componente LGPL-3.0-or-later. `npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
+    }
+  ],
+  "datos_cc_by_4_0": [
+    {
+      "paquete": "caniuse-lite",
+      "licencia": "CC-BY-4.0",
+      "motivo": "Solo datos (base de datos de compatibilidad de navegadores usada por Autoprefixer); sin código ejecutable. Permitido por PLT-09 únicamente para datos."
+    }
+  ]
+}

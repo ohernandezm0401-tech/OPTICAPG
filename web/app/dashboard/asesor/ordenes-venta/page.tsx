@@ -432,7 +432,7 @@ export default function OrdenesVentaPage() {
     const costoLentes = (precioLenteBase + precioTratamientos.total) * 2;
     const costoArticulos = cartItems.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
     return costoLentes + costoArticulos;
-  }, [precioTratamientos, cartItems, selectedLenteId, inventario]);
+  }, [precioTratamientos, cartItems, precioLenteBase]);
 
   const promocionesActivas = useMemo(() => promociones.filter(p => p.activa), [promociones]);
 
