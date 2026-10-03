@@ -17,6 +17,7 @@ import {
   BarChart3,
   HeartPulse,
   FileCheck,
+  PenLine,
   Store,
   MessageCircle,
   ShoppingCart
@@ -48,7 +49,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías y Cambios', href: '/dashboard/admin/garantias' },
     { icon: HeartPulse, iconName: 'HeartPulse', label: 'Secretaría de Salud', href: '/dashboard/admin/secretaria-salud' },
     { icon: Settings, iconName: 'Settings', label: 'Configuración Sede', href: '/dashboard/admin/configuracion' },
-    { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' }
+    { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' },
+    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' }
   ],
   asesor: [
     { icon: LayoutDashboard, iconName: 'LayoutDashboard', label: 'Dashboard Comercial', href: '/dashboard/asesor' },
@@ -59,7 +61,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: Store, iconName: 'Store', label: 'Venta Vitrina (POS)', href: '/dashboard/asesor/ventas' },
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías', href: '/dashboard/asesor/garantias' },
     { icon: HeartPulse, iconName: 'HeartPulse', label: 'Secretaría de Salud', href: '/dashboard/asesor/secretaria-salud' },
-    { icon: MessageCircle, iconName: 'MessageCircle', label: 'WhatsApp CRM', href: '/dashboard/asesor/whatsapp' }
+    { icon: MessageCircle, iconName: 'MessageCircle', label: 'WhatsApp CRM', href: '/dashboard/asesor/whatsapp' },
+    { icon: PenLine, iconName: 'PenLine', label: 'Firma de ejemplo', href: '/dashboard/asesor/firma' }
   ],
   optometra: [
     { icon: Calendar, iconName: 'Calendar', label: 'Mi Agenda Clínica', href: '/dashboard/optometra' },
@@ -69,7 +72,9 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: Eye, iconName: 'Eye', label: 'Adaptación L.C.', href: '/dashboard/optometra/adaptacion-lc' },
     { icon: FileCheck, iconName: 'FileCheck', label: 'Control de Calidad (QA)', href: '/dashboard/optometra/calidad' },
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías Receta', href: '/dashboard/optometra/garantias' },
-    { icon: Shield, iconName: 'Shield', label: 'Mis accesos', href: '/dashboard/auditoria' }
+    { icon: Shield, iconName: 'Shield', label: 'Mis accesos', href: '/dashboard/auditoria' },
+    { icon: PenLine, iconName: 'PenLine', label: 'Firma de ejemplo', href: '/dashboard/optometra/firma' },
+    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/optometra/verificador-firma' }
   ]
 };
 

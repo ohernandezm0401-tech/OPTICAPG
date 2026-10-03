@@ -7,6 +7,7 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T14 (SEG-08) agrega `@react-pdf/renderer@4.9.0` (MIT, `npm view @react-pdf/renderer@4.9.0 license`) y `signature_pad@5.1.4` (MIT, sin dependencias, `npm view signature_pad@5.1.4 license`). Instalados con `--legacy-peer-deps` por el peer opcional ya existente de `next-auth`. Transitivas revisadas con `npm run licenses:check`: MIT, ISC, Apache-2.0, 0BSD o BlueOak, salvo `png-js@2.0.0` (pdfkit), cuyo `package.json` no declara `license` y `npm view` sale vacío; el archivo `LICENSE` del tarball es MIT (Devon Govett, 2017). Quedó en `web/licenses.exceptions.json` como `licencia_verificada_en_archivo`. No se adoptó ninguna transitiva LGPL/MPL nueva.
 - T13 (ASE-01, SEG-06) agrega `react-hook-form@7.65.0` (MIT, verificado con `npm view react-hook-form@7.65.0 license` el 3 de octubre de 2026). `zod` (MIT) ya estaba instalado. No se agregó axe-core: la prueba de accesibilidad usa el paquete transitivo ya exceptuado en `web/licenses.exceptions.json`.
 - T11 (SEG-12) no agrega dependencias npm. El cifrado AES-256-GCM usa `node:crypto`
   (biblioteca estándar de Node.js, licencia MIT del proyecto Node.js; no es un
@@ -45,6 +46,8 @@
 | `@base-ui/react` | `^1.4.1` | MIT | prod |
 | `@casl/ability` | `^6.8.1` | MIT | prod (autorización rol × sede × recurso; T09). Transitivas `@ucast/mongo2js`, `@ucast/core`, `@ucast/js`, `@ucast/mongo`: Apache-2.0 |
 | `@hookform/resolvers` | `^5.2.1` | MIT | prod |
+| `@react-pdf/renderer` | `^4.9.0` | MIT | prod (PDF de firma, T14). PDF/A no garantizado (TODO(Q-22)). Transitiva `png-js@2.0.0`: MIT en el archivo LICENSE |
+| `signature_pad` | `^5.1.4` | MIT | prod (trazo del paciente, T14). Sin dependencias |
 | `autoprefixer` | `^10.4.21` | MIT | prod |
 | `class-variance-authority` | `^0.7.1` | Apache-2.0 | prod |
 | `clsx` | `^2.1.1` | MIT | prod |

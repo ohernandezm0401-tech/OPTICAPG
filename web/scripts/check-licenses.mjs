@@ -79,6 +79,14 @@ export function evaluarLicencias(paquetes, excepciones = {}) {
     const nombre = nombrePaquete(clave);
     const campo = info?.license;
     if (!campo) {
+      // Algunos paquetes MIT publican LICENSE y omiten `license` en package.json
+      // (npm no lo copia al candado). Solo se acepta si la entrada nombra paquete
+      // y versión, y la licencia ya está en la lista permitida. Un campo presente
+      // con GPL/LGPL/MPL sigue fallando: esta lista no lo tapa.
+      const archivo = (excepciones.licencia_verificada_en_archivo ?? []).find(
+        (entrada) => entrada.paquete === nombre && entrada.version === info?.version,
+      );
+      if (archivo && LICENCIAS_PERMITIDAS.has(normalizarLicencia(archivo.licencia))) continue;
       errores.push(`${nombre}: sin campo "license" en el candado (se exige licencia declarada)`);
       continue;
     }
