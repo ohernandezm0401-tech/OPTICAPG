@@ -8,6 +8,7 @@
 // nunca datos reales de pacientes.
 import 'server-only';
 
+import { guardarPaciente, type ContextoPaciente } from '../../pacientes';
 import { obtenerDb } from '../../index';
 import { membresias, sedes, tenants, usuarios } from '../../esquema/nucleo';
 import { esProduccion } from '../../../lib/entorno';
@@ -93,10 +94,58 @@ export async function sembrarDatosSinteticos(): Promise<ResumenSiembra> {
       .onConflictDoNothing();
   }
 
+  await sembrarPacientesSinteticos(datos, porNit, sedesPorNombre);
+
   return {
     tenants: datos.tenants.length,
     sedes: datos.sedes.length,
     usuarios: datos.usuarios.length,
     membresias: datos.membresias.length,
   };
+}
+
+async function sembrarPacientesSinteticos(
+  datos: ReturnType<typeof obtenerDatosSinteticos>,
+  porNit: Map<string, string>,
+  sedesPorNombre: Map<string, string>,
+): Promise<void> {
+  const lista = datos.pacientes ?? [];
+  for (const fila of lista) {
+    validarFilaSintetica(fila, 'pacientes');
+    if (fila.email && !String(fila.email).endsWith('@example.invalid')) {
+      throw new Error('Semilla pacientes con correo fuera del dominio reservado.');
+    }
+    if (!String(fila.num_doc).startsWith('900')) {
+      throw new Error('Semilla pacientes con documento fuera del prefijo sintético 900.');
+    }
+    const tenant_id = porNit.get(fila.tenant_nit);
+    const sede_id = sedesPorNombre.get(`${fila.tenant_nit}|${fila.sede_nombre}`);
+    if (!tenant_id || !sede_id) throw new Error(`Semilla pacientes sin sede para ${fila.nombres}.`);
+    const contexto: ContextoPaciente = {
+      tenant_id,
+      usuario_id: 'c2222222-2222-4222-8222-222222222222',
+      sede_id,
+      sedes: [sede_id],
+      rol: 'asesor',
+    };
+    await guardarPaciente(contexto, {
+      id: undefined,
+      nombres: fila.nombres,
+      apellidos: fila.apellidos,
+      tipo_doc: fila.tipo_doc,
+      num_doc: fila.num_doc,
+      fecha_nacimiento: fila.fecha_nacimiento,
+      sexo: fila.sexo,
+      estado_civil: fila.estado_civil,
+      ocupacion: fila.ocupacion,
+      direccion: fila.direccion,
+      telefono: fila.telefono,
+      email: fila.email,
+      acompanante: fila.acompanante,
+      responsable: fila.responsable,
+      aseguradora: fila.aseguradora,
+      tipo_vinculacion: fila.tipo_vinculacion,
+      representante: fila.representante ?? null,
+    });
+  }
 }

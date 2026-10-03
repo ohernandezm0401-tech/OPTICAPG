@@ -54,7 +54,7 @@ export interface Paciente {
   nombre: string;
   apellido: string;
   documento: string;
-  tipoDocumento: 'CC' | 'CE' | 'TI' | 'PA';
+  tipoDocumento: 'CC' | 'TI' | 'RC' | 'CE' | 'PA' | 'PE' | 'PPT' | 'NUIP';
   telefono: string;
   email?: string;
   fechaNacimiento: string; // ISO Date

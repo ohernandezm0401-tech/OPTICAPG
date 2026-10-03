@@ -7,6 +7,7 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T13 (ASE-01, SEG-06) agrega `react-hook-form@7.65.0` (MIT, verificado con `npm view react-hook-form@7.65.0 license` el 3 de octubre de 2026). `zod` (MIT) ya estaba instalado. No se agregó axe-core: la prueba de accesibilidad usa el paquete transitivo ya exceptuado en `web/licenses.exceptions.json`.
 - T11 (SEG-12) no agrega dependencias npm. El cifrado AES-256-GCM usa `node:crypto`
   (biblioteca estándar de Node.js, licencia MIT del proyecto Node.js; no es un
   paquete del registro). No hubo paquete nuevo que verificar con `npm view`.

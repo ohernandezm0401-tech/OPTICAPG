@@ -85,6 +85,13 @@
       "when": 1791046000000,
       "tag": "0011_seg04_inmutabilidad",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791048000000,
+      "tag": "0012_ase01_pacientes",
+      "breakpoints": true
     }
   ]
 }

@@ -132,6 +132,8 @@ export const mockUsuarios: Usuario[] = [
   },
 ];
 
+// Etiquetas sintéticas para módulos aún no migrados (citas, ventas).
+// El registro de pacientes de recepción vive en PostgreSQL (T13) y no en el navegador.
 export const mockPacientes: Paciente[] = [
   {
     id: 'pac1',
