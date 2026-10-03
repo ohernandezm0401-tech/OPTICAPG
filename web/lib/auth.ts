@@ -32,6 +32,7 @@ function toAuthUser(user: Usuario) {
     empresaId: user.empresaId,
     sedeId: user.sedesAccess[0] || '',
     role: user.role,
+    sedesAccess: user.sedesAccess,
   };
 }
 
@@ -96,10 +97,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.empresaId = user.empresaId;
         token.sedeId = user.sedeId;
         token.role = user.role;
+        token.sedesAccess = user.sedesAccess || [];
       }
 
-      if (trigger === 'update' && session?.sedeId) {
-        token.sedeId = session.sedeId;
+      if (trigger === 'update' && typeof session?.sedeId === 'string') {
+        const allowed = Array.isArray(token.sedesAccess) ? token.sedesAccess : [];
+        if (allowed.includes(session.sedeId)) {
+          token.sedeId = session.sedeId;
+        }
       }
 
       return token;
