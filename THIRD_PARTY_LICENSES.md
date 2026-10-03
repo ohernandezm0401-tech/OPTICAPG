@@ -94,6 +94,10 @@ verificados en el registro npm el 3-oct-2026. `pg` `^8.23.1` (MIT) pasa de
 `devDependencies` a `dependencies` (controlador de la capa servidor). Ver
 `docs/DECISIONES.md` (ADR-012).
 
+Cambios de T04 respecto a T03: **sin dependencias nuevas** (restricción de la
+tarea: solo `pg`, ya declarado MIT, para `scripts/check-rls.mjs`; sin intrusos
+en `package-lock.json`). Ver `docs/DECISIONES.md` (ADR-013).
+
 ## Auditoría transitiva (`package-lock.json`, 697 paquetes)
 
 Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T03).

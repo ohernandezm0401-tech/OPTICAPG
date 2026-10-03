@@ -57,7 +57,35 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 ## 5. Qué falta (no es de esta tarea)
 
-- RLS `FORCE` + `withTenantTx` + roles `optisaas_app`/`optisaas_migrator` (PLT-01).
 - Autenticación real (T05/SEG-01) y autorización por sede (SEG-02).
 - Respaldos cifrados y restauración probada (PLT-07); secretos y cifrado (SEG-12).
 - Alta de tenant con contrato de encargo (PLT-03); parámetros por tenant (PLT-11).
+
+## 6. Aislamiento multi-tenant (PLT-01, T04)
+
+Cada fila de negocio pertenece a un tenant y la base lo impone aunque falle
+la aplicación. Solo datos sintéticos.
+
+- Roles: `optisaas_app` (NOLOGIN, sin superusuario ni salto de RLS; lo crea
+  la migración `0001_rls_aislamiento_tenant.sql`). Las migraciones corren con
+  el dueño, sujeto a las políticas por el `FORCE`.
+- RLS: `ENABLE` + `FORCE ROW LEVEL SECURITY` en las 5 tablas del núcleo, con
+  al menos una política `TO optisaas_app` por tabla. Comparaciones en texto
+  (`::text = current_setting(...)`): sin contexto o con otro tenant el
+  resultado es 0 filas, nunca un error que filtre existencia.
+- Regla por tabla: `usuarios`/`sesiones` exigen `tenant_id = app.tenant_id`;
+  `membresias` exige además `sede_id` dentro de `app.sedes` (CSV de UUID);
+  `sedes` permite INSERT por tenant (alta de sedes) pero leer/modificar/borrar
+  solo filas de sedes autorizadas; `tenants` deja ver solo la fila propia.
+- Contexto: `withTenantTx(ctx, fn)` (`web/db/tenant.ts`) abre transacción y
+  fija `SET LOCAL app.tenant_id`, `app.usuario_id`, `app.sede_id`,
+  `app.sedes`, `app.rol` (+ alias `app.role` de la spec).
+- Verificación: `npm run db:check-rls` (`web/scripts/check-rls.mjs`) recorre
+  `information_schema` y falla si alguna tabla con `tenant_id` no tiene RLS
+  FORCE + política, o si el rol falta o tiene privilegios elevados. La CI lo
+  ejecuta tras `db:migrate`; las pruebas están en
+  `tests/int/aislamiento.test.ts` (matriz R/I/S) y
+  `tests/unit/plt-01-guardas.test.ts` (U).
+- Pendiente (no es de esta tarea): usuario de conexión de producción y
+  residencia (Q-06, T05); alta de tenants por rol de aplicación (PLT-03, que
+  definirá la vía elevada); CASL por sede en cada acción (SEG-02).
