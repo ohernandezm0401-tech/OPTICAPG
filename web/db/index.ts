@@ -13,6 +13,7 @@ import { Pool } from 'pg';
 import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
 import * as autorizacion from './esquema/autorizacion';
+import * as catalogos from './esquema/catalogos';
 import * as cifrado from './esquema/cifrado';
 import * as firma from './esquema/firma';
 import * as inmutabilidad from './esquema/inmutabilidad';
@@ -38,6 +39,7 @@ const esquema = {
   ...inmutabilidad,
   ...invitaciones,
   ...tratamiento,
+  ...catalogos,
 };
 
 export function leerUrlBd(): string {

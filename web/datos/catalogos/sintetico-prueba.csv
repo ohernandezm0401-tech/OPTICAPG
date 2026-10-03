@@ -1,0 +1,14 @@
+# SINTETICO DE PRUEBA — no es el catálogo oficial CIE-10 ni CUPS.
+# TODO(Q-23): la licencia de las fuentes oficiales sigue pendiente. No copiar descripciones oficiales aquí.
+# Códigos genéricos de prueba, salvo H52.1 que la prueba de búsqueda exige, con descripción inventada.
+tipo,codigo,descripcion,version,vigente_desde
+cie10,H52.1,"SINTETICO codigo de prueba H52.1 — no es la descripcion oficial del CIE-10",sintetica-prueba-2026,2026-01-01
+cie10,ZZ0.1,"SINTETICO fila de prueba 2 del bloque inventado",sintetica-prueba-2026,2026-01-01
+cie10,ZZ0.2,"SINTETICO fila de prueba 3 del bloque inventado",sintetica-prueba-2026,2026-01-01
+cie10,ZZ0.3,"SINTETICO fila de prueba 4 del bloque inventado",sintetica-prueba-2026,2026-01-01
+cie10,ZZ8.8,"SINTETICO fila de prueba 5 del bloque inventado",sintetica-prueba-2026,2026-01-01
+cie10,ZZ9.9,"SINTETICO fila de prueba 6 del bloque inventado",sintetica-prueba-2026,2026-01-01
+cups,000101,"SINTETICO procedimiento de prueba 000101 — no es la descripcion oficial de CUPS",sintetica-prueba-2026,2026-01-01
+cups,000102,"SINTETICO procedimiento de prueba 000102",sintetica-prueba-2026,2026-01-01
+cups,000103,"SINTETICO procedimiento de prueba 000103",sintetica-prueba-2026,2026-01-01
+cups,000199,"SINTETICO procedimiento de prueba 000199",sintetica-prueba-2026,2026-01-01
