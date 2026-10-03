@@ -29,6 +29,7 @@ Con `APP_ENV=produccion` la app **no arranca** si detecta cualquiera de:
 3. Bandera de datos sintéticos (`DATOS_SINTETICOS=true` o `SEED_DEMO=true`).
 4. Adaptador de facturación simulado (`FACTURACION_ADAPTADOR=simulado`).
 5. Rastros de desarrollo en disco (módulo local de credenciales o semillas).
+6. Clave maestra de cifrado ausente o inválida (`APP_MASTER_KEY` de 32 bytes en base64, o `APP_MASTER_KEY_FILE`). El valor no va en el repositorio (SEG-12).
 
 El error lista cada motivo. Pruebas: `tests/unit/plt-10-entornos.test.ts`
 (AC-PLT-10-1).

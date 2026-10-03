@@ -14,6 +14,7 @@ export default defineConfig({
     './db/esquema/autenticacion.ts',
     './db/esquema/mfa.ts',
     './db/esquema/autorizacion.ts',
+    './db/esquema/cifrado.ts',
   ],
   out: './db/migrations',
   dbCredentials: {

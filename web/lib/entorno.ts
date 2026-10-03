@@ -105,6 +105,16 @@ export function listarProblemasProduccion(
     );
   }
 
+  const claveMaestra = variables.APP_MASTER_KEY?.trim() ?? '';
+  const archivoClaveMaestra = variables.APP_MASTER_KEY_FILE?.trim() ?? '';
+  if (!claveMaestra && !archivoClaveMaestra) {
+    problemas.push(
+      'falta la clave maestra de cifrado (APP_MASTER_KEY o APP_MASTER_KEY_FILE; ver docs/ENTORNOS.md).',
+    );
+  } else if (claveMaestra && !/^[A-Za-z0-9+/]{43}=$/.test(claveMaestra)) {
+    problemas.push('APP_MASTER_KEY no es una clave de 32 bytes en base64.');
+  }
+
   if (existeArchivo) {
     const rastros = nombresRastros.filter((nombre) => {
       try {

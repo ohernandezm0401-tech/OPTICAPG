@@ -1,6 +1,6 @@
 // SEG-01 (T08) — Segundo factor. Español snake_case. Toda tabla con
 // tenant_id nace con RLS ENABLE+FORCE (migración posterior). El secreto TOTP
-// pasa por `ProteccionSecretoMfa` (TODO T11: hoy sin cifrado envelope).
+// pasa por `proteccionEnvelope` (SEG-12): la columna guarda el sobre, no el secreto.
 import { sql } from 'drizzle-orm';
 import { check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 

@@ -65,6 +65,9 @@ jobs:
       - name: Auditoría de licencias (PLT-09)
         run: npm run licenses:check
 
+      - name: Buscar secretos en el repositorio (SEG-12)
+        run: npm run secretos:buscar
+
       - name: Build de producción
         run: npm run build
 

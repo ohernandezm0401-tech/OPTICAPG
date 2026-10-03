@@ -1,13 +1,14 @@
 // SEG-01 (T08) — Segundo factor sin base de datos (U).
 // Cubre el hash de recuperación, TOTP (incluido el rechazo de reuso del
 // mismo paso), la política de roles, la ventana de 10 min y el QR propio.
+import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 import {
   debePedirSegundoFactor,
   mfaEsObligatoria,
 } from '../../lib/auth/mfa/politica';
-import { proteccionIdentidad } from '../../lib/auth/mfa/proteccion';
+import { aadDato, cifrarConDek, descifrarConDek, sha256Hex } from '../../lib/cifrado/aes';
 import { svgQr } from '../../lib/auth/mfa/qr';
 import { evaluarMfaParaFirma, VENTANA_MFA_RECIENTE_MS } from '../../lib/auth/mfa/reciente';
 import {
@@ -89,10 +90,14 @@ describe('SEG-01 U: política, ventana de firma y QR', () => {
     expect(svg).not.toContain('<script');
   });
 
-  it('la protección del secreto es la interfaz de identidad hasta T11', () => {
-    expect(proteccionIdentidad.revelar(proteccionIdentidad.proteger('secreto-sintetico'))).toBe(
-      'secreto-sintetico',
-    );
+  it('el secreto TOTP de prueba se cifra con AES-256-GCM y no queda en claro', () => {
+    const clave = randomBytes(32);
+    const claro = Buffer.from('secreto-sintetico', 'utf8');
+    const aad = aadDato('a1010101-1010-4101-8101-101010101010', 'secreto_mfa', 1);
+    const sobre = cifrarConDek(clave, 1, aad, claro);
+    expect(sobre.startsWith('optisaas1.1.')).toBe(true);
+    expect(sobre).not.toContain('secreto-sintetico');
+    expect(sha256Hex(descifrarConDek(clave, aad, sobre))).toBe(sha256Hex(claro));
   });
 
   it('en local el relying party sale del origen; en producción sin variables no hay passkey', () => {
