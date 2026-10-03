@@ -20,6 +20,16 @@ export function decidirAccesoPanel(actor: ActorAuthz, ruta: string): { permitido
       permitido: habilidad.can('crear', { tipo: 'R9', tenantId: actor.tenantId, sedeId: sede }),
     };
   }
+  if (ruta.startsWith('/dashboard/auditoria')) {
+    return {
+      permitido: habilidad.can('leer', {
+        tipo: 'R19',
+        tenantId: actor.tenantId,
+        sedeId: sede,
+        autorId: actor.id,
+      }),
+    };
+  }
   if (ruta.startsWith('/dashboard/optometra')) {
     return {
       permitido: habilidad.can('leer', {

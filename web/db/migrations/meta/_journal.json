@@ -64,6 +64,13 @@
       "when": 1791040000000,
       "tag": "0008_seg02_autorizacion",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791042000000,
+      "tag": "0009_seg03_auditoria",
+      "breakpoints": true
     }
   ]
 }

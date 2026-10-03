@@ -14,7 +14,8 @@
 | `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). | ✅ T03 (núcleo; perfiles en ADM-02) |
 | — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 + T08 (`mfa_verificada_en`, pase de un solo uso) |
 | — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa`; hoy es identidad (sin cifrado envelope). TODO(T11): quien lea la columna o un respaldo obtiene el secreto. |
-| — | `permisos_extra`, `intentos_autorizacion` | Excepciones de permiso e intentos denegados (SEG-02). | ✅ T09. RLS ENABLE+FORCE. La bitácora encadenada es T10. |
+| — | `permisos_extra`, `intentos_autorizacion` | Excepciones de permiso e intentos denegados (SEG-02). | ✅ T09. RLS ENABLE+FORCE. El intento persistido entra en `auditoria` (T10). |
+| — | `auditoria` | Bitácora append-only con hash SHA-256 por tenant (SEG-03). | ✅ T10. RLS ENABLE+FORCE. Sin UPDATE/DELETE. No guarda contenido clínico. |
 | `pacientes` | `pacientes` + `representantes` + `autorizaciones` | Añadir campos de Res. 1995 art. 9; tipo `RC`. | ⏳ siguiente PR |
 | `citas` (con HC embebida y factura) | `citas` + `atenciones` + `documentos_electronicos` | Separar clínica de facturación. | ⏳ siguiente PR |
 | `historias_clinicas` | `atenciones` (+ adendas) | El contenido de demostración en memoria no se migra. | ⏳ siguiente PR |
@@ -61,7 +62,8 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 ## 5. Qué falta (no es de esta tarea)
 
-- Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La bitácora con hash es T10. La autenticación de SEG-01 está en T07 y T08. La firma clínica que debe llamar `exigirMfaParaFirmarAtencion` llega con SEG-08.
+- Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La autenticación de SEG-01 está en T07 y T08. La firma clínica que debe llamar `exigirMfaParaFirmarAtencion` llega con SEG-08.
+- Bitácora (SEG-03, T10): tabla `auditoria` (migración `0009`), cadena SHA-256 en `web/lib/auditoria/cadena.mjs` (`node:crypto`). Verificador `npm run auditoria:verificar` (alias `audit:verify`). La lectura de HC reutilizable está en `web/lib/auditoria/lecturas.ts` (recurso de prueba `R3`; la atención real es OPT-01). Vista `/dashboard/auditoria` y CSV en `/api/auditoria/csv`. TODO(Q-07): sin plazo de conservación ni umbral de lecturas anómalas.
 - Respaldos cifrados y restauración probada (PLT-07); secretos y cifrado (SEG-12).
 - Alta de tenant con contrato de encargo (PLT-03).
 

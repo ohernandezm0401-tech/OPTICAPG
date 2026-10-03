@@ -1,9 +1,12 @@
 // SEG-02 (T09) — Persistencia de intentos denegados dentro de `withTenantTx`.
-// La bitácora con hash es T10. Aquí solo queda el intento, sin texto clínico.
+// SEG-03 (T10) — El mismo intento, si se persiste, entra en la bitácora.
+// El filtro en memoria de `lib/authz/intentos.ts` no escribe la cadena:
+// TODO: unificarlo exigiría volver async todas las guardas de ruta.
 import 'server-only';
 
 import { desc, eq } from 'drizzle-orm';
 
+import { anexarIntentoDenegado } from '../lib/auditoria/servicio';
 import { intentosAutorizacion } from './esquema/autorizacion';
 import { withTenantTx, type ContextoTenant } from './tenant';
 
@@ -17,8 +20,8 @@ export interface IntentoNuevo {
 }
 
 export async function insertarIntentoDenegado(contexto: ContextoTenant, entrada: IntentoNuevo) {
-  return withTenantTx(contexto, async (tx) => {
-    const [fila] = await tx
+  const fila = await withTenantTx(contexto, async (tx) => {
+    const [creada] = await tx
       .insert(intentosAutorizacion)
       .values({
         tenant_id: contexto.tenant_id,
@@ -31,8 +34,20 @@ export async function insertarIntentoDenegado(contexto: ContextoTenant, entrada:
         resultado: 'denegado',
       })
       .returning();
-    return fila;
+    return creada;
   });
+  if (fila) {
+    await anexarIntentoDenegado({
+      tenant_id: contexto.tenant_id,
+      usuario_id: entrada.usuario_id,
+      rol: entrada.rol,
+      sede_id: entrada.sede_id ?? null,
+      recurso: entrada.recurso,
+      recurso_id: entrada.recurso_id ?? null,
+      accion: entrada.accion,
+    });
+  }
+  return fila;
 }
 
 export async function listarIntentosDenegados(contexto: ContextoTenant) {

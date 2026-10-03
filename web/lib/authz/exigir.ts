@@ -1,4 +1,6 @@
 // SEG-02 (T09) — Guarda reutilizable para rutas y acciones de servidor.
+// TODO(T10): esta guarda es síncrona y solo deja el intento en memoria.
+// La cadena append-only se escribe en `insertarIntentoDenegado` (persistencia).
 import type { Accion } from './matrix';
 import type { ActorAuthz, SujetoRecurso } from './ability';
 import { buildAbility } from './ability';
