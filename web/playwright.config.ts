@@ -29,10 +29,10 @@ export default defineConfig({
     timeout: 180000,
     env: {
       AUTH_SECRET: process.env.AUTH_SECRET ?? SECRETO_SOLO_E2E_LOCAL,
-      // PLT-10 (T05): el servidor E2E declara `pruebas` (datos sintéticos;
-      // jamás `produccion`, que abortaría por el modo demo y las cuentas
-      // locales — ver `lib/entorno.ts`).
-      APP_ENV: 'pruebas',
+      // PLT-10 (T05) + SEG-01 (T07): datos sintéticos, jamás `produccion`
+      // (abortaría por el modo demo). Las cuentas locales solo entran con
+      // `desarrollo` (ver `lib/auth/cuentas-locales.ts`).
+      APP_ENV: 'desarrollo',
       // PLT-02 (T03): el servidor E2E usa la base migrada y el modo demo para
       // las cuentas sintéticas locales (`npm run seed:dev` antes de
       // `test:e2e`). Sin `APP_MODE=demo`, `lib/auth.ts` las rechaza (ver

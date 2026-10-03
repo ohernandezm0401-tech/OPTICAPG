@@ -16,7 +16,8 @@
 `APP_ENV` se valida con Zod al arrancar (`web/lib/entorno.ts`, ejecutada
 desde `web/instrumentation.ts`). Sin variable se asume `desarrollo`, salvo
 con `NODE_ENV=production`, donde se asume `produccion` (postura segura). El
-servidor E2E de Playwright declara `APP_ENV=pruebas` (jamás `produccion`).
+servidor E2E de Playwright declara `APP_ENV=desarrollo` (jamás `produccion`):
+desde T07 las cuentas locales solo se aceptan en `desarrollo` o `demo`.
 
 ## 2. Bloqueo de arranque en producción
 
@@ -47,9 +48,11 @@ npm run dev        # con APP_MODE=demo en .env.local
 lee al iniciar sesión; el archivo se crea si no existe) y
 `.credenciales-desarrollo.local.json` (que leen las pruebas E2E). Si el
 archivo ya existe, se niega a sobrescribirlo (repita con `--forzar`). Se niega
-a correr con `APP_ENV=produccion`. En producción el inicio de sesión de
-demostración no existe (`lib/auth.ts` lo rechaza y `lib/entorno.ts` aborta el
-arranque).
+a correr con `APP_ENV=produccion`. El inicio con esas cuentas locales solo
+existe si `APP_ENV` es `desarrollo` o `demo` y el modo demo está activo
+(`lib/auth/cuentas-locales.ts`). En `pruebas` y en `produccion` el inicio es
+contra la tabla `usuarios` (Argon2id). En producción, además, el arranque
+aborta si detecta rastros de desarrollo (`lib/entorno.ts`).
 
 Las pruebas E2E leen ese archivo local (`tests/e2e/demo.spec.ts`); la CI lo
 genera antes de `test:e2e`. Prueba: `tests/e2e/entornos.spec.ts`

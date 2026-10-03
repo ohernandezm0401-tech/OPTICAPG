@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Eye, Stethoscope, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { MENSAJE_CREDENCIALES_INVALIDAS } from '@/lib/auth/puerto';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        setError('Credenciales inválidas. Intente nuevamente.');
+        setError(MENSAJE_CREDENCIALES_INVALIDAS);
       } else {
         router.push('/dashboard');
         router.refresh();

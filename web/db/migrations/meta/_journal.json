@@ -29,6 +29,20 @@
       "when": 1791034500000,
       "tag": "0003_rls_parametros",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791035574889,
+      "tag": "0004_seg01_autenticacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791035600000,
+      "tag": "0005_rls_autenticacion",
+      "breakpoints": true
     }
   ]
 }

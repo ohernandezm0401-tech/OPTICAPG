@@ -1,9 +1,12 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+
+import { obtenerAuthPort } from './auth/authjs';
+import { authConfig } from './auth/borde';
+import { permiteCuentasLocales } from './auth/cuentas-locales';
 import { cargarCredencialesDesarrollo } from './credenciales-desarrollo';
-import { getUsuarioByEmail } from './mock-data';
 import { esProduccion } from './entorno';
-import { esModoDemo } from './modo';
+import { getUsuarioByEmail } from './mock-data';
 import type { Usuario } from './types';
 
 function passwordsMatch(provided: string, expected: string) {
@@ -26,74 +29,107 @@ function toAuthUser(user: Usuario) {
     sedeId: user.sedesAccess[0] || '',
     role: user.role,
     sedesAccess: user.sedesAccess,
+    devLocal: true as const,
   };
 }
 
-// PLT-10 (T05) — Las cuentas de demostración son sintéticas y locales: las
-// genera `npm run seed:dev` en un archivo no versionado (ver
-// `lib/credenciales-desarrollo.ts`). Nunca existen en producción: el arranque
-// con `APP_ENV=produccion` las rechaza (ver `lib/entorno.ts`).
+// Cuentas sintéticas locales (`npm run seed:dev`). Solo `desarrollo` / `demo`
+// con modo demo. En `pruebas` y `produccion` no se consultan.
 function authenticateDevUser(email: string, password: string): Usuario | null {
-  if (esProduccion()) return null;
+  if (esProduccion() || !permiteCuentasLocales()) return null;
   const cuentas = cargarCredencialesDesarrollo();
   const expected = cuentas[email];
   if (!expected || !passwordsMatch(password, expected)) return null;
   return getUsuarioByEmail(email) ?? null;
 }
 
+function direccionIp(request: Request): string | null {
+  const encabezado = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '';
+  const primera = encabezado.split(',')[0]?.trim();
+  return primera || null;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-  trustHost: true,
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: 'Correo', type: 'email' },
+        password: { label: 'Contraseña', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = String(credentials?.email || '').trim().toLowerCase();
         const password = String(credentials?.password || '');
         if (!email || !password) return null;
 
-        // T05 autentica contra la tabla `usuarios` de PostgreSQL. Mientras
-        // tanto, las cuentas de demostración solo existen con
-        // `APP_MODE=demo` (AC-PLT-02-4; ver `lib/modo.ts`) y jamás en
-        // producción (AC-PLT-10-1; ver `lib/entorno.ts`).
-        if (!esModoDemo()) return null;
-
-        const mockUser = authenticateDevUser(email, password);
-        return mockUser ? toAuthUser(mockUser) : null;
+        try {
+          const resultado = await obtenerAuthPort().iniciarSesion({
+            correo: email,
+            contrasena: password,
+            direccionIp: direccionIp(request),
+            agente: request.headers.get('user-agent'),
+          });
+          if (resultado.ok && resultado.sesion) {
+            const sesion = resultado.sesion;
+            return {
+              id: sesion.usuarioId,
+              email: sesion.correo,
+              name: sesion.correo,
+              empresaId: sesion.tenantId,
+              sedeId: sesion.sedeId,
+              role: sesion.rol,
+              sedesAccess: sesion.sedes,
+              sesionId: sesion.id,
+              devLocal: false,
+            };
+          }
+          if (resultado.continuarConCuentasLocales) {
+            const mockUser = authenticateDevUser(email, password);
+            if (mockUser) return toAuthUser(mockUser);
+          }
+          return null;
+        } catch {
+          // Sin el objeto de error: puede incluir parámetros de la consulta.
+          console.error('No se pudo consultar la autenticación.');
+          const mockUser = authenticateDevUser(email, password);
+          return mockUser ? toAuthUser(mockUser) : null;
+        }
       },
     }),
   ],
-  pages: {
-    signIn: '/login',
-  },
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.empresaId = user.empresaId;
-        token.sedeId = user.sedeId;
-        token.role = user.role;
-        token.sedesAccess = user.sedesAccess || [];
-      }
-
-      if (trigger === 'update' && typeof session?.sedeId === 'string') {
-        const allowed = Array.isArray(token.sedesAccess) ? token.sedesAccess : [];
-        if (allowed.includes(session.sedeId)) {
-          token.sedeId = session.sedeId;
+    ...authConfig.callbacks,
+    async jwt(params) {
+      const token = await authConfig.callbacks.jwt(params);
+      if (token.devLocal === true) return token;
+      if (typeof token.sesionId !== 'string' || token.sesionId.length === 0) return token;
+      try {
+        const vigente = await obtenerAuthPort().sesionVigente(token.sesionId);
+        if (!vigente) {
+          token.sesionId = undefined;
+          token.role = undefined;
+          token.empresaId = undefined;
+          token.sedeId = undefined;
+          token.sub = undefined;
         }
+      } catch {
+        console.error('No se pudo comprobar la sesión.');
+        token.sesionId = undefined;
+        token.role = undefined;
       }
-
       return token;
     },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.empresaId = token.empresaId as string;
-        session.user.sedeId = token.sedeId as string;
-        session.user.role = token.role as string;
+  },
+  events: {
+    async signOut(message) {
+      if (!('token' in message)) return;
+      const sesionId = message.token?.sesionId;
+      if (typeof sesionId !== 'string') return;
+      try {
+        await obtenerAuthPort().revocarSesion(sesionId);
+      } catch {
+        console.error('No se pudo revocar la sesión.');
       }
-      return session;
     },
   },
 });

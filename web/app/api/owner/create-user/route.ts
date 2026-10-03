@@ -3,6 +3,7 @@
 // Mientras tanto responde en memoria para no romper el panel del owner.
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { evaluarPoliticaContrasena } from '@/lib/auth/politica-contrasena';
 
 export async function POST(request: Request) {
   try {
@@ -26,11 +27,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'La contraseña debe tener al menos 6 caracteres.' },
-        { status: 400 }
-      );
+    const politica = evaluarPoliticaContrasena(String(password));
+    if (!politica.ok) {
+      return NextResponse.json({ error: politica.mensaje }, { status: 400 });
     }
 
     // TODO(T05): persistir en la tabla `usuarios` de PostgreSQL.
@@ -48,7 +47,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error: unknown) {
-    console.error('Error en api/owner/create-user:', error);
+    console.error('Error en api/owner/create-user.');
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Error interno del servidor.' },
       { status: 500 }

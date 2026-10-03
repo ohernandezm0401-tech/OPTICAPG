@@ -218,8 +218,8 @@ export default function GlobalUsersPage() {
       toast.error('Las contraseñas no coinciden.');
       return;
     }
-    if (newPasswordValue.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres.');
+    if (newPasswordValue.length < 12) {
+      toast.error('La contraseña debe tener al menos 12 caracteres.');
       return;
     }
 
