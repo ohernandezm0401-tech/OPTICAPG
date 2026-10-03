@@ -12,6 +12,7 @@ import { Pool } from 'pg';
 
 import * as atencionAdendas from './esquema/atencion-adendas';
 import * as entregasHc from './esquema/entregas-hc';
+import * as habeasData from './esquema/habeas-data';
 import * as atenciones from './esquema/atenciones';
 import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
@@ -49,6 +50,7 @@ const esquema = {
   ...atenciones,
   ...atencionAdendas,
   ...entregasHc,
+  ...habeasData,
   ...consentimientos,
   ...limitesCaptura,
   ...prescripciones,

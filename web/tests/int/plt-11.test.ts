@@ -83,7 +83,7 @@ describe('PLT-11 en PostgreSQL real', () => {
   it('siembra retención verificada, plazos provisionales sin cantidad y bitácora', async () => {
     const tenant = await crearTenant({ razon_social: 'Óptica Parámetros Sintética S.A.S.', nit: nitUnico() });
     const vigentes = await sembrarParametrosIniciales(tenant.id);
-    expect(vigentes).toHaveLength(7);
+    expect(vigentes).toHaveLength(13);
 
     const retencion = vigentes.find((fila) => fila.clave === 'retencion_historias_anios');
     expect(retencion?.valor).toBe(15);
@@ -95,8 +95,12 @@ describe('PLT-11 en PostgreSQL real', () => {
       expect(plazo?.rotulo).toBe(ROTULO_PROVISIONAL);
     }
 
+    expect(vigentes.find((fila) => fila.clave === 'plazo_reclamo_habeas_dias')?.valor).toBe(15);
+    expect(vigentes.find((fila) => fila.clave === 'plazo_consulta_habeas_dias')?.valor).toBe(10);
+    expect(vigentes.find((fila) => fila.clave === 'plazo_marca_reclamo_horas_habiles')?.valor).toBe(48);
+
     const otraVez = await sembrarParametrosIniciales(tenant.id);
-    expect(otraVez).toHaveLength(7);
+    expect(otraVez).toHaveLength(13);
 
     const actualizado = await actualizarParametro({
       tenant_id: tenant.id,

@@ -12,7 +12,7 @@ import { sumarDiasHabiles as sumarDiasHabilesPuro } from '../dominio/calendario-
 import { parsearCsvFestivos } from '../dominio/festivos-csv';
 import { capturarInstantaneaImpuesto, type ImpuestoSnapshot } from '../dominio/impuestos';
 import { programarMensajeComercial as programarMensajePuro } from '../dominio/mensajes-comerciales';
-import { parametrosIniciales, type ClaveParametro } from '../dominio/parametros-iniciales';
+import { CLAVES_PARAMETRO, parametrosIniciales, type ClaveParametro } from '../dominio/parametros-iniciales';
 import {
   bitacoraParametros,
   festivos,
@@ -272,12 +272,5 @@ export async function obtenerInstantaneaLinea(tenantId: string, lineaId: string)
 }
 
 export function claveEsConocida(clave: string): clave is ClaveParametro {
-  return (
-    clave === 'zona_horaria' ||
-    clave === 'moneda' ||
-    clave === 'retencion_historias_anios' ||
-    clave === 'plazo_conservacion_logs' ||
-    clave === 'plazo_conservacion_facturas' ||
-    clave === 'plazo_aviso_incidente'
-  );
+  return (CLAVES_PARAMETRO as readonly string[]).includes(clave);
 }

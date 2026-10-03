@@ -14,6 +14,7 @@ import {
   Building2,
   Shield,
   ShieldCheck,
+  Scale,
   BarChart3,
   HeartPulse,
   FileCheck,
@@ -55,7 +56,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: Settings, iconName: 'Settings', label: 'Configuración Sede', href: '/dashboard/admin/configuracion' },
     { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' },
     { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' },
-    { icon: Shield, iconName: 'Shield', label: 'Política de tratamiento', href: '/dashboard/admin/politica-tratamiento' }
+    { icon: Shield, iconName: 'Shield', label: 'Política de tratamiento', href: '/dashboard/admin/politica-tratamiento' },
+    { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/admin/habeas-data' }
   ],
   asesor: [
     { icon: LayoutDashboard, iconName: 'LayoutDashboard', label: 'Dashboard Comercial', href: '/dashboard/asesor' },
@@ -67,7 +69,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías', href: '/dashboard/asesor/garantias' },
     { icon: HeartPulse, iconName: 'HeartPulse', label: 'Secretaría de Salud', href: '/dashboard/asesor/secretaria-salud' },
     { icon: MessageCircle, iconName: 'MessageCircle', label: 'WhatsApp CRM', href: '/dashboard/asesor/whatsapp' },
-    { icon: PenLine, iconName: 'PenLine', label: 'Firma de ejemplo', href: '/dashboard/asesor/firma' }
+    { icon: PenLine, iconName: 'PenLine', label: 'Firma de ejemplo', href: '/dashboard/asesor/firma' },
+    { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/asesor/habeas-data' }
   ],
   optometra: [
     { icon: Calendar, iconName: 'Calendar', label: 'Mi Agenda Clínica', href: '/dashboard/optometra' },
@@ -80,7 +83,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías Receta', href: '/dashboard/optometra/garantias' },
     { icon: Shield, iconName: 'Shield', label: 'Mis accesos', href: '/dashboard/auditoria' },
     { icon: PenLine, iconName: 'PenLine', label: 'Firma de ejemplo', href: '/dashboard/optometra/firma' },
-    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/optometra/verificador-firma' }
+    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/optometra/verificador-firma' },
+    { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/optometra/habeas-data' }
   ]
 };
 

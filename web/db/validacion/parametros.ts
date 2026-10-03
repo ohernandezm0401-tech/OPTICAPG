@@ -21,6 +21,12 @@ const valorPlazo = z.number().int().positive().max(200).nullable();
 
 const valorBandera = z.boolean();
 
+const valorDiasHabeas = z.number().int().positive().max(366);
+
+const valorHorasHabeas = z.number().int().positive().max(24 * 60);
+
+const valorCausa = z.string().trim().min(20).max(4000);
+
 export const EsquemaActualizarParametro = z
   .object({
     tenant_id: UUID,
@@ -53,6 +59,15 @@ function esquemaValor(clave: ClaveParametro): z.ZodType<string | number | boolea
       return valorPlazo;
     case 'mfa_obligatoria_asesor':
       return valorBandera;
+    case 'plazo_consulta_habeas_dias':
+    case 'plazo_reclamo_habeas_dias':
+    case 'plazo_prorroga_reclamo_habeas_dias':
+    case 'plazo_actualizacion_encargado_dias':
+      return valorDiasHabeas;
+    case 'plazo_marca_reclamo_horas_habiles':
+      return valorHorasHabeas;
+    case 'causa_bloqueo_supresion_clinica':
+      return valorCausa;
     default: {
       const agotado: never = clave;
       return agotado;

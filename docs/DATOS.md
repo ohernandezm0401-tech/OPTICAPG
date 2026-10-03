@@ -211,3 +211,16 @@ TODO(Q-23): la licencia de CIE-10 y CUPS no está verificada. Valor por defecto 
 | Glosario | `/dashboard/admin/catalogos` y `/dashboard/optometra/catalogos` | Editable por el `admin` del tenant. Una abreviatura fuera de glosario avisa y no bloquea. |
 
 `catalogo_cie10` y `catalogo_cups` no tienen `tenant_id`. El RLS por tenant no aplica: el código es el mismo para todas las ópticas. `optisaas_app` solo tiene `SELECT`. La carga hace `INSERT` con el rol de administración (dueño de `DATABASE_URL`), sin salto de RLS. `glosario_abreviaturas` sí lleva `tenant_id` y nace con RLS `ENABLE` + `FORCE` y política. `npm run db:check-rls` sigue auditando toda tabla con `tenant_id`.
+
+## 13. Habeas Data y PQR del titular (SEG-07, T26)
+
+El titular radica consulta, reclamo, rectificación, supresión o revocatoria. El plazo usa `sumarDiasHabiles` de T06. Los días (10 de consulta, 15 de reclamo, 8 de prórroga, 5 del encargado) y las 48 h hábiles para marcar «reclamo en trámite» son parámetros del tenant con la fuente que cita la ficha SEG-07 (Ley 1581 arts. 14, 15 y 18 lit. d). La rectificación clínica llama la adenda de T21 y no reescribe el examen. La demográfica actualiza el dato y deja el valor anterior en `historial_datos_demograficos`. La respuesta vive en `bitacora_respuestas_titular` (sin UPDATE ni DELETE).
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Plazos, semáforo, 48 h y causa | `web/dominio/habeas-data.ts` | TODO(Q-32) si no hay festivos: solo sábado y domingo, con aviso. TODO(Q-17). TODO(Q-07). |
+| Tablas | `web/db/esquema/habeas-data.ts` | `solicitudes_titular`, `bitacora_respuestas_titular`, `banderas_dato`, `historial_datos_demograficos`, `secuencias_radicado_hd`. |
+| RLS | `web/db/migrations/0025_seg07_habeas_data.sql` | `ENABLE` + `FORCE` y política en cada tabla con `tenant_id`. |
+| Pantallas | `/dashboard/admin/habeas-data`, `/dashboard/asesor/habeas-data`, `/dashboard/optometra/habeas-data` | UI en español. El aviso de festivos se muestra si la tabla `festivos` del tenant está vacía. |
+
+La supresión de datos clínicos queda bloqueada por defecto: SEG-09 aún no existe. La causa es el parámetro `causa_bloqueo_supresion_clinica`, texto configurable rotulado «BORRADOR – requiere revisión jurídica», sin un número de años de retención. TODO(Q-07). TODO(Q-17): registrar la solicitud no resuelve la base legal de la historia clínica.
