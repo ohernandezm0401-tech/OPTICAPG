@@ -15,7 +15,7 @@ La aplicación corre con datos ficticios. Esto es lo que hay que cerrar antes de
 - Activar Row Level Security en todas las tablas con datos de pacientes, historias, fórmulas y facturas, y probar que una sede no lee la de otra empresa.
 - Dejar de persistir historias, pacientes y bitácoras en `localStorage`. Hoy varios módulos de cumplimiento se guardan en el navegador.
 - Cifrar copias de seguridad y definir retención, acceso y borrado según la Ley 1581 de 2012 (habeas data) y la normativa de historia clínica (Resolución 1995 de 1999 y habilitación, Resolución 3100 de 2019).
-- Registrar consentimiento, auditoría de lectura y escritura, y el bloqueo de la historia pasadas 24 horas. La interfaz lo menciona; la base todavía no lo impone.
+- Registrar consentimiento (SEG-05) y la historia clínica real (OPT-01). T14 deja la firma electrónica sobre un documento de ejemplo sintético. TODO(Q-22): el PDF no es PDF/A y no hay TSA; el sello es el hash SHA-256 y la hora del servidor.
 - No tratar los CUFE, RIPS ni los conceptos de Secretaría de Salud de la demo como documentos válidos. La facturación DIAN y el reporte RIPS están simulados.
 - Firmar un acuerdo de tratamiento de datos con quien aloje la base (Supabase u otro PostgreSQL) y restringir el acceso del equipo a producción.
 - Revisar los endpoints `/api/owner/*` y `/api/facturacion` con una sesión real: hoy el modo mock responde sin escribir en una base.

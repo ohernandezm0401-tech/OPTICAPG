@@ -14,3 +14,5 @@ playwright-report/
 # SEG-12: clave maestra local
 *.kek
 kek.local
+# SEG-08: PDFs cifrados en disco local (no son públicos ni se versionan)
+.almacen-firma/

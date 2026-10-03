@@ -52,6 +52,34 @@ describe('AC-PLT-09-1: una dependencia GPL/LGPL/AGPL/BSL/SSPL hace fallar licens
     assert.match(`${proc.stdout}${proc.stderr}`, /GPL-3\.0-only/);
   });
 
+  it('un paquete sin campo license falla, y la lista de archivo no tapa una GPL declarada', () => {
+    const sinCampo = evaluarLicencias(
+      { 'node_modules/png-js': { version: '2.0.0' } },
+      { pendiente_q09: [], datos_cc_by_4_0: [], licencia_verificada_en_archivo: [] },
+    );
+    assert.equal(sinCampo.errores.length, 1);
+
+    const conArchivo = evaluarLicencias(
+      { 'node_modules/png-js': { version: '2.0.0' } },
+      {
+        pendiente_q09: [],
+        datos_cc_by_4_0: [],
+        licencia_verificada_en_archivo: [{ paquete: 'png-js', version: '2.0.0', licencia: 'MIT' }],
+      },
+    );
+    assert.deepEqual(conArchivo.errores, []);
+
+    const tapaProhibida = evaluarLicencias(
+      { 'node_modules/png-js': { version: '2.0.0', license: 'GPL-3.0-only' } },
+      {
+        pendiente_q09: [],
+        datos_cc_by_4_0: [],
+        licencia_verificada_en_archivo: [{ paquete: 'png-js', version: '2.0.0', licencia: 'MIT' }],
+      },
+    );
+    assert.equal(tapaProhibida.errores.length, 1);
+  });
+
   it('falla si el candado no incluye una dependencia directa (candado desactualizado)', () => {
     const errores = verificarSincroniaCandado(
       { dependencies: { 'paquete-fantasma': '^1.0.0' }, devDependencies: {} },

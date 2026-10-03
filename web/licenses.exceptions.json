@@ -108,6 +108,14 @@
       "motivo": "Contiene componente LGPL-3.0-or-later. `npm ci --omit=optional` no es viable (también excluye los binarios SWC que Next.js necesita para compilar). PENDIENTE Q-09."
     }
   ],
+  "licencia_verificada_en_archivo": [
+    {
+      "paquete": "png-js",
+      "version": "2.0.0",
+      "licencia": "MIT",
+      "motivo": "Transitiva de pdfkit (@react-pdf/renderer, T14). package.json no declara el campo license y `npm view png-js@2.0.0 license` sale vacío. El archivo LICENSE del tarball es MIT (Copyright 2017 Devon Govett). No es LGPL ni MPL."
+    }
+  ],
   "datos_cc_by_4_0": [
     {
       "paquete": "caniuse-lite",

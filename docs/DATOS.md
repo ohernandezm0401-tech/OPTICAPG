@@ -63,7 +63,7 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 ## 5. Qué falta (no es de esta tarea)
 
-- Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La autenticación de SEG-01 está en T07 y T08. La firma clínica que debe llamar `exigirMfaParaFirmarAtencion` llega con SEG-08.
+- Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La autenticación de SEG-01 está en T07 y T08. La firma del documento de ejemplo (SEG-08, T14) llama `exigirMfaParaFirmarAtencion`.
 - Bitácora (SEG-03, T10): tabla `auditoria` (migración `0009`), cadena SHA-256 en `web/lib/auditoria/cadena.mjs` (`node:crypto`). Verificador `npm run auditoria:verificar` (alias `audit:verify`). La lectura de HC reutilizable está en `web/lib/auditoria/lecturas.ts` (recurso de prueba `R3`; la atención real es OPT-01). Vista `/dashboard/auditoria` y CSV en `/api/auditoria/csv`. TODO(Q-07): sin plazo de conservación ni umbral de lecturas anómalas.
 - Respaldos cifrados y restauración probada (PLT-07). El cifrado de anexos y secretos está en SEG-12 (T11); el respaldo del volumen sigue siendo infraestructura.
 - Alta de tenant con contrato de encargo (PLT-03).
@@ -162,3 +162,18 @@ Una fila firmada no se edita ni se borra. La corrección es un INSERT en `adenda
 Las tablas de historia clínica todavía no existen. La tarea que las cree debe ejecutar `select aplicar_marco_inmutabilidad('public.<tabla>'::regclass)` y no publicar un endpoint `DELETE`. El borrado de un borrador lo permite el trigger; hay que anotarlo en la bitácora con la acción `anular`.
 
 `atencion_adendas.motivo` y `atencion_adendas.nuevo_valor` siguen siendo el contrato de cifrado de T11 para cuando exista la atención. El marco genérico no cifra: guarda el texto que reciba.
+
+## 10. Firma electrónica (SEG-08, T14)
+
+Servicio genérico. Las historias, prescripciones y consentimientos todavía no existen: el tipo persistido es `ejemplo_sintetico`.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Reglas | `web/dominio/firma.ts` | SHA-256, MFA reciente, vigencia declarada de la tarjeta, evidencia del paciente. |
+| PDF | `web/lib/firma/pdf.tsx` | `@react-pdf/renderer` MIT. TODO(Q-22): no es PDF/A. |
+| Puertos | `web/lib/firma/puertos.ts` | `SelloTiempoPort`: `nulo` (sin TSA), `servidor` (hora + hash), `tsa_externa` (contrato, sin cliente de pago). |
+| Almacén | `web/lib/firma/almacen.ts` | `bd_cifrada` usa `anexos` de T11. `disco_cifrado` escribe el mismo sobre en disco. |
+| Tablas | `perfiles_profesionales`, `documentos_firma`, `firmas`, `codigos_otp_firma` | RLS `ENABLE`+`FORCE` (migración `0013`). `vigente_hasta` no tiene valor por defecto. |
+| Pantallas | `/dashboard/optometra/firma`, `/dashboard/asesor/firma`, verificador en admin y optómetra | UI en español. El verificador compara el PDF subido con el hash del tenant. |
+
+TODO(Q-22): valor por defecto aplicado — firma electrónica simple, hash SHA-256 y sellado propio. La TSA externa queda apagada. BORRADOR – requiere revisión jurídica.

@@ -46,6 +46,8 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  // T14: yoga-layout y fontkit no deben entrar al bundle de webpack.
+  serverExternalPackages: ['@react-pdf/renderer'],
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
