@@ -4,16 +4,27 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { evaluarPoliticaContrasena } from '@/lib/auth/politica-contrasena';
+import { buildAbility } from '@/lib/authz/ability';
+import { registrarDenegacionDeActor } from '@/lib/authz/intentos';
+import { actorDesdeSesion } from '@/lib/authz/sesion';
 
 export async function POST(request: Request) {
   try {
-    // 1. Verificar sesión del usuario actual
     const session = await auth();
-    if (!session || session.user?.role !== 'owner') {
-      return NextResponse.json(
-        { error: 'No autorizado. Solo el Platform Owner puede realizar esta acción.' },
-        { status: 401 }
-      );
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Debe iniciar sesión.' }, { status: 401 });
+    }
+    const actor = actorDesdeSesion({
+      id: session.user.id,
+      role: session.user.role,
+      empresaId: session.user.empresaId,
+      sedeId: session.user.sedeId,
+      sedesAccess: session.user.sedesAccess,
+    });
+    const permitido = buildAbility(actor).can('crear', { tipo: 'R24', plataforma: true });
+    if (!permitido) {
+      registrarDenegacionDeActor(actor, 'R24', 'crear');
+      return NextResponse.json({ error: 'No tiene permiso para crear usuarios de plataforma.' }, { status: 403 });
     }
 
     // 2. Parsear el cuerpo de la petición

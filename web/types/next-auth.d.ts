@@ -7,6 +7,7 @@ declare module 'next-auth' {
       empresaId: string;
       sedeId: string;
       role: string;
+      sedesAccess?: string[];
       sesionId?: string;
       devLocal?: boolean;
     } & DefaultSession['user'];
@@ -43,6 +44,7 @@ declare module '@auth/core/types' {
       empresaId: string;
       sedeId: string;
       role: string;
+      sedesAccess?: string[];
       sesionId?: string;
       devLocal?: boolean;
     } & DefaultSession['user'];

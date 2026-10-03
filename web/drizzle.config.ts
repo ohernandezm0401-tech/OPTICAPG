@@ -13,6 +13,7 @@ export default defineConfig({
     './db/esquema/parametros.ts',
     './db/esquema/autenticacion.ts',
     './db/esquema/mfa.ts',
+    './db/esquema/autorizacion.ts',
   ],
   out: './db/migrations',
   dbCredentials: {

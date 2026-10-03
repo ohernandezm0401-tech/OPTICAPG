@@ -1,8 +1,34 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import { emitirFacturaElectronica, FactusPayload } from '@/lib/facturacion/api-client';
+import { buildAbility } from '@/lib/authz/ability';
+import { registrarDenegacionDeActor } from '@/lib/authz/intentos';
+import { actorDesdeSesion } from '@/lib/authz/sesion';
 
 export async function POST(request: Request) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Debe iniciar sesión.' }, { status: 401 });
+    }
+    const actor = actorDesdeSesion({
+      id: session.user.id,
+      role: session.user.role,
+      empresaId: session.user.empresaId,
+      sedeId: session.user.sedeId,
+      sedesAccess: session.user.sedesAccess,
+    });
+    const permitido = buildAbility(actor).can('crear', {
+      tipo: 'R11',
+      tenantId: actor.tenantId,
+      sedeId: actor.sedeActiva,
+      autorId: actor.id,
+    });
+    if (!permitido) {
+      registrarDenegacionDeActor(actor, 'R11', 'crear');
+      return NextResponse.json({ error: 'No tiene permiso para emitir esta factura.' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     // Validaciones básicas

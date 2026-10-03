@@ -7,6 +7,9 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T09 (SEG-02) agrega `@casl/ability@6.8.1` (MIT, verificado con `npm view @casl/ability@6.8.1 license`).
+  Transitivas directas, también verificadas en el registro: `@ucast/mongo2js@1.4.1`,
+  `@ucast/core@1.10.2`, `@ucast/js@3.1.0` y `@ucast/mongo@2.4.3` (todas Apache-2.0).
 - T06 (PLT-11) no agrega dependencias. El calendario hábil, el CSV de festivos
   y las tarifas usan la biblioteca estándar y las dependencias ya auditadas
   (`drizzle-orm` Apache-2.0, `zod` MIT, `pg` MIT). No hubo paquete nuevo que
@@ -33,6 +36,7 @@
 | Paquete | Versión (declarada) | Licencia SPDX (registro npm) | Uso |
 |---|---|---|---|
 | `@base-ui/react` | `^1.4.1` | MIT | prod |
+| `@casl/ability` | `^6.8.1` | MIT | prod (autorización rol × sede × recurso; T09). Transitivas `@ucast/mongo2js`, `@ucast/core`, `@ucast/js`, `@ucast/mongo`: Apache-2.0 |
 | `@hookform/resolvers` | `^5.2.1` | MIT | prod |
 | `autoprefixer` | `^10.4.21` | MIT | prod |
 | `class-variance-authority` | `^0.7.1` | Apache-2.0 | prod |
