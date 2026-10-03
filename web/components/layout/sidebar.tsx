@@ -46,7 +46,11 @@ export default function Sidebar({ className }: { className?: string }) {
   if (!session?.user) return null;
 
   const role = session.user.role as Role;
-  const rawNavItems = NAV_CONFIG[role] || [];
+  const roleNav =
+    role === 'owner' || session.user.role === 'owner_plataforma' || session.user.role === 'soporte_plataforma'
+      ? 'owner'
+      : role;
+  const rawNavItems = NAV_CONFIG[roleNav] || [];
   
   const usuario = getUsuarioByEmail(session.user.email as string);
   const empresa = empresas.find(e => e.id === session.user.empresaId);

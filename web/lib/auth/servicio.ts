@@ -115,6 +115,15 @@ async function buscarUsuarios(correo: string): Promise<FilaUsuario[]> {
   }));
 }
 
+async function rolOperadorPlataforma(usuarioId: string): Promise<string | null> {
+  const resultado = await obtenerPool().query<{ rol_operador_plataforma: string | null }>(
+    `select rol_operador_plataforma($1::uuid) as rol_operador_plataforma`,
+    [usuarioId],
+  );
+  const rol = resultado.rows[0]?.rol_operador_plataforma;
+  return rol === 'owner_plataforma' || rol === 'soporte_plataforma' ? rol : null;
+}
+
 async function membresiasDe(usuarioId: string): Promise<FilaMembresia[]> {
   const resultado = await obtenerPool().query<FilaMembresia>(
     `select sede_id, rol, tenant_id from membresias_para_inicio($1::uuid)`,
@@ -363,7 +372,10 @@ export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<Resul
   }
 
   const membresias = await membresiasDe(usuario.id);
-  const roles = membresias.map((fila) => fila.rol);
+  const rolPlataforma = await rolOperadorPlataforma(usuario.id);
+  const roles = rolPlataforma
+    ? [rolPlataforma, ...membresias.map((fila) => fila.rol)]
+    : membresias.map((fila) => fila.rol);
   const sedes = [...new Set(membresias.map((fila) => fila.sede_id))];
   const inactividad = minutosInactividad(roles, await parametroInactividad(usuario.tenant_id));
   const agente = entrada.agente?.slice(0, 300) ?? null;

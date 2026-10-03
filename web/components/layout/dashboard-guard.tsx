@@ -65,7 +65,7 @@ export default function DashboardGuard({ children }: { children: React.ReactNode
   const empresaId = session.user.empresaId;
 
   // Platform owner is completely exempt
-  if (role === 'owner') return <>{children}</>;
+  if (role === 'owner' || role === 'owner_plataforma' || role === 'soporte_plataforma') return <>{children}</>;
 
   const empresa = empresas.find(e => e.id === empresaId);
   if (!empresa) return <>{children}</>;

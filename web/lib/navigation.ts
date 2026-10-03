@@ -39,6 +39,7 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: BarChart3, iconName: 'BarChart3', label: 'Métricas Globales', href: '/dashboard/owner/metricas' },
     { icon: CreditCard, iconName: 'CreditCard', label: 'Facturación Planes', href: '/dashboard/owner/facturacion' },
     { icon: Shield, iconName: 'Shield', label: 'Seguridad & Logs', href: '/dashboard/owner/seguridad' },
+    { icon: Shield, iconName: 'Shield', label: 'Incidentes de seguridad', href: '/dashboard/owner/incidentes' },
     { icon: Settings, iconName: 'Settings', label: 'Config. Plataforma', href: '/dashboard/owner/configuracion' }
   ],
   admin: [
@@ -59,7 +60,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' },
     { icon: Shield, iconName: 'Shield', label: 'Política de tratamiento', href: '/dashboard/admin/politica-tratamiento' },
     { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/admin/habeas-data' },
-    { icon: Archive, iconName: 'Archive', label: 'Retención de historias', href: '/dashboard/admin/retencion' }
+    { icon: Archive, iconName: 'Archive', label: 'Retención de historias', href: '/dashboard/admin/retencion' },
+    { icon: Shield, iconName: 'Shield', label: 'Incidentes de seguridad', href: '/dashboard/admin/incidentes' }
   ],
   asesor: [
     { icon: LayoutDashboard, iconName: 'LayoutDashboard', label: 'Dashboard Comercial', href: '/dashboard/asesor' },

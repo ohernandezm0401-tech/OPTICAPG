@@ -239,3 +239,27 @@ El estado se calcula desde `pacientes.fecha_ultima_atencion` (día civil `Americ
 | Tablas | `politica_retencion`, `marcas_retencion` | Migración `0026_seg09_retencion.sql`. RLS `ENABLE` + `FORCE`. |
 | Bloqueo auditado | `web/db/retencion.ts` | `intentarEliminarHistoriaClinica` escribe `auditoria` con resultado `error`. |
 | Pantalla | `/dashboard/admin/retencion` | ✅ verificado y ⚠️ provisional. |
+
+## 15. Incidentes de seguridad (SEG-11, T29)
+
+El incidente es de plataforma y puede tocar varias ópticas. `incidentes` y
+`alertas_incidente` no llevan `tenant_id`. Las lee y escribe el rol
+`optisaas_incidente`, que `optisaas_app` solo puede asumir (`INHERIT FALSE`).
+Ningún rol de la aplicación tiene `BYPASSRLS`. `incidentes_tenants` y
+`notificaciones_internas` sí llevan `tenant_id`, con RLS `ENABLE` + `FORCE`:
+el admin ve únicamente su óptica.
+
+El plazo de 15 días hábiles ante la SIC está en `parametros_incidente`
+(`plazo_sic_dias_habiles`), con la fuente de la ficha SEG-11. El calendario es
+`sumarDiasHabiles` de T06. TODO(Q-32): si no hay festivos, se excluyen solo
+sábado y domingo y queda el aviso. TODO(Q-07): `plazo_aviso_incidente` del
+tenant sigue sin valor. Las plantillas son borrador para abogado; el sistema
+no envía nada a la SIC. Los textos del incidente no guardan datos personales
+de pacientes. La bitácora de T10 recibe una fila `incidente` / `crear` en cada
+óptica avisada. Runbook: `docs/seguridad/RUNBOOK_INCIDENTES.md`.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Plazo, alertas y plantillas | `web/dominio/incidentes.ts` | T-5, T-2 y T-0. BORRADOR. |
+| Tablas | migración `0028_seg11_incidentes.sql` | RLS en todas, con y sin `tenant_id`. |
+| Pantallas | `/dashboard/owner/incidentes`, `/dashboard/admin/incidentes` | Aviso in-app, sin correo. |

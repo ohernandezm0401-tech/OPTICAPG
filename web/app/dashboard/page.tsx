@@ -8,5 +8,9 @@ export default async function DashboardIndexPage() {
     redirect('/login');
   }
 
-  redirect(`/dashboard/${session.user.role}`);
+  const rol = session.user.role;
+  if (rol === 'owner' || rol === 'owner_plataforma' || rol === 'soporte' || rol === 'soporte_plataforma') {
+    redirect('/dashboard/owner');
+  }
+  redirect(`/dashboard/${rol}`);
 }
