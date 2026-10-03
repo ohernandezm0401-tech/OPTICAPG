@@ -11,10 +11,11 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
 import * as autenticacion from './esquema/autenticacion';
+import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
 import * as parametros from './esquema/parametros';
 
-const esquema = { ...nucleo, ...parametros, ...autenticacion };
+const esquema = { ...nucleo, ...parametros, ...autenticacion, ...mfa };
 
 export function leerUrlBd(): string {
   const url = process.env.DATABASE_URL ?? process.env.DATABASE_URL_TEST;

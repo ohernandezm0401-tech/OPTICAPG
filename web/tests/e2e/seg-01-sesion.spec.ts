@@ -8,6 +8,7 @@ import { expect, test } from '@playwright/test';
 import { Client } from 'pg';
 
 import { hashearContrasena } from '../../lib/auth/contrasena';
+import { codigoTotp } from '../../lib/auth/mfa/totp';
 
 const MENSAJE = 'Credenciales inválidas. Intente nuevamente.';
 
@@ -55,6 +56,10 @@ test('AC-SEG-01-3: una sesión revocada cae en la petición siguiente', async ({
   await page.getByLabel('Correo Electrónico').fill(correo);
   await page.getByLabel('Contraseña').fill(clave);
   await page.getByRole('button', { name: 'Ingresar al Sistema' }).click();
+  await expect(page.getByTestId('secreto-totp')).toBeVisible();
+  const secreto = (await page.getByTestId('secreto-totp').innerText()).trim();
+  await page.getByLabel('Código de verificación').fill(codigoTotp(secreto, new Date()));
+  await page.getByRole('button', { name: 'Verificar' }).click();
   await expect(page).toHaveURL(/\/dashboard\/admin/);
 
   const vigente = await page.request.get('/api/auth/vigencia');

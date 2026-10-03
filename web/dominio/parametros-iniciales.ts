@@ -21,13 +21,15 @@ export const CLAVES_PARAMETRO = [
   'plazo_conservacion_logs',
   'plazo_conservacion_facturas',
   'plazo_aviso_incidente',
+  // SEG-01 (T08): el asesor no exige MFA salvo que el tenant lo active.
+  'mfa_obligatoria_asesor',
 ] as const;
 
 export type ClaveParametro = (typeof CLAVES_PARAMETRO)[number];
 
 export type ParametroInicial = {
   clave: ClaveParametro;
-  valor: string | number | null;
+  valor: string | number | boolean | null;
   rotulo: string | null;
 };
 
@@ -44,6 +46,7 @@ export function parametrosIniciales(): ParametroInicial[] {
     { clave: 'plazo_conservacion_logs', valor: null, rotulo: ROTULO_PROVISIONAL },
     { clave: 'plazo_conservacion_facturas', valor: null, rotulo: ROTULO_PROVISIONAL },
     { clave: 'plazo_aviso_incidente', valor: null, rotulo: ROTULO_PROVISIONAL },
+    { clave: 'mfa_obligatoria_asesor', valor: false, rotulo: null },
   ];
 }
 

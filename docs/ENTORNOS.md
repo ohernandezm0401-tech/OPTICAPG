@@ -58,6 +58,20 @@ Las pruebas E2E leen ese archivo local (`tests/e2e/demo.spec.ts`); la CI lo
 genera antes de `test:e2e`. Prueba: `tests/e2e/entornos.spec.ts`
 (AC-PLT-10-2: el login de producción no expone contraseñas).
 
+Las cuentas locales de `seed:dev` no pasan por MFA: no existen en `usuarios`.
+Un `admin` u `optometra` de la base sí tiene que enrolar el segundo factor
+antes de abrir sesión (T08).
+
+## 3.1 Passkeys (opcional)
+
+`WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN` no son secretos. Si ambas están definidas,
+el origen de la petición tiene que coincidir. Si faltan, fuera de producción
+solo se acepta `localhost` o `127.0.0.1`. El navegador no registra una llave
+si el relying party es una IP: en local abra `http://localhost`. En producción
+sin esas variables el endpoint de llaves de acceso no abre el relying party
+(no se toma el `Host` del cliente como configuración de producción). Ver
+`web/.env.example`.
+
 ## 4. Semilla sintética (`seed:demo`)
 
 ```bash

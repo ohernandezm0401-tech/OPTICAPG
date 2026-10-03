@@ -19,11 +19,13 @@ const valorAnios = z.number().int().positive().max(200);
 
 const valorPlazo = z.number().int().positive().max(200).nullable();
 
+const valorBandera = z.boolean();
+
 export const EsquemaActualizarParametro = z
   .object({
     tenant_id: UUID,
     clave: z.enum(CLAVES_PARAMETRO),
-    valor: z.union([z.string(), z.number(), z.null()]),
+    valor: z.union([z.string(), z.number(), z.boolean(), z.null()]),
   })
   .superRefine((dato, ctx) => {
     const esquema = esquemaValor(dato.clave);
@@ -37,7 +39,7 @@ export const EsquemaActualizarParametro = z
     }
   });
 
-function esquemaValor(clave: ClaveParametro): z.ZodType<string | number | null> {
+function esquemaValor(clave: ClaveParametro): z.ZodType<string | number | boolean | null> {
   switch (clave) {
     case 'zona_horaria':
       return valorZona;
@@ -49,6 +51,8 @@ function esquemaValor(clave: ClaveParametro): z.ZodType<string | number | null> 
     case 'plazo_conservacion_facturas':
     case 'plazo_aviso_incidente':
       return valorPlazo;
+    case 'mfa_obligatoria_asesor':
+      return valorBandera;
     default: {
       const agotado: never = clave;
       return agotado;

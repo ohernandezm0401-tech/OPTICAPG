@@ -1,18 +1,75 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Eye, Stethoscope, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { MENSAJE_CREDENCIALES_INVALIDAS } from '@/lib/auth/puerto';
+import { MENSAJE_CREDENCIALES_INVALIDAS, MENSAJE_MFA_INVALIDO } from '@/lib/auth/puerto';
+
+type PasoMfa = 'enrolar' | 'verificar';
+
+type AltaTotpCliente = {
+  secreto: string;
+  svg: string;
+  codigos: string[];
+};
+
+function leerPendiente(code: string | null | undefined): { paso: PasoMfa; ticket: string; passkey: boolean } | null {
+  if (!code) return null;
+  const partes = code.split(':');
+  if (partes.length < 3) return null;
+  const paso = partes[0];
+  const marca = partes[partes.length - 1];
+  const ticket = partes.slice(1, -1).join(':');
+  if ((paso !== 'enrolar' && paso !== 'verificar') || !ticket) return null;
+  return { paso, ticket, passkey: marca === '1' };
+}
+
+function qrConfiable(svg: string): string {
+  if (!svg.startsWith('<svg ') || svg.includes('<script') || svg.toLowerCase().includes('javascript:')) return '';
+  return svg;
+}
+
+async function entrarConPase(pase: string, correo: string) {
+  return signIn('credentials', { redirect: false, email: correo, pase });
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pendiente, setPendiente] = useState<{ paso: PasoMfa; ticket: string; passkey: boolean } | null>(null);
+  const [alta, setAlta] = useState<AltaTotpCliente | null>(null);
+  const [codigo, setCodigo] = useState('');
+  const [opcionesLlave, setOpcionesLlave] = useState<unknown>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!pendiente) return;
+    if (pendiente.paso === 'verificar' && !pendiente.passkey) return;
+    let vigente = true;
+    const modo = pendiente.paso === 'enrolar' ? 'registro' : 'autenticacion';
+    fetch('/api/auth/mfa/passkey', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accion: 'opciones', modo, ticket: pendiente.ticket }),
+    })
+      .then(async (respuesta) => {
+        const cuerpo = (await respuesta.json()) as { opciones?: unknown };
+        if (vigente && respuesta.ok && cuerpo.opciones) setOpcionesLlave(cuerpo.opciones);
+      })
+      .catch(() => undefined);
+    return () => {
+      vigente = false;
+    };
+  }, [pendiente]);
+
+  const entrar = () => {
+    router.push('/dashboard');
+    router.refresh();
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +82,108 @@ export default function LoginPage() {
         email,
         password,
       });
+      const siguiente = leerPendiente(res?.code);
+      if (siguiente) {
+        setPendiente(siguiente);
+        if (siguiente.paso === 'enrolar') {
+          const respuesta = await fetch('/api/auth/mfa/totp', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ accion: 'preparar', ticket: siguiente.ticket }),
+          });
+          const cuerpo = (await respuesta.json()) as { secreto?: string; svg?: string; codigos?: string[] };
+          if (!respuesta.ok || !cuerpo.secreto || !cuerpo.svg) {
+            setError(MENSAJE_MFA_INVALIDO);
+            setPendiente(null);
+          } else {
+            setAlta({ secreto: cuerpo.secreto, svg: cuerpo.svg, codigos: cuerpo.codigos ?? [] });
+          }
+        }
+        return;
+      }
 
       if (res?.error) {
         setError(MENSAJE_CREDENCIALES_INVALIDAS);
       } else {
-        router.push('/dashboard');
-        router.refresh();
+        entrar();
       }
-    } catch (err) {
+    } catch {
       setError('Ocurrió un error inesperado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const confirmarCodigo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendiente) return;
+    setIsLoading(true);
+    setError('');
+    try {
+      const respuesta = await fetch('/api/auth/mfa/totp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accion: 'confirmar', ticket: pendiente.ticket, codigo }),
+      });
+      const cuerpo = (await respuesta.json()) as { pase?: string };
+      if (!respuesta.ok || !cuerpo.pase) {
+        setError(MENSAJE_MFA_INVALIDO);
+        return;
+      }
+      const sesion = await entrarConPase(cuerpo.pase, email);
+      if (sesion?.error) setError(MENSAJE_MFA_INVALIDO);
+      else entrar();
+    } catch {
+      setError(MENSAJE_MFA_INVALIDO);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const usarLlave = async () => {
+    if (!pendiente || !opcionesLlave) return;
+    setIsLoading(true);
+    setError('');
+    try {
+      const publico = globalThis.PublicKeyCredential as
+        | {
+            parseCreationOptionsFromJSON?: (opciones: unknown) => PublicKeyCredentialCreationOptions;
+            parseRequestOptionsFromJSON?: (opciones: unknown) => PublicKeyCredentialRequestOptions;
+          }
+        | undefined;
+      const modo = pendiente.paso === 'enrolar' ? 'registro' : 'autenticacion';
+      const parsear =
+        modo === 'registro' ? publico?.parseCreationOptionsFromJSON : publico?.parseRequestOptionsFromJSON;
+      if (!parsear || !navigator.credentials) {
+        setError(MENSAJE_MFA_INVALIDO);
+        return;
+      }
+      const opciones = parsear(opcionesLlave);
+      const credencial =
+        modo === 'registro'
+          ? await navigator.credentials.create({ publicKey: opciones as PublicKeyCredentialCreationOptions })
+          : await navigator.credentials.get({ publicKey: opciones as PublicKeyCredentialRequestOptions });
+      const json =
+        credencial && 'toJSON' in credencial && typeof credencial.toJSON === 'function' ? credencial.toJSON() : null;
+      if (!json) {
+        setError(MENSAJE_MFA_INVALIDO);
+        return;
+      }
+      const confirmacion = await fetch('/api/auth/mfa/passkey', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accion: 'confirmar', modo, ticket: pendiente.ticket, respuesta: json }),
+      });
+      const cuerpo = (await confirmacion.json()) as { pase?: string };
+      if (!confirmacion.ok || !cuerpo.pase) {
+        setError(MENSAJE_MFA_INVALIDO);
+        return;
+      }
+      const sesion = await entrarConPase(cuerpo.pase, email);
+      if (sesion?.error) setError(MENSAJE_MFA_INVALIDO);
+      else entrar();
+    } catch {
+      setError(MENSAJE_MFA_INVALIDO);
     } finally {
       setIsLoading(false);
     }
@@ -107,8 +257,87 @@ export default function LoginPage() {
             transition={{ duration: 0.5 }}
           >
             <h2 className="text-3xl font-bold mb-2">Bienvenido de nuevo</h2>
-            <p className="text-muted-foreground mb-8">Ingresa tus credenciales para acceder al sistema.</p>
+            <p className="text-muted-foreground mb-8">
+              {pendiente
+                ? 'Confirma el segundo factor para entrar.'
+                : 'Ingresa tus credenciales para acceder al sistema.'}
+            </p>
 
+            {pendiente ? (
+            <form onSubmit={confirmarCodigo} className="space-y-5">
+              {error && (
+                <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md border border-destructive/20 flex items-start gap-2">
+                  <Lock className="w-4 h-4 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {pendiente.paso === 'enrolar' && alta && (
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                    Escanea el código con tu aplicación de autenticación o escribe el secreto.
+                  </p>
+                  {qrConfiable(alta.svg) ? (
+                    <div
+                      className="mx-auto w-48 bg-white p-2 rounded-md"
+                      data-testid="qr-totp"
+                      dangerouslySetInnerHTML={{ __html: qrConfiable(alta.svg) }}
+                    />
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">Secreto (ingreso manual)</p>
+                  <code data-testid="secreto-totp" className="block break-all text-sm font-mono bg-slate-100 dark:bg-slate-900 p-2 rounded-md">
+                    {alta.secreto}
+                  </code>
+                  {alta.codigos.length > 0 && (
+                    <div data-testid="codigos-recuperacion">
+                      <p className="text-sm font-medium mb-1">Códigos de recuperación. Guárdalos: se muestran una sola vez.</p>
+                      <ul className="text-sm font-mono space-y-1">
+                        {alta.codigos.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              {pendiente.paso === 'verificar' && (
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  Escribe el código de tu aplicación de autenticación o un código de recuperación.
+                </p>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="codigo-mfa">
+                  Código de verificación
+                </label>
+                <input
+                  id="codigo-mfa"
+                  inputMode="text"
+                  autoComplete="one-time-code"
+                  required
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  className="block w-full px-3 py-2.5 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
+                  placeholder="000000"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+              >
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verificar'}
+              </button>
+              {(pendiente.paso === 'enrolar' || pendiente.passkey) && (
+                <button
+                  type="button"
+                  onClick={usarLlave}
+                  disabled={isLoading || !opcionesLlave}
+                  className="w-full py-2.5 px-4 rounded-md border border-input text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-900 disabled:opacity-70"
+                >
+                  {pendiente.paso === 'enrolar' ? 'Registrar llave de acceso' : 'Entrar con llave de acceso'}
+                </button>
+              )}
+            </form>
+            ) : (
             <form onSubmit={handleLogin} className="space-y-5">
               {error && (
                 <motion.div 
@@ -181,6 +410,7 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+            )}
 
             <div className="mt-10 pt-6 border-t border-border">
               <p className="text-xs text-center text-muted-foreground">

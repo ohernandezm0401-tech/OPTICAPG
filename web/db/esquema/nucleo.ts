@@ -154,10 +154,16 @@ export const sesiones = pgTable(
     inactividad_minutos: integer('inactividad_minutos').notNull().default(15),
     direccion_ip: text('direccion_ip'),
     agente: text('agente'),
+    // SEG-01 (T08): momento del segundo factor. Nulo si la sesión no pasó MFA.
+    mfa_verificada_en: timestamp('mfa_verificada_en', { withTimezone: true }),
+    // Pase de un solo uso para entregar la sesión al navegador tras el MFA.
+    pase_hash: text('pase_hash'),
+    pase_consumido_en: timestamp('pase_consumido_en', { withTimezone: true }),
   },
   (tabla) => [
     index('sesiones_tenant_id_idx').on(tabla.tenant_id),
     index('sesiones_usuario_id_idx').on(tabla.usuario_id),
+    uniqueIndex('sesiones_pase_hash_unico').on(tabla.pase_hash),
     check('sesiones_inactividad_positiva', sql`${tabla.inactividad_minutos} > 0`),
   ],
 );

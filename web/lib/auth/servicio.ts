@@ -167,6 +167,8 @@ async function abrirSesionServidor(entrada: {
   direccionIp: string | null;
   agente: string | null;
   ahora: Date;
+  mfaVerificadaEn: Date | null;
+  paseHash: string | null;
 }): Promise<SesionEmitida['id']> {
   const expira = new Date(entrada.ahora.getTime() + entrada.inactividadMinutos * 60_000);
   return withTenantTx({ tenant_id: entrada.tenantId, usuario_id: entrada.usuarioId }, async (tx) => {
@@ -181,10 +183,78 @@ async function abrirSesionServidor(entrada: {
         direccion_ip: entrada.direccionIp,
         agente: entrada.agente,
         creada_en: entrada.ahora,
+        mfa_verificada_en: entrada.mfaVerificadaEn,
+        pase_hash: entrada.paseHash,
       })
       .returning({ id: sesiones.id });
     return creada.id;
   });
+}
+
+export async function completarInicio(entrada: {
+  tenantId: string;
+  usuarioId: string;
+  correo: string;
+  roles: string[];
+  sedes: string[];
+  inactividad: number;
+  direccionIp: string | null;
+  agente: string | null;
+  ahora: Date;
+  mfaVerificadaEn: Date | null;
+  emitirPase: boolean;
+}): Promise<ResultadoInicioSesion> {
+  const { createHash, randomBytes } = await import('node:crypto');
+  const pase = entrada.emitirPase ? randomBytes(32).toString('base64url') : null;
+  const paseHash = pase ? createHash('sha256').update(pase).digest('hex') : null;
+  const sesionId = await abrirSesionServidor({
+    tenantId: entrada.tenantId,
+    usuarioId: entrada.usuarioId,
+    inactividadMinutos: entrada.inactividad,
+    direccionIp: entrada.direccionIp,
+    agente: entrada.agente,
+    ahora: entrada.ahora,
+    mfaVerificadaEn: entrada.mfaVerificadaEn,
+    paseHash,
+  });
+  await withTenantTx({ tenant_id: entrada.tenantId, usuario_id: entrada.usuarioId }, async (tx) => {
+    await tx
+      .update(usuarios)
+      .set({
+        intentos_fallidos: 0,
+        nivel_bloqueo: 0,
+        bloqueado_hasta: null,
+        estado: 'activo',
+        ultimo_login: entrada.ahora,
+        actualizado_en: entrada.ahora,
+      })
+      .where(eq(usuarios.id, entrada.usuarioId));
+  });
+  await registrarEvento({
+    tenantId: entrada.tenantId,
+    usuarioId: entrada.usuarioId,
+    tipo: 'inicio_ok',
+    correo: entrada.correo,
+    direccionIp: entrada.direccionIp,
+    ahora: entrada.ahora,
+  });
+  const expira = new Date(entrada.ahora.getTime() + entrada.inactividad * 60_000);
+  return {
+    ok: true,
+    mensaje: '',
+    continuarConCuentasLocales: false,
+    pase: pase ?? undefined,
+    sesion: {
+      id: sesionId,
+      usuarioId: entrada.usuarioId,
+      tenantId: entrada.tenantId,
+      sedeId: entrada.sedes[0] ?? '',
+      rol: entrada.roles[0] ?? '',
+      sedes: entrada.sedes,
+      correo: entrada.correo,
+      expiraEn: expira.toISOString(),
+    },
+  };
 }
 
 export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<ResultadoInicioSesion> {
@@ -288,50 +358,30 @@ export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<Resul
   const roles = membresias.map((fila) => fila.rol);
   const sedes = [...new Set(membresias.map((fila) => fila.sede_id))];
   const inactividad = minutosInactividad(roles, await parametroInactividad(usuario.tenant_id));
-  const sesionId = await abrirSesionServidor({
-    tenantId: usuario.tenant_id,
+  const agente = entrada.agente?.slice(0, 300) ?? null;
+  const { decidirMfa } = await import('./mfa/flujo');
+  const pendiente = await decidirMfa({
     usuarioId: usuario.id,
-    inactividadMinutos: inactividad,
-    direccionIp,
-    agente: entrada.agente?.slice(0, 300) ?? null,
-    ahora,
-  });
-  await guardarUsuario(
-    usuario,
-    {
-      intentos_fallidos: 0,
-      nivel_bloqueo: 0,
-      bloqueado_hasta: null,
-      estado: 'activo',
-      ultimo_login: ahora,
-    },
-    ahora,
-  );
-  await registrarEvento({
     tenantId: usuario.tenant_id,
-    usuarioId: usuario.id,
-    tipo: 'inicio_ok',
-    correo,
+    correo: usuario.email,
+    roles,
     direccionIp,
     ahora,
   });
-
-  const expira = new Date(ahora.getTime() + inactividad * 60_000);
-  return {
-    ok: true,
-    mensaje: '',
-    continuarConCuentasLocales: false,
-    sesion: {
-      id: sesionId,
-      usuarioId: usuario.id,
-      tenantId: usuario.tenant_id,
-      sedeId: sedes[0] ?? '',
-      rol: roles[0] ?? '',
-      sedes,
-      correo: usuario.email,
-      expiraEn: expira.toISOString(),
-    },
-  };
+  if (pendiente) return pendiente;
+  return completarInicio({
+    tenantId: usuario.tenant_id,
+    usuarioId: usuario.id,
+    correo: usuario.email,
+    roles,
+    sedes,
+    inactividad,
+    direccionIp,
+    agente,
+    ahora,
+    mfaVerificadaEn: null,
+    emitirPase: false,
+  });
 }
 
 interface FilaSesion {
@@ -344,12 +394,13 @@ interface FilaSesion {
   inactividad_minutos: number;
   direccion_ip: string | null;
   agente: string | null;
+  mfa_verificada_en: Date | null;
 }
 
 async function leerSesion(sesionId: string): Promise<FilaSesion | null> {
   const resultado = await obtenerPool().query<FilaSesion>(
     `select id, tenant_id, usuario_id, expira_en, revocada_en, ultima_actividad_en,
-            inactividad_minutos, direccion_ip, agente
+            inactividad_minutos, direccion_ip, agente, mfa_verificada_en
        from sesiones
       where id = $1`,
     [sesionId],
@@ -362,6 +413,7 @@ async function leerSesion(sesionId: string): Promise<FilaSesion | null> {
     revocada_en: fila.revocada_en ? new Date(fila.revocada_en) : null,
     ultima_actividad_en: new Date(fila.ultima_actividad_en),
     inactividad_minutos: Number(fila.inactividad_minutos),
+    mfa_verificada_en: fila.mfa_verificada_en ? new Date(fila.mfa_verificada_en) : null,
   };
 }
 
@@ -449,6 +501,8 @@ export async function rotarSesion(
     direccionIp: meta?.direccionIp ?? fila.direccion_ip,
     agente: meta?.agente ?? fila.agente,
     ahora,
+    mfaVerificadaEn: fila.mfa_verificada_en,
+    paseHash: null,
   });
   await withTenantTx({ tenant_id: fila.tenant_id, usuario_id: fila.usuario_id }, async (tx) => {
     await tx

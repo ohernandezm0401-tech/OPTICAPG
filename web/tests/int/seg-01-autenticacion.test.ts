@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 
 import { obtenerAuthPort } from '../../lib/auth/authjs';
+import { codigoTotpDePrueba } from '../../lib/auth/mfa/flujo';
 import { MENSAJE_CREDENCIALES_INVALIDAS, cuerpoHttpInicio, respuestaPublica } from '../../lib/auth/puerto';
 import { cerrarPool, obtenerPool } from '../../db';
 import { asignarMembresia, crearSede, crearTenant, crearUsuario } from '../../db/nucleo';
@@ -41,6 +42,37 @@ async function preparar(rol: 'admin' | 'optometra' | 'asesor' = 'admin') {
   return { tenant, sede, usuario, correo, port };
 }
 
+const secretosMfa = new Map<string, string>();
+
+async function entrarConMfa(
+  port: ReturnType<typeof obtenerAuthPort>,
+  correo: string,
+  ahora: Date,
+) {
+  const inicio = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora });
+  expect(JSON.stringify(inicio)).not.toContain(CLAVE);
+  if (inicio.ok && inicio.sesion && !inicio.pendiente) return inicio;
+  expect(inicio.ticket).toBeTruthy();
+  expect(inicio.sesion).toBeUndefined();
+  let secreto = secretosMfa.get(correo);
+  if (inicio.pendiente === 'enrolar') {
+    const alta = await port.prepararEnrolamientoTotp(inicio.ticket!, ahora);
+    expect(alta.ok).toBe(true);
+    if (!alta.ok) throw new Error('no se pudo preparar el alta TOTP');
+    secreto = alta.secreto;
+    secretosMfa.set(correo, secreto);
+  }
+  if (!secreto) throw new Error('falta el secreto TOTP de la prueba');
+  const confirmado = await port.confirmarSegundoFactor({
+    ticket: inicio.ticket!,
+    codigo: codigoTotpDePrueba(secreto, ahora),
+    ahora,
+  });
+  expect(confirmado.ok).toBe(true);
+  expect(confirmado.sesion?.id).not.toBe(inicio.ticket);
+  return confirmado;
+}
+
 describe('SEG-01 autenticación en PostgreSQL real', () => {
   beforeAll(async () => {
     if (!process.env.DATABASE_URL && !process.env.DATABASE_URL_TEST) {
@@ -59,7 +91,7 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
 
   it('I: guarda Argon2id, abre sesión y no devuelve la contraseña', async () => {
     const { usuario, correo, port } = await preparar();
-    const resultado = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora: AHORA });
+    const resultado = await entrarConMfa(port, correo, AHORA);
     expect(resultado.ok).toBe(true);
     expect(JSON.stringify(resultado)).not.toContain(CLAVE);
     expect(resultado.sesion && Object.keys(resultado.sesion).sort()).toEqual(
@@ -131,7 +163,7 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
 
   it('AC-SEG-01-3 I: la sesión revocada no sirve en la consulta siguiente', async () => {
     const { correo, port } = await preparar();
-    const inicio = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora: AHORA });
+    const inicio = await entrarConMfa(port, correo, AHORA);
     const sesionId = inicio.sesion?.id;
     expect(sesionId).toBeTruthy();
     expect(await port.sesionVigente(sesionId!, AHORA)).toBe(true);
@@ -142,12 +174,15 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
   it('S: el cliente no fija el id; rotar invalida la anterior; cerrar todas también', async () => {
     const { usuario, correo, port } = await preparar();
     const plantada = '11111111-1111-4111-8111-111111111111';
-    const inicio = await port.iniciarSesion({
+    const ignorada = await port.iniciarSesion({
       correo,
       contrasena: CLAVE,
       ahora: AHORA,
       sesionId: plantada,
     } as never);
+    expect(ignorada.sesion).toBeUndefined();
+    expect(ignorada.ticket).not.toBe(plantada);
+    const inicio = await entrarConMfa(port, correo, AHORA);
     expect(inicio.sesion?.id).not.toBe(plantada);
     const existe = await obtenerPool().query('select 1 from sesiones where id = $1', [plantada]);
     expect(existe.rowCount).toBe(0);
@@ -158,11 +193,7 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
     expect(await port.sesionVigente(inicio.sesion!.id, AHORA)).toBe(false);
     expect(await port.sesionVigente(rotada!, AHORA)).toBe(true);
 
-    const segunda = await port.iniciarSesion({
-      correo,
-      contrasena: CLAVE,
-      ahora: new Date(AHORA.getTime() + 1000),
-    });
+    const segunda = await entrarConMfa(port, correo, new Date(AHORA.getTime() + 31_000));
     const cerradas = await port.revocarTodas(usuario.id, AHORA);
     expect(cerradas).toBeGreaterThanOrEqual(2);
     expect(await port.sesionVigente(rotada!, AHORA)).toBe(false);
@@ -171,7 +202,7 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
 
   it('I: la inactividad de un rol clínico vence a los 15 min', async () => {
     const { correo, port } = await preparar('optometra');
-    const inicio = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora: AHORA });
+    const inicio = await entrarConMfa(port, correo, AHORA);
     const dentro = new Date(AHORA.getTime() + 14 * 60_000);
     const fuera = new Date(AHORA.getTime() + 16 * 60_000);
     expect(await port.sesionVigente(inicio.sesion!.id, fuera)).toBe(false);
