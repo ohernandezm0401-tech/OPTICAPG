@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth';
 import { decidirAccesoPanel, rutaInicio } from '@/lib/authz/panel';
 import { actorDesdeSesion } from '@/lib/authz/sesion';
 
+import { BannerCertificado } from '@/components/sedes/banner-certificado';
 import { ToastContainer } from '@/components/ui/toast';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <main id="main-content" className="col-start-1 md:col-start-2 overflow-y-auto p-4 md:p-6 bg-background scrollbar-hide">
         <PageTransition>
           <DashboardGuard>
+            <BannerCertificado />
             {children}
           </DashboardGuard>
         </PageTransition>

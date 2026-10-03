@@ -10,7 +10,7 @@
 | Hoy (`web/supabase_init.sql`, 22 tablas) | Destino | Nota | Estado |
 |---|---|---|---|
 | `empresas` | `tenants` | Se quitan `stripe_*`; `estado` con el flujo `onboarding → activo → suspendido → en_cierre → cerrado` (PLT-03). | ✅ T03 |
-| `sedes` | `sedes` | `habilitacion_salud` (texto libre) → `tipo` (catálogo §10.3), `reps_codigo`; certificados a `certificados_sede` (ADM-01). | ✅ T03 (núcleo; certificados en ADM-01) |
+| `sedes` | `sedes` | `habilitacion_salud` (texto libre) → `tipo` (catálogo §10.3), `reps_codigo`; certificados a `certificados_sede` (ADM-01). | ✅ T03 núcleo; T16 añade director, tecnovigilancia, espejo del certificado y `certificados_sede` |
 | `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). | ✅ T03 (núcleo; perfiles en ADM-02) |
 | — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 + T08 (`mfa_verificada_en`, pase de un solo uso) |
 | — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa` con sobre AES-256-GCM (T11). |
@@ -35,6 +35,7 @@
 | Entornos | `web/lib/entorno.ts` + `web/instrumentation.ts` | `APP_ENV` validado con Zod; en `produccion` el arranque aborta (PLT-10, T05; ver `docs/ENTORNOS.md`). |
 | Semillas sintéticas | `web/db/seeds/sinteticos/` | JSON + sembrador idempotente (`npm run seed:demo` para el núcleo; `sembrarDatosSinteticos` también inserta pacientes sintéticos de T13). Cuentas locales con `npm run seed:dev` (PLT-10, T05). |
 | Pacientes | `web/db/esquema/pacientes.ts`, `web/db/pacientes.ts`, `web/dominio/pacientes.ts` | Recepción en `web/components/pacientes/recepcion-pacientes.tsx`. RLS en `0012_ase01_pacientes.sql`. TODO(Q-17) en `negativa_autorizacion`. |
+| Sedes y certificados | `web/dominio/sedes.ts`, `web/db/sedes-habilitacion.ts`, `web/db/esquema/sedes-habilitacion.ts` | ADM-01 (T16). Extiende `sedes` (no la duplica). `certificados_sede` con RLS ENABLE+FORCE en `0015_adm01_sedes.sql`. TODO(Q-01) vencida no bloquea; TODO(Q-19) director y tecnovigilancia; TODO(Q-20) REPS libre. |
 | Autorización de datos | `web/db/esquema/tratamiento.ts`, `web/db/autorizaciones.ts`, `web/dominio/autorizacion-datos.ts` | SEG-05 (T15). Plantillas versionadas, evidencia, revocatoria de contacto y política por tenant. RLS en `0014_seg05_autorizacion.sql`. Textos con rótulo de borrador jurídico. `puedeAbrirAtencion` y `puedeContactarComercialmente` quedan para las atenciones y para SEG-16. |
 | Acciones | `web/db/nucleo.ts` | CRUD validado con Zod; exigen `tenant_id` explícito hasta que PLT-01 aporte `withTenantTx`. |
 | Validación | `web/db/validacion/nucleo.ts` | DTOs de entrada/salida; nada fiscal con valor quemado. |
