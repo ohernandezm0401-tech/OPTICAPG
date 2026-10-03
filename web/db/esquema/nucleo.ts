@@ -7,7 +7,7 @@
 // esquema deja `tenant_id` y los índices listos para esas políticas.
 // TODO(Q-06): valor por defecto aplicado — PostgreSQL estándar + Drizzle, sin
 // SDK propietario, de modo que el hosting sea intercambiable.
-import { check, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { check, index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Estados de la spec: PLT-03 (`onboarding → activo → suspendido → en_cierre →
@@ -94,6 +94,11 @@ export const usuarios = pgTable(
     email: text('email').notNull(),
     hash_password: text('hash_password'),
     estado: text('estado').notNull().default('invitado'),
+    // SEG-01 (T07): bloqueo progresivo. El primer bloqueo dura 15 min (spec).
+    intentos_fallidos: integer('intentos_fallidos').notNull().default(0),
+    nivel_bloqueo: integer('nivel_bloqueo').notNull().default(0),
+    bloqueado_hasta: timestamp('bloqueado_hasta', { withTimezone: true }),
+    ultimo_login: timestamp('ultimo_login', { withTimezone: true }),
     creado_en: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
     actualizado_en: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -101,6 +106,8 @@ export const usuarios = pgTable(
     index('usuarios_tenant_id_idx').on(tabla.tenant_id),
     uniqueIndex('usuarios_tenant_email_unico').on(tabla.tenant_id, tabla.email),
     check('usuarios_estado_valido', sql`${tabla.estado} in (${listaSql(ESTADOS_USUARIO)})`),
+    check('usuarios_intentos_no_negativos', sql`${tabla.intentos_fallidos} >= 0`),
+    check('usuarios_nivel_bloqueo_no_negativo', sql`${tabla.nivel_bloqueo} >= 0`),
   ],
 );
 
@@ -142,12 +149,16 @@ export const sesiones = pgTable(
     creada_en: timestamp('creada_en', { withTimezone: true }).notNull().defaultNow(),
     expira_en: timestamp('expira_en', { withTimezone: true }).notNull(),
     revocada_en: timestamp('revocada_en', { withTimezone: true }),
+    ultima_actividad_en: timestamp('ultima_actividad_en', { withTimezone: true }).notNull().defaultNow(),
+    // Minutos de inactividad. 15 en roles clínicos (SEG-01); se guarda en la fila.
+    inactividad_minutos: integer('inactividad_minutos').notNull().default(15),
     direccion_ip: text('direccion_ip'),
     agente: text('agente'),
   },
   (tabla) => [
     index('sesiones_tenant_id_idx').on(tabla.tenant_id),
     index('sesiones_usuario_id_idx').on(tabla.usuario_id),
+    check('sesiones_inactividad_positiva', sql`${tabla.inactividad_minutos} > 0`),
   ],
 );
 

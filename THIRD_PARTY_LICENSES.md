@@ -43,7 +43,8 @@
 | `lucide-react` | `^1.14.0` | ISC | prod |
 | `motion` | `^12.23.24` | MIT | prod |
 | `next` | `^15.4.9` | MIT | prod |
-| `next-auth` | `^5.0.0-beta.31` | ISC | prod |
+| `next-auth` | `^5.0.0-beta.31` | ISC | prod (Auth.js v5, todavía en beta; T07) |
+| `@node-rs/argon2` | `^2.2.1` | MIT | prod (Argon2id; T07) |
 | `next-themes` | `^0.4.6` | MIT | prod |
 | `pg` | `^8.23.1` | MIT | prod (controlador PostgreSQL solo-servidor; T03; era dev en T02) |
 | `postcss` | `^8.5.6` | MIT | prod |
@@ -106,9 +107,19 @@ Cambios de T05 respecto a T04: **sin dependencias nuevas** (`zod` MIT ya instala
 en T03, reutilizado para `APP_ENV` en `web/lib/entorno.ts`). Ver
 `docs/DECISIONES.md` (ADR-014) y `docs/ENTORNOS.md`.
 
-## Auditoría transitiva (`package-lock.json`, 697 paquetes)
+Cambios de T07 respecto a T06: se agrega `@node-rs/argon2` `^2.2.1` (MIT,
+verificado con `npm view @node-rs/argon2@2.2.1 license` y el mismo campo en
+los 13 binarios opcionales `@node-rs/argon2-*@2.2.1`, todos MIT, el 3-oct-2026).
+`next-auth` ya estaba en `^5.0.0-beta.31` (ISC; `npm view next-auth@5.0.0-beta.31 license`
+y `npm view next-auth@5.0.0-beta.32 license` → ISC). No se sube de beta.31 a
+beta.32: la versión ya fijada en el candado cumple «5.0.0-beta.x». Ninguna
+transitiva nueva de Argon2 trae LGPL/MPL (`licenses:check`: 711 paquetes, 0
+errores, los mismos 15 avisos PENDIENTE Q-09). No hizo falta TODO(Q-09) por
+esta tarea. Ver `docs/DECISIONES.md` (ADR-015).
 
-Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T03).
+## Auditoría transitiva (`package-lock.json`, 711 paquetes)
+
+Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T07, 711 paquetes).
 
 | Paquete(s) | Licencia | Estado | Origen |
 |---|---|---|---|
