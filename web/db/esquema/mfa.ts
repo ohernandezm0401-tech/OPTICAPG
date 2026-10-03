@@ -1,6 +1,6 @@
 // SEG-01 (T08) — Segundo factor. Español snake_case. Toda tabla con
 // tenant_id nace con RLS ENABLE+FORCE (migración posterior). El secreto TOTP
-// pasa por `ProteccionSecretoMfa` (TODO T11: hoy sin cifrado envelope).
+// pasa por `ProteccionSecretoMfa` (sobre AES-256-GCM, SEG-12).
 import { sql } from 'drizzle-orm';
 import { check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
@@ -25,6 +25,7 @@ export const factoresTotp = pgTable(
       .notNull()
       .references(() => usuarios.id, { onDelete: 'cascade' }),
     secreto_protegido: text('secreto_protegido').notNull(),
+    clave_version: integer('clave_version'),
     ultimo_paso: integer('ultimo_paso'),
     confirmado_en: timestamp('confirmado_en', { withTimezone: true }).notNull(),
     creado_en: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
@@ -92,6 +93,7 @@ export const desafiosMfa = pgTable(
       .references(() => usuarios.id, { onDelete: 'cascade' }),
     proposito: text('proposito').notNull(),
     secreto_pendiente: text('secreto_pendiente'),
+    clave_version: integer('clave_version'),
     codigos_hash: jsonb('codigos_hash').$type<string[]>(),
     codigos_entregados: integer('codigos_entregados').notNull().default(0),
     desafio_webauthn: text('desafio_webauthn'),

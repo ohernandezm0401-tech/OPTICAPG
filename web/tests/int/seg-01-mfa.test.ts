@@ -3,13 +3,14 @@
 // AC-SEG-01-4: firmar con MFA de más de 10 min exige reautenticación.
 // La firma clínica (SEG-08) todavía no existe: se prueba la función reutilizable.
 // S: fuerza bruta del segundo factor, no enumeración y pase de un solo uso.
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 
 import { obtenerAuthPort } from '../../lib/auth/authjs';
+import { fijarRegistroKekParaPruebas } from '../../lib/cifrado/kek.mjs';
 import { codigoTotpDePrueba } from '../../lib/auth/mfa/flujo';
 import { MENSAJE_MFA_INVALIDO } from '../../lib/auth/puerto';
 import { cerrarPool, obtenerPool } from '../../db';
@@ -42,6 +43,10 @@ async function preparar(rol: 'admin' | 'optometra' | 'asesor' | 'oftalmologo' = 
 
 describe('SEG-01 MFA en PostgreSQL real', () => {
   beforeAll(async () => {
+    fijarRegistroKekParaPruebas({
+      activaId: 'prueba-mfa',
+      claves: new Map([['prueba-mfa', randomBytes(32)]]),
+    });
     if (!process.env.DATABASE_URL && !process.env.DATABASE_URL_TEST) {
       throw new Error('Falta DATABASE_URL_TEST.');
     }
@@ -50,6 +55,7 @@ describe('SEG-01 MFA en PostgreSQL real', () => {
   });
 
   afterAll(async () => {
+    fijarRegistroKekParaPruebas(null);
     await cerrarPool();
   });
 
@@ -88,7 +94,9 @@ describe('SEG-01 MFA en PostgreSQL real', () => {
       'select secreto_protegido from factores_totp where usuario_id = $1',
       [usuario.id],
     );
-    expect(factor.rows[0].secreto_protegido).toBe(alta.secreto);
+    expect(factor.rows[0].secreto_protegido).not.toBe(alta.secreto);
+    expect(factor.rows[0].secreto_protegido.startsWith('opt1:')).toBe(true);
+    expect(factor.rows[0].secreto_protegido).not.toContain(alta.secreto);
 
     const despues = new Date(AHORA.getTime() + 31_000);
     const segundo = await port.iniciarSesion({ correo, contrasena: CLAVE, ahora: despues });

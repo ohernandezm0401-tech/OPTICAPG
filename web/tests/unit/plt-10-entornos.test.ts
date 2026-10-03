@@ -57,6 +57,7 @@ function entornoBase(extra: Record<string, string> = {}): Record<string, string>
     APP_ENV: 'produccion',
     NODE_ENV: 'production',
     AUTH_SECRET: 'secreto-generado-de-prueba-con-mas-de-32-caracteres-0123456789',
+    APP_MASTER_KEY: 'configurada-en-la-prueba',
     ...extra,
   };
 }
@@ -106,6 +107,12 @@ describe('AC-PLT-10-1: APP_ENV validado con Zod', () => {
 
   it('producción con secreto generado y sin rastros arranca', () => {
     expect(validarArranque(entornoBase(), sinRastros, sinArchivos)).toBe('produccion');
+  });
+
+  it('producción sin clave maestra aborta', () => {
+    const variables = entornoBase();
+    delete variables.APP_MASTER_KEY;
+    expect(listarProblemasProduccion(variables, sinRastros, sinArchivos).join('\n')).toMatch(/clave maestra/);
   });
 
   it('producción con modo de demostración activo aborta', () => {

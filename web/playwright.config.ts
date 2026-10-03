@@ -2,6 +2,7 @@
 // Corre contra la app construida (`npm run build` y luego `npm run test:e2e`;
 // en CI lo hace el workflow después del paso de build). Si ya hay un servidor
 // en el puerto, se reutiliza fuera de CI.
+import { randomBytes } from 'node:crypto';
 import { defineConfig, devices } from '@playwright/test';
 
 const PUERTO_E2E = Number(process.env.PUERTO_E2E ?? 3100);
@@ -13,6 +14,10 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PUERTO_E
 // efímero (`openssl rand -base64 32`); en producción T05 exige uno generado
 // (AC-PLT-10-1) y este valor nunca debe usarse allí.
 const SECRETO_SOLO_E2E_LOCAL = 'secreto-solo-e2e-local-sin-valor-real';
+
+// KEK efímera del servidor E2E. No es una clave real y no se versiona:
+// se genera al arrancar Playwright (o se reutiliza APP_MASTER_KEY del entorno).
+const KEK_SOLO_E2E = process.env.APP_MASTER_KEY ?? randomBytes(32).toString('base64');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -39,6 +44,8 @@ export default defineConfig({
       // `tests/unit/plt-02-guardas.test.ts`).
       APP_MODE: 'demo',
       DATABASE_URL: process.env.DATABASE_URL ?? process.env.DATABASE_URL_TEST ?? '',
+      APP_MASTER_KEY: KEK_SOLO_E2E,
+      APP_MASTER_KEY_ID: process.env.APP_MASTER_KEY_ID ?? 'e2e',
     },
   },
 });

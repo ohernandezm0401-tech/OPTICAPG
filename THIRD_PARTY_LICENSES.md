@@ -7,6 +7,9 @@
 > Ver `docs/DECISIONES.md` (ADR-007 a ADR-010).
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
+- T11 (SEG-12) no agrega dependencias npm. El cifrado AES-256-GCM usa `node:crypto`
+  (biblioteca estándar de Node.js, licencia MIT del proyecto Node.js; no es un
+  paquete del registro). No hubo paquete nuevo que verificar con `npm view`.
 - T10 (SEG-03) no agrega dependencias npm. El hash encadenado usa `node:crypto`
   (biblioteca estándar de Node.js, no es un paquete del registro). No hubo
   paquete nuevo que verificar.

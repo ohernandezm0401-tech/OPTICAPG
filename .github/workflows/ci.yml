@@ -53,6 +53,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Buscar secretos en el repositorio (SEG-12)
+        run: npm run secretos:buscar
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -73,6 +76,9 @@ jobs:
 
       - name: Verificación RLS multi-tenant (PLT-01)
         run: npm run db:check-rls
+
+      - name: Recifrar secretos MFA legados (SEG-12)
+        run: npm run cifrado:recifrar-mfa
 
       - name: Instalar Chromium para Playwright
         run: npx playwright install --with-deps chromium

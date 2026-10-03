@@ -13,7 +13,7 @@
 | `sedes` | `sedes` | `habilitacion_salud` (texto libre) → `tipo` (catálogo §10.3), `reps_codigo`; certificados a `certificados_sede` (ADM-01). | ✅ T03 (núcleo; certificados en ADM-01) |
 | `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). | ✅ T03 (núcleo; perfiles en ADM-02) |
 | — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 + T08 (`mfa_verificada_en`, pase de un solo uso) |
-| — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa`; hoy es identidad (sin cifrado envelope). TODO(T11): quien lea la columna o un respaldo obtiene el secreto. |
+| — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa` con sobre AES-256-GCM (T11). |
 | — | `permisos_extra`, `intentos_autorizacion` | Excepciones de permiso e intentos denegados (SEG-02). | ✅ T09. RLS ENABLE+FORCE. El intento persistido entra en `auditoria` (T10). |
 | — | `auditoria` | Bitácora append-only con hash SHA-256 por tenant (SEG-03). | ✅ T10. RLS ENABLE+FORCE. Sin UPDATE/DELETE. No guarda contenido clínico. |
 | `pacientes` | `pacientes` + `representantes` + `autorizaciones` | Añadir campos de Res. 1995 art. 9; tipo `RC`. | ⏳ siguiente PR |
@@ -64,7 +64,7 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 - Autorización (SEG-02, T09): la matriz vive en `web/lib/authz/matrix.ts` y las habilidades en `web/lib/authz/ability.ts`. Tablas `permisos_extra` e `intentos_autorizacion` (RLS ENABLE+FORCE, migración `0008`). Atenciones y prescripciones aún no tienen tabla ni endpoint (OPT-01, OPT-05); el contrato está en `web/lib/authz/rutas-clinicas.ts`. La autenticación de SEG-01 está en T07 y T08. La firma clínica que debe llamar `exigirMfaParaFirmarAtencion` llega con SEG-08.
 - Bitácora (SEG-03, T10): tabla `auditoria` (migración `0009`), cadena SHA-256 en `web/lib/auditoria/cadena.mjs` (`node:crypto`). Verificador `npm run auditoria:verificar` (alias `audit:verify`). La lectura de HC reutilizable está en `web/lib/auditoria/lecturas.ts` (recurso de prueba `R3`; la atención real es OPT-01). Vista `/dashboard/auditoria` y CSV en `/api/auditoria/csv`. TODO(Q-07): sin plazo de conservación ni umbral de lecturas anómalas.
-- Respaldos cifrados y restauración probada (PLT-07); secretos y cifrado (SEG-12).
+- Respaldos cifrados y restauración probada (PLT-07). El cifrado de anexos y secretos está en SEG-12 (T11); el respaldo del volumen sigue siendo infraestructura.
 - Alta de tenant con contrato de encargo (PLT-03).
 
 ## 6. Aislamiento multi-tenant (PLT-01, T04)
@@ -119,3 +119,29 @@ Valores iniciales (editables):
 - TODO(Q-18): vigencia y cantidad de la prescripción no se siembran (las escribe el profesional en OPT-05).
 
 La venta y el envío de mensajes todavía no existen. `cerrarLineaConImpuesto` guarda `impuesto_snapshot` y un disparador impide reescribirlo. `programarMensajeComercial(fecha, tenant)` es el predicado que usará SEG-16.
+
+## 8. Cifrado envelope (SEG-12, T11)
+
+AES-256-GCM con `node:crypto`. Cada tenant tiene una clave de datos (DEK) en `claves_datos`; la DEK se guarda envuelta con la clave maestra (KEK) del entorno (`APP_MASTER_KEY` o `APP_MASTER_KEY_FILE`, nunca en el repo). Rotar la KEK solo reenvuelve DEK (`rotarClaveMaestra`). Rotar la DEK re-cifra por lotes (`rotarClaveDatos`) y pasa la clave anterior por `activa → rotada → retirada`.
+
+El cifrado de disco o de volumen del servidor es responsabilidad de la infraestructura. No es una dependencia de código ni se configura aquí.
+
+### Campos cifrados en la aplicación
+
+El plano no se persiste. Las tablas clínicas de atención todavía no existen (OPT-01, OPT-05); el nombre del campo ya está cerrado en `web/lib/cifrado/campos.mjs` para cuando se creen.
+
+| Campo | Dónde | Estado |
+|---|---|---|
+| `atenciones.contenido` | jsonb de la atención (secciones A–I de la spec §17.3) | Contrato. La tabla llega con OPT-01. |
+| `atencion_diagnosticos.descripcion` | Texto del diagnóstico | Contrato. OPT-01. |
+| `atencion_adendas.motivo` | Motivo de la adenda | Contrato. SEG-04 / OPT-01. |
+| `atencion_adendas.nuevo_valor` | Valor nuevo de la adenda | Contrato. SEG-04 / OPT-01. |
+| `prescripciones.indicaciones` | Indicaciones en texto libre | Contrato. OPT-05. |
+| `anexos.contenido_cifrado` | Bytes del anexo | ✅ T11. OPT-14 añadirá el vínculo a la atención. |
+| `factores_totp.secreto_protegido` | Secreto TOTP | ✅ T11. Filas en claro de T08: `npm run cifrado:recifrar-mfa` (solo desarrollo y pruebas). |
+| `desafios_mfa.secreto_pendiente` | Secreto TOTP aún no confirmado | ✅ T11. El mismo script. |
+| `secretos_adaptador.valor_cifrado` | Token de facturación u OAuth RDA (`adaptador` `facturacion` o `rda`) | ✅ T11. `GET/POST /api/adaptadores` solo devuelve id, adaptador, nombre y `configurado`. |
+
+`claves_datos`, `anexos` y `secretos_adaptador` nacen con RLS `ENABLE` + `FORCE` y política `TO optisaas_app` (migración `0010`).
+
+Buscador de secretos en el árbol versionado: `npm run secretos:buscar` (sin dependencia npm; corre en CI). No lee `.env.local`. Omite `web/.agents/` y los lockfiles.
