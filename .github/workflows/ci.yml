@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - cursor/feat-t00-reglas-spec-b7f3
+      - main
+      - master
+
+jobs:
+  calidad:
+    name: lint + typecheck + pruebas + licencias + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Fijar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Instalar dependencias (sin postinstall de terceros)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Auditoría de licencias (PLT-09)
+        run: npm run licenses:check
+
+      - name: Build de producción
+        run: npm run build

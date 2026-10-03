@@ -1849,7 +1849,7 @@ export default function SecretariaSaludPage() {
                         onClick={() => setWasteWizardTab('blanco')}
                         className={`py-1 text-[9px] font-bold rounded-md transition-colors ${
                           wasteWizardTab === 'blanco' 
-                            ? 'bg-card text-foreground border border-border shadow-xs font-extrabold' 
+                            ? 'bg-card text-foreground border border-border shadow-sm font-extrabold' 
                             : 'text-muted-foreground hover:bg-secondary'
                         }`}
                       >

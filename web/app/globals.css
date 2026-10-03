@@ -1,136 +1,91 @@
-@import "tailwindcss";
-
-@theme {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-sidebar-bg: var(--sidebar-bg);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
+    --background: 248 250 252;
+    --foreground: 15 23 42;
 
-    --card: #ffffff;
-    --card-foreground: #0f172a;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
 
-    --popover: #ffffff;
-    --popover-foreground: #0f172a;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
 
     /* Azul clínico profesional */
-    --primary: #3b82f6; 
-    --primary-foreground: #ffffff;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
 
-    --secondary: #f1f5f9;
-    --secondary-foreground: #1e293b;
+    --secondary: 241 245 249;
+    --secondary-foreground: 30 41 59;
 
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
 
-    --accent: #e0f2fe;
-    --accent-foreground: #0284c7;
+    --accent: 224 242 254;
+    --accent-foreground: 2 132 199;
 
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --warning: #f59e0b;
-    --warning-foreground: #ffffff;
+    --warning: 245 158 11;
+    --warning-foreground: 255 255 255;
 
-    --success: #10b981;
-    --success-foreground: #ffffff;
+    --success: 16 185 129;
+    --success-foreground: 255 255 255;
 
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #3b82f6;
-    
-    --sidebar-bg: #0f172a;
-    --sidebar-foreground: #cbd5e1;
-    --sidebar-accent: #1e293b;
-    --sidebar-accent-foreground: #f8fafc;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
+
+    --sidebar-bg: 15 23 42;
+    --sidebar-foreground: 203 213 225;
+    --sidebar-accent: 30 41 59;
+    --sidebar-accent-foreground: 248 250 252;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: #0b1120;
-    --foreground: #e2e8f0;
+    --background: 11 17 32;
+    --foreground: 226 232 240;
 
-    --card: #131c31;
-    --card-foreground: #e2e8f0;
+    --card: 19 28 49;
+    --card-foreground: 226 232 240;
 
-    --popover: #131c31;
-    --popover-foreground: #e2e8f0;
+    --popover: 19 28 49;
+    --popover-foreground: 226 232 240;
 
-    --primary: #60a5fa;
-    --primary-foreground: #0f172a;
+    --primary: 96 165 250;
+    --primary-foreground: 15 23 42;
 
-    --secondary: #1e293b;
-    --secondary-foreground: #e2e8f0;
+    --secondary: 30 41 59;
+    --secondary-foreground: 226 232 240;
 
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
 
-    --accent: #172554;
-    --accent-foreground: #93c5fd;
+    --accent: 23 37 84;
+    --accent-foreground: 147 197 253;
 
-    --destructive: #f87171;
-    --destructive-foreground: #0f172a;
-    
-    --warning: #fbbf24;
-    --warning-foreground: #0f172a;
-    
-    --success: #34d399;
-    --success-foreground: #0f172a;
+    --destructive: 248 113 113;
+    --destructive-foreground: 15 23 42;
 
-    --border: #1e293b;
-    --input: #1e293b;
-    --ring: #60a5fa;
-    
-    --sidebar-bg: #060d1b;
-    --sidebar-foreground: #94a3b8;
-    --sidebar-accent: #131c31;
-    --sidebar-accent-foreground: #e2e8f0;
+    --warning: 251 191 36;
+    --warning-foreground: 15 23 42;
+
+    --success: 52 211 153;
+    --success-foreground: 15 23 42;
+
+    --border: 30 41 59;
+    --input: 30 41 59;
+    --ring: 96 165 250;
+
+    --sidebar-bg: 6 13 27;
+    --sidebar-foreground: 148 163 184;
+    --sidebar-accent: 19 28 49;
+    --sidebar-accent-foreground: 226 232 240;
   }
 }
 
@@ -148,7 +103,7 @@
   .glass-panel {
     @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -171,16 +126,16 @@ main::-webkit-scrollbar-track {
   background: transparent;
 }
 main::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgb(var(--border));
   border-radius: 10px;
 }
 main::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: rgb(var(--muted-foreground));
 }
 
 /* Focus ring for accessibility */
 :focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid rgb(var(--ring));
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -190,8 +145,8 @@ main::-webkit-scrollbar-thumb:hover {
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
   padding: 8px;
   z-index: 100;
   transition: top 0.2s;

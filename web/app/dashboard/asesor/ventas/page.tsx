@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   CreditCard, 
@@ -113,7 +113,8 @@ export default function VentasPage() {
   const promocionesActivas = useMemo(() => promociones.filter(p => p.activa), [promociones]);
 
   // Real-time Promo Eligibility & Constraints Evaluation
-  const validarPromocionParaCarrito = (promo: Promocion, cart: typeof cartItems) => {
+  // Función pura de (promo, carrito) + fecha actual: sin dependencias reactivas.
+  const validarPromocionParaCarrito = useCallback((promo: Promocion, cart: typeof cartItems) => {
     const ahora = new Date();
     
     // Fechas
@@ -141,7 +142,7 @@ export default function VentasPage() {
     }
 
     return { valida: true };
-  };
+  }, []);
 
   // Cart Calculations
   const subtotal = useMemo(() => {
@@ -183,7 +184,7 @@ export default function VentasPage() {
     }
 
     return Math.min(desc, subtotal);
-  }, [promoId, cartItems, subtotal, promociones]);
+  }, [promoId, cartItems, subtotal, promociones, validarPromocionParaCarrito]);
 
   const totalFinal = useMemo(() => {
     return subtotal - descuentoCalculado;
