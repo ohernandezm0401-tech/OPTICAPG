@@ -51,6 +51,12 @@ import {
 const MINUTOS_DESAFIO = 10;
 const MINUTOS_PASE = 2;
 
+function opcionesWebAuthn(opciones: object): Record<string, unknown> {
+  const copia = { ...(opciones as Record<string, unknown>) };
+  if (Array.isArray(copia.hints) && copia.hints.length === 0) delete copia.hints;
+  return copia;
+}
+
 type Desafio = {
   id: string;
   tenant_id: string;
@@ -632,6 +638,7 @@ export async function opcionesRegistroPasskey(entrada: {
     attestationType: 'none',
     excludeCredentials: existentes.map((fila) => ({ id: fila.credencial_id })),
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+    supportedAlgorithmIDs: [-7, -257],
   });
   await withTenantTx({ tenant_id: dueno.tenant_id, usuario_id: dueno.usuario_id }, async (tx) => {
     await tx
@@ -639,7 +646,7 @@ export async function opcionesRegistroPasskey(entrada: {
       .set({ desafio_webauthn: opciones.challenge })
       .where(eq(desafiosMfa.id, dueno.id));
   });
-  return { ok: true, opciones: { ...opciones, ticket: dueno.id } as Record<string, unknown> };
+  return { ok: true, opciones: opcionesWebAuthn(opciones) };
 }
 
 export async function confirmarRegistroPasskey(entrada: {
@@ -734,7 +741,7 @@ export async function opcionesAutenticacionPasskey(entrada: {
       .set({ desafio_webauthn: opciones.challenge, proposito: 'passkey_auth' })
       .where(eq(desafiosMfa.id, desafio.id));
   });
-  return { ok: true, opciones: opciones as unknown as Record<string, unknown> };
+  return { ok: true, opciones: opcionesWebAuthn(opciones) };
 }
 
 export async function confirmarAutenticacionPasskey(entrada: {

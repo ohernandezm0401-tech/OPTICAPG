@@ -1,7 +1,9 @@
 // SEG-01 (T08) — Relying party de WebAuthn. En producción hacen falta
 // `WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN` (no son secretos, pero el origen no se
 // toma del encabezado Host para evitar un RP fijado por el cliente). Fuera de
-// producción se acepta localhost o 127.0.0.1.
+// producción se acepta localhost o 127.0.0.1. El navegador rechaza una IP
+// como relying party (`SecurityError: invalid domain`): en local hay que
+// abrir la app en `localhost`, no en `127.0.0.1`.
 import { esProduccion, type VariablesEntorno } from '../../entorno';
 
 export const NOMBRE_RP = 'OptiSaaS';

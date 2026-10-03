@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Eye, Stethoscope, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
@@ -43,7 +43,28 @@ export default function LoginPage() {
   const [pendiente, setPendiente] = useState<{ paso: PasoMfa; ticket: string; passkey: boolean } | null>(null);
   const [alta, setAlta] = useState<AltaTotpCliente | null>(null);
   const [codigo, setCodigo] = useState('');
+  const [opcionesLlave, setOpcionesLlave] = useState<unknown>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!pendiente) return;
+    if (pendiente.paso === 'verificar' && !pendiente.passkey) return;
+    let vigente = true;
+    const modo = pendiente.paso === 'enrolar' ? 'registro' : 'autenticacion';
+    fetch('/api/auth/mfa/passkey', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ accion: 'opciones', modo, ticket: pendiente.ticket }),
+    })
+      .then(async (respuesta) => {
+        const cuerpo = (await respuesta.json()) as { opciones?: unknown };
+        if (vigente && respuesta.ok && cuerpo.opciones) setOpcionesLlave(cuerpo.opciones);
+      })
+      .catch(() => undefined);
+    return () => {
+      vigente = false;
+    };
+  }, [pendiente]);
 
   const entrar = () => {
     router.push('/dashboard');
@@ -120,7 +141,7 @@ export default function LoginPage() {
   };
 
   const usarLlave = async () => {
-    if (!pendiente) return;
+    if (!pendiente || !opcionesLlave) return;
     setIsLoading(true);
     setError('');
     try {
@@ -131,19 +152,13 @@ export default function LoginPage() {
           }
         | undefined;
       const modo = pendiente.paso === 'enrolar' ? 'registro' : 'autenticacion';
-      const opcionesRes = await fetch('/api/auth/mfa/passkey', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accion: 'opciones', modo, ticket: pendiente.ticket }),
-      });
-      const opcionesCuerpo = (await opcionesRes.json()) as { opciones?: unknown };
       const parsear =
         modo === 'registro' ? publico?.parseCreationOptionsFromJSON : publico?.parseRequestOptionsFromJSON;
-      if (!opcionesRes.ok || !opcionesCuerpo.opciones || !parsear || !navigator.credentials) {
+      if (!parsear || !navigator.credentials) {
         setError(MENSAJE_MFA_INVALIDO);
         return;
       }
-      const opciones = parsear(opcionesCuerpo.opciones);
+      const opciones = parsear(opcionesLlave);
       const credencial =
         modo === 'registro'
           ? await navigator.credentials.create({ publicKey: opciones as PublicKeyCredentialCreationOptions })
@@ -315,7 +330,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={usarLlave}
-                  disabled={isLoading}
+                  disabled={isLoading || !opcionesLlave}
                   className="w-full py-2.5 px-4 rounded-md border border-input text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-900 disabled:opacity-70"
                 >
                   {pendiente.paso === 'enrolar' ? 'Registrar llave de acceso' : 'Entrar con llave de acceso'}

@@ -8,6 +8,10 @@ import { Client } from 'pg';
 import { hashearContrasena } from '../../lib/auth/contrasena';
 import { codigoTotp } from '../../lib/auth/mfa/totp';
 
+// WebAuthn no acepta una IP como relying party. El servidor E2E también
+// escucha en localhost (mismo puerto que playwright.config).
+test.use({ baseURL: `http://localhost:${process.env.PUERTO_E2E ?? 3100}` });
+
 function urlBd(): string {
   const url = process.env.DATABASE_URL || process.env.DATABASE_URL_TEST;
   if (!url) throw new Error('Falta DATABASE_URL para la E2E de MFA.');
@@ -83,6 +87,8 @@ test('E: una llave de acceso opcional también completa el alta', async ({ page 
   const correo = `passkey.${Date.now()}.${randomBytes(3).toString('hex')}@example.invalid`;
   await sembrar('admin', clave, correo);
   await pedirClave(page, correo, clave);
-  await page.getByRole('button', { name: 'Registrar llave de acceso' }).click();
+  const boton = page.getByRole('button', { name: 'Registrar llave de acceso' });
+  await expect(boton).toBeEnabled();
+  await boton.click();
   await expect(page).toHaveURL(/\/dashboard\/admin/);
 });

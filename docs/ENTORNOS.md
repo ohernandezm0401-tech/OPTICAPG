@@ -66,9 +66,11 @@ antes de abrir sesión (T08).
 
 `WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN` no son secretos. Si ambas están definidas,
 el origen de la petición tiene que coincidir. Si faltan, fuera de producción
-solo se acepta `localhost` o `127.0.0.1`. En producción sin esas variables el
-endpoint de llaves de acceso no abre el relying party (no se toma el `Host`
-del cliente como configuración de producción). Ver `web/.env.example`.
+solo se acepta `localhost` o `127.0.0.1`. El navegador no registra una llave
+si el relying party es una IP: en local abra `http://localhost`. En producción
+sin esas variables el endpoint de llaves de acceso no abre el relying party
+(no se toma el `Host` del cliente como configuración de producción). Ver
+`web/.env.example`.
 
 ## 4. Semilla sintética (`seed:demo`)
 

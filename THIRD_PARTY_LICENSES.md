@@ -132,9 +132,9 @@ Transitivas directas revisadas en el mismo registro: `@otplib/core`,
 librería de QR. El QR es código propio (`web/lib/auth/mfa/qr.ts`). Ver
 `docs/DECISIONES.md` (ADR-016).
 
-## Auditoría transitiva (`package-lock.json`, 711 paquetes)
+## Auditoría transitiva (`package-lock.json`, 741 paquetes)
 
-Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T07, 711 paquetes).
+Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T08, 741 paquetes; tras T07 eran 711).
 
 | Paquete(s) | Licencia | Estado | Origen |
 |---|---|---|---|
