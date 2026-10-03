@@ -68,6 +68,9 @@ jobs:
       - name: Auditoría de licencias (PLT-09)
         run: npm run licenses:check
 
+      - name: Catálogos CIE-10 y CUPS no redistribuidos (OPT-10)
+        run: npm run catalogos:check
+
       - name: Build de producción
         run: npm run build
 

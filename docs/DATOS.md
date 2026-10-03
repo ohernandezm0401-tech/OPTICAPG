@@ -192,3 +192,17 @@ No se crea `usuarios_sedes`: el rol por sede sigue en `membresias`. `perfiles_pr
 | Pantallas | `/dashboard/admin/usuarios`, `/invitacion/[token]` | UI en español. Sin registro profesional vigente no se muestra «Firmar como profesional». |
 
 TODO(NV-23): no hay API oficial de tarjeta profesional. La verificación es manual. `entidad` no tiene catálogo ni valor por defecto.
+
+## 12. Catálogos clínicos CIE-10, CUPS y glosario (OPT-10, T18)
+
+TODO(Q-23): la licencia de CIE-10 y CUPS no está verificada. Valor por defecto aplicado: no se redistribuyen en el repositorio. Se cargan en local con el rol de administración de la base (`npm run catalogos:cargar -- archivo.csv`). La fuente prevista es el archivo que publica el Ministerio de Salud y la Protección Social a través de SISPRO; no se fija una URL ni un archivo oficial.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Formato y búsqueda en memoria | `web/dominio/catalogos.mjs` | Encabezado `tipo,codigo,descripcion,version,vigente_desde`. |
+| CSV sintético de 10 filas | `web/datos/catalogos/sintetico-prueba.csv` | Única excepción de AC-OPT-10-2. Marcado `SINTETICO`. No trae descripciones oficiales. |
+| Comprobación de archivos | `npm run catalogos:check` | Falla si aparece otro CSV/XLSX/JSON de CIE-10 o CUPS. |
+| Tablas | `catalogo_cie10`, `catalogo_cups`, `glosario_abreviaturas` | Migración `0017_opt10_catalogos.sql`. |
+| Glosario | `/dashboard/admin/catalogos` y `/dashboard/optometra/catalogos` | Editable por el `admin` del tenant. Una abreviatura fuera de glosario avisa y no bloquea. |
+
+`catalogo_cie10` y `catalogo_cups` no tienen `tenant_id`. El RLS por tenant no aplica: el código es el mismo para todas las ópticas. `optisaas_app` solo tiene `SELECT`. La carga hace `INSERT` con el rol de administración (dueño de `DATABASE_URL`), sin salto de RLS. `glosario_abreviaturas` sí lleva `tenant_id` y nace con RLS `ENABLE` + `FORCE` y política. `npm run db:check-rls` sigue auditando toda tabla con `tenant_id`.
