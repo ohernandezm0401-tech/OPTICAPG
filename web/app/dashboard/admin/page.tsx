@@ -467,7 +467,7 @@ export default function AdminDashboardPage() {
             Monitoreo Normativo (Res. 3100 habilitación)
           </h3>
           <div className="space-y-5">
-            <ProgressBar value={ripsCompliance} label="Porcentaje de Historias Cerradas < 24h" />
+            <ProgressBar value={ripsCompliance} label="Historias con registro clínico en la sede" />
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-muted-foreground">Calibración Periódica de Equipos (Biómetro/Queratómetro)</span>

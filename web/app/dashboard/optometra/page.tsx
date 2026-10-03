@@ -148,7 +148,8 @@ export default function OptometraDashboardPage() {
                 tone="danger"
                 title="Auditoría HC"
                 message={hcPendientesFirma > 0
-                  ? `${hcPendientesFirma} historia(s) sin firma digital. Debe firmarse antes de las 24h para cumplir Res. 3100.`
+                  // TODO(Q-17): interpretación pendiente de abogado. No hay plazo de 24 h.
+                  ? `${hcPendientesFirma} historia(s) en borrador. El borrador no es el registro oficial hasta firmarlo; después solo se corrige con adenda.`
                   : 'No hay historias pendientes de firma en esta sede.'}
               />
             </div>
