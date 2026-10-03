@@ -17,10 +17,12 @@ import * as cifrado from './esquema/cifrado';
 import * as inmutabilidad from './esquema/inmutabilidad';
 import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
+import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
 
 const esquema = {
   ...nucleo,
+  ...pacientes,
   ...parametros,
   ...autenticacion,
   ...mfa,

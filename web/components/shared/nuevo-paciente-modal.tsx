@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserPlus, X, Calendar, User, Phone, Mail, Award, CheckCircle } from 'lucide-react';
+import { accionGuardarPaciente } from '@/app/acciones/pacientes';
 import { useClinicStore } from '@/lib/store';
 import { Paciente, Cita } from '@/lib/types';
 import { toast } from '@/lib/toast-store';
@@ -22,7 +23,7 @@ export function NuevoPacienteModal({ isOpen, onClose }: NuevoPacienteModalProps)
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [documento, setDocumento] = useState('');
-  const [tipoDocumento, setTipoDocumento] = useState<'CC' | 'CE' | 'TI' | 'PA'>('CC');
+  const [tipoDocumento, setTipoDocumento] = useState<Paciente['tipoDocumento']>('CC');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
@@ -33,14 +34,40 @@ export function NuevoPacienteModal({ isOpen, onClose }: NuevoPacienteModalProps)
   const [motivoClinico, setMotivoClinico] = useState('Valoración Inicial Optometría');
   const [prioridad, setPrioridad] = useState<'normal' | 'alta' | 'urgente'>('normal');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre || !apellido || !documento || !telefono || !fechaNacimiento) {
       toast.warning('Por favor complete todos los campos obligatorios (*).');
       return;
     }
 
-    const pacienteId = `pac-${Date.now()}`;
+    const guardado = await accionGuardarPaciente({
+      nombres: nombre,
+      apellidos: apellido,
+      tipo_doc: tipoDocumento,
+      num_doc: documento,
+      fecha_nacimiento: fechaNacimiento,
+      sexo: 'No aplica',
+      estado_civil: 'No aplica',
+      ocupacion: 'No aplica',
+      direccion: 'No aplica',
+      telefono,
+      email: email || null,
+      acompanante: 'No aplica',
+      responsable: 'No aplica',
+      aseguradora: eps || 'No aplica',
+      tipo_vinculacion: 'no_aplica',
+    });
+    if (!guardado.ok) {
+      toast.warning(guardado.errores[0] ?? 'No se pudo guardar el paciente.');
+      return;
+    }
+    if (guardado.resultado.duplicado && guardado.resultado.existente_id) {
+      toast.warning('Ese documento ya existe. Ábralo desde Recepción de pacientes.');
+      return;
+    }
+
+    const pacienteId = guardado.resultado.id;
     const nuevoPaciente: Paciente = {
       id: pacienteId,
       empresaId: empresaId || 'emp1',
@@ -56,7 +83,8 @@ export function NuevoPacienteModal({ isOpen, onClose }: NuevoPacienteModalProps)
       fechaUltimaVisita: agendarHoy ? new Date().toISOString().split('T')[0] : undefined,
     };
 
-    // Save paciente to store
+    // La cita (ASE-02) aún no está en PostgreSQL: conserva el nombre en memoria
+    // solo para esa agenda. El registro del paciente ya quedó en la base.
     addPaciente(nuevoPaciente);
     toast.success(`Paciente ${nombre} ${apellido} registrado exitosamente`);
 
@@ -170,9 +198,13 @@ export function NuevoPacienteModal({ isOpen, onClose }: NuevoPacienteModalProps)
                           className="w-full px-2 py-2 bg-background border border-input rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="CC">C.C.</option>
-                          <option value="CE">C.E.</option>
                           <option value="TI">T.I.</option>
+                          <option value="RC">R.C.</option>
+                          <option value="CE">C.E.</option>
                           <option value="PA">P.A.</option>
+                          <option value="PE">P.E.</option>
+                          <option value="PPT">PPT</option>
+                          <option value="NUIP">NUIP</option>
                         </select>
                       </div>
                       <div className="col-span-2">

@@ -102,8 +102,9 @@ interface ClinicStore {
 
 
 
-// Estado inicial: solo datos sintéticos en memoria (modo demo). Sin
-// persistencia en el navegador: la persistencia real es PostgreSQL (ver `db/`).
+// Estado inicial: solo datos sintéticos en memoria (modo demo) para entidades
+// que todavía no migran. Los pacientes de recepción no se leen ni se escriben
+// aquí (T13): viven en PostgreSQL. Sin persistencia en el navegador.
 const getInitialEmpresas = () => mockEmpresas;
 
 const getInitialUsuarios = () => mockUsuarios;

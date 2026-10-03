@@ -5,7 +5,9 @@
 // identificadores reservados) e inserta con `ON CONFLICT DO NOTHING`: correr
 // dos veces deja la base igual (AC-PLT-10-3). Se niega a correr con
 // `APP_ENV=produccion`. Solo datos sintéticos; nunca datos reales de
-// pacientes. Uso: `DATABASE_URL=... npm run seed:demo`.
+// pacientes. Los pacientes de T13 los inserta `sembrarDatosSinteticos`
+// (`db/seeds/sinteticos/sembrar.ts`), que cifra el documento; este script
+// sigue sembrando el núcleo. Uso: `DATABASE_URL=... npm run seed:demo`.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
