@@ -150,6 +150,15 @@ export function puedeRegistrarPerfil(rol: string): boolean {
   return (ROLES_PERFIL_PROFESIONAL as readonly string[]).includes(rol);
 }
 
+/** Código HTTP de la API de firma. Sin registro vigente la respuesta es 403. */
+export function codigoHttpFirma(codigo: string, mensaje: string): number {
+  if (codigo === 'permiso' || codigo === 'mfa' || codigo === 'tarjeta') {
+    return mensaje.startsWith('Debe iniciar') ? 401 : 403;
+  }
+  if (codigo === 'no_encontrado') return 404;
+  return 400;
+}
+
 export function esPng(bytes: Uint8Array): boolean {
   if (bytes.length < PNG.length || bytes.length > MAX_PNG) return false;
   return PNG.every((byte, indice) => bytes[indice] === byte);

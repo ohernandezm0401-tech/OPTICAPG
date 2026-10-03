@@ -11,7 +11,7 @@
 |---|---|---|---|
 | `empresas` | `tenants` | Se quitan `stripe_*`; `estado` con el flujo `onboarding → activo → suspendido → en_cierre → cerrado` (PLT-03). | ✅ T03 |
 | `sedes` | `sedes` | `habilitacion_salud` (texto libre) → `tipo` (catálogo §10.3), `reps_codigo`; certificados a `certificados_sede` (ADM-01). | ✅ T03 núcleo; T16 añade director, tecnovigilancia, espejo del certificado y `certificados_sede` |
-| `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). | ✅ T03 (núcleo; perfiles en ADM-02) |
+| `usuarios` | `usuarios` + `membresias` + `perfiles_profesionales` + `invitaciones_usuario` | `registro_medico` → perfil profesional; el rol por sede vive en `membresias` (equivale a `usuarios_sedes` de la spec §17.1). La invitación guarda solo el hash del enlace. | ✅ T03 núcleo; T14 perfil; T17 invitación, documento, entidad, firma cifrada y estado |
 | — | `sesiones` | Sesiones servidoras revocables (SEG-01). | ✅ T07 + T08 (`mfa_verificada_en`, pase de un solo uso) |
 | — | `factores_totp`, `codigos_recuperacion`, `credenciales_webauthn`, `desafios_mfa` | Segundo factor (SEG-01). | ✅ T08. El secreto TOTP pasa por `ProteccionSecretoMfa` con sobre AES-256-GCM (T11). |
 | — | `permisos_extra`, `intentos_autorizacion` | Excepciones de permiso e intentos denegados (SEG-02). | ✅ T09. RLS ENABLE+FORCE. El intento persistido entra en `auditoria` (T10). |
@@ -179,3 +179,16 @@ Servicio genérico. Las historias, prescripciones y consentimientos todavía no 
 | Pantallas | `/dashboard/optometra/firma`, `/dashboard/asesor/firma`, verificador en admin y optómetra | UI en español. El verificador compara el PDF subido con el hash del tenant. |
 
 TODO(Q-22): valor por defecto aplicado — firma electrónica simple, hash SHA-256 y sellado propio. La TSA externa queda apagada. BORRADOR – requiere revisión jurídica.
+
+## 11. Usuarios, rol por sede y perfil profesional (ADM-02, T17)
+
+No se crea `usuarios_sedes`: el rol por sede sigue en `membresias`. `perfiles_profesionales` se extiende (documento, tipo, entidad, firma cifrada, estado). `invitaciones_usuario` nace con RLS `ENABLE`+`FORCE` (migración `0016`).
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Reglas | `web/dominio/usuarios-adm.ts` | Un admin no asigna `owner` ni un rol de rango mayor. El enlace vence a las 72 h (ventana operativa, no plazo legal) y es de un solo uso. |
+| Correo | `web/lib/correo/puerto.ts` | `CorreoPort`. El adaptador de desarrollo registra el enlace y no lo envía. |
+| Servicio | `web/db/usuarios-adm.ts` | Invitación, cambio de rol, desactivación (no borra firmas; revoca sesiones) y verificación manual del perfil. |
+| Pantallas | `/dashboard/admin/usuarios`, `/invitacion/[token]` | UI en español. Sin registro profesional vigente no se muestra «Firmar como profesional». |
+
+TODO(NV-23): no hay API oficial de tarjeta profesional. La verificación es manual. `entidad` no tiene catálogo ni valor por defecto.

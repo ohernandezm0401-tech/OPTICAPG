@@ -49,6 +49,7 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: ShieldCheck, iconName: 'ShieldCheck', label: 'Garantías y Cambios', href: '/dashboard/admin/garantias' },
     { icon: HeartPulse, iconName: 'HeartPulse', label: 'Secretaría de Salud', href: '/dashboard/admin/secretaria-salud' },
     { icon: Building2, iconName: 'Building2', label: 'Sedes y certificados', href: '/dashboard/admin/sedes' },
+    { icon: Users, iconName: 'Users', label: 'Usuarios y roles', href: '/dashboard/admin/usuarios' },
     { icon: Settings, iconName: 'Settings', label: 'Configuración Sede', href: '/dashboard/admin/configuracion' },
     { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' },
     { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' },

@@ -298,14 +298,15 @@ export async function guardarPerfilProfesional(
   const id = await conApp(ctx, async (cliente) => {
     const filas = await cliente.query<{ id: string }>(
       `insert into perfiles_profesionales
-         (tenant_id, usuario_id, nombre_completo, registro_profesional, vigente_hasta, verificado_por, verificado_en)
-       values ($1, $2, $3, $4, $5, $6, $7)
+         (tenant_id, usuario_id, nombre_completo, registro_profesional, vigente_hasta, verificado_por, verificado_en, estado)
+       values ($1, $2, $3, $4, $5, $6, $7, 'verificado')
        on conflict (tenant_id, usuario_id)
        do update set nombre_completo = excluded.nombre_completo,
                      registro_profesional = excluded.registro_profesional,
                      vigente_hasta = excluded.vigente_hasta,
                      verificado_por = excluded.verificado_por,
                      verificado_en = excluded.verificado_en,
+                     estado = 'verificado',
                      actualizado_en = now()
        returning id`,
       [ctx.tenant_id, entrada.usuarioId, nombre, registro, entrada.vigenteHasta, ctx.usuario_id, ahora.toISOString()],

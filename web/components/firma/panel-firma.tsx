@@ -59,9 +59,9 @@ export function PanelFirma() {
       <p className="text-sm text-muted-foreground" role="status">
         {estado?.aviso}
         {estado?.motivo === 'mfa_reciente' ? ' Firmar exige un segundo factor reciente.' : ''}
-        {estado?.motivo === 'tarjeta_profesional' || estado?.tarjeta_vigente === false
-          ? ' Firmar exige tarjeta profesional vigente.'
-          : ''}
+        {estado?.tarjeta_vigente === true
+          ? ''
+          : ' Sin registro profesional vigente no puede firmar.'}
       </p>
       {mensaje ? (
         <p className="text-sm" role="alert">
@@ -87,13 +87,15 @@ export function PanelFirma() {
 
       <p className="text-sm">Documento: {documentoId || 'aún no creado'}</p>
 
-      <button
-        type="button"
-        className="rounded-md border px-3 py-2 text-sm"
-        onClick={() => void post({ accion: 'profesional', documento_id: documentoId || '00000000-0000-4000-8000-000000000000' })}
-      >
-        Firmar como profesional
-      </button>
+      {estado?.tarjeta_vigente === true ? (
+        <button
+          type="button"
+          className="rounded-md border px-3 py-2 text-sm"
+          onClick={() => void post({ accion: 'profesional', documento_id: documentoId || '00000000-0000-4000-8000-000000000000' })}
+        >
+          Firmar como profesional
+        </button>
+      ) : null}
 
       <form
         className="space-y-3"

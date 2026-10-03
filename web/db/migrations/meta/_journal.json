@@ -113,6 +113,13 @@
       "when": 1791054000000,
       "tag": "0015_adm01_sedes",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791056000000,
+      "tag": "0016_adm02_usuarios",
+      "breakpoints": true
     }
   ]
 }

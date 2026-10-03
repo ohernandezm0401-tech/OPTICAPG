@@ -24,12 +24,21 @@ export const perfilesProfesionales = pgTable(
     vigente_hasta: date('vigente_hasta'),
     verificado_por: uuid('verificado_por').references(() => usuarios.id),
     verificado_en: timestamp('verificado_en', { withTimezone: true }),
+    // ADM-02 (T17): el tipo, el documento, la entidad y la firma no tienen
+    // catálogo ni valor por defecto. La verificación es manual (NV-23).
+    tipo: text('tipo'),
+    documento: text('documento'),
+    entidad: text('entidad'),
+    firma_png_cifrada: text('firma_png_cifrada'),
+    estado: text('estado').notNull().default('pendiente'),
     creado_en: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
     actualizado_en: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
   },
   (tabla) => [
     index('perfiles_profesionales_tenant_id_idx').on(tabla.tenant_id),
     uniqueIndex('perfiles_profesionales_usuario_unico').on(tabla.tenant_id, tabla.usuario_id),
+    check('perfiles_profesionales_tipo_valido', sql`${tabla.tipo} is null or ${tabla.tipo} in ('optometra', 'oftalmologo')`),
+    check('perfiles_profesionales_estado_valido', sql`${tabla.estado} in ('pendiente', 'verificado', 'no_vigente')`),
   ],
 );
 

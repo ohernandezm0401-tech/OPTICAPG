@@ -313,7 +313,7 @@ export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<Resul
     usuario.estado === 'bloqueado' &&
     (bloqueadoHasta == null || bloqueadoHasta.getTime() > ahora.getTime());
 
-  if (sigueBloqueado || usuario.estado === 'invitado' || !hash) {
+  if (sigueBloqueado || usuario.estado === 'invitado' || usuario.estado === 'desactivado' || !hash) {
     await registrarEvento({
       tenantId: usuario.tenant_id,
       usuarioId: usuario.id,
