@@ -12,6 +12,7 @@ import { obtenerPool } from './index';
 import { puedeFirmarAtencion, puedeIniciarAtencionClinica } from '../dominio/atencion-optica';
 import { CODIGO_TRATAMIENTO, type EstadoAutorizacion } from '../dominio/autorizacion-datos';
 import { fechaCivilEnZona } from '../dominio/fechas';
+import { fechaUltimaTrasFolio } from '../dominio/retencion';
 import { ZONA_BOGOTA } from '../dominio/pacientes';
 import { codigoHttpFirma, lineaSelloProfesional, presentarBogota } from '../dominio/firma';
 import {
@@ -716,6 +717,22 @@ export async function firmarAtencion(ctx: ContextoAtencion, id: string, ahora = 
       );
       if ((firmada.rowCount ?? 0) === 0) {
         throw new ErrorAtencion(409, 'El registro firmado no se puede modificar.');
+      }
+      const folio = await cliente.query<{ paciente_id: string; fecha: string; previa: string | null }>(
+        `select a.paciente_id::text, (a.fecha_atencion at time zone 'America/Bogota')::date::text as fecha,
+                p.fecha_ultima_atencion::text as previa
+           from atenciones a
+           join pacientes p on p.id = a.paciente_id
+          where a.id = $1`,
+        [id],
+      );
+      const filaFolio = folio.rows[0];
+      if (filaFolio) {
+        const siguiente = fechaUltimaTrasFolio(filaFolio.previa, filaFolio.fecha);
+        await cliente.query(
+          `update pacientes set fecha_ultima_atencion = $2::date, actualizado_en = now() where id = $1`,
+          [filaFolio.paciente_id, siguiente],
+        );
       }
     });
     return conApp(ctx, (cliente) => leerVista(cliente, id));

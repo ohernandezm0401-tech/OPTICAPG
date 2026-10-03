@@ -30,6 +30,7 @@ import * as sedesHabilitacion from './esquema/sedes-habilitacion';
 import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
 import * as prescripciones from './esquema/prescripciones';
+import * as retencion from './esquema/retencion';
 import * as tratamiento from './esquema/tratamiento';
 
 const esquema = {
@@ -54,6 +55,7 @@ const esquema = {
   ...consentimientos,
   ...limitesCaptura,
   ...prescripciones,
+  ...retencion,
 };
 
 export function leerUrlBd(): string {

@@ -13,6 +13,7 @@ import { parsearCsvFestivos } from '../dominio/festivos-csv';
 import { capturarInstantaneaImpuesto, type ImpuestoSnapshot } from '../dominio/impuestos';
 import { programarMensajeComercial as programarMensajePuro } from '../dominio/mensajes-comerciales';
 import { CLAVES_PARAMETRO, parametrosIniciales, type ClaveParametro } from '../dominio/parametros-iniciales';
+import { POLITICA_RETENCION_INICIAL } from '../dominio/retencion';
 import {
   bitacoraParametros,
   festivos,
@@ -20,6 +21,7 @@ import {
   parametrosTenant,
   tarifasImpuesto,
 } from './esquema/parametros';
+import { politicaRetencion } from './esquema/retencion';
 import { withTenantTx } from './tenant';
 import {
   EsquemaActualizarParametro,
@@ -57,6 +59,20 @@ export async function sembrarParametrosIniciales(tenantId: string) {
         registrado_en: ahora,
       });
     }
+
+    await tx
+      .insert(politicaRetencion)
+      .values(
+        POLITICA_RETENCION_INICIAL.map((fila) => ({
+          tenant_id: tenantId,
+          tipo_documento: fila.tipo_documento,
+          anios: fila.anios,
+          base_normativa: fila.base_normativa,
+          verificado: fila.verificado,
+          aplica_contratante_no_prestador: true,
+        })),
+      )
+      .onConflictDoNothing();
 
     return tx
       .select()

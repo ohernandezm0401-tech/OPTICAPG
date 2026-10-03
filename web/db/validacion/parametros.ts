@@ -52,6 +52,7 @@ function esquemaValor(clave: ClaveParametro): z.ZodType<string | number | boolea
     case 'moneda':
       return valorMoneda;
     case 'retencion_historias_anios':
+    case 'plazo_archivo_gestion_anios':
       return valorAnios;
     case 'plazo_conservacion_logs':
     case 'plazo_conservacion_facturas':

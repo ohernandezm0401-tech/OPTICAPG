@@ -3,6 +3,7 @@
 // SEG-07 (T26) — Radicación y seguimiento de habeas data / PQR.
 // TODO(Q-32): el aviso de festivos se muestra si el tenant no cargó ninguno.
 // TODO(Q-07): la causa de supresión clínica es un borrador sin plazo en años.
+// La causa puede citar el estado de retención de SEG-09.
 // TODO(Q-17): el sistema no resuelve la base legal de la historia clínica.
 // BORRADOR – requiere revisión jurídica.
 import { useCallback, useEffect, useState, type FormEvent } from 'react';

@@ -12,12 +12,16 @@ export const ZONA_HORARIA_INICIAL = 'America/Bogota';
 export const MONEDA_INICIAL = 'COP';
 export const RETENCION_HISTORIAS_ANIOS_INICIAL = 15;
 export const ROTULO_RETENCION_HISTORIAS = 'según Res. 839/2017 (verificada)';
+export const ARCHIVO_GESTION_ANIOS_INICIAL = 5;
+export const ROTULO_ARCHIVO_GESTION =
+  'spec SEG-09: retención mínima 15 años (5 gestión + 10 central) ✅; Res. 839/2017 art. 3';
 export const ROTULO_PROVISIONAL = 'provisional';
 
 export const CLAVES_PARAMETRO = [
   'zona_horaria',
   'moneda',
   'retencion_historias_anios',
+  'plazo_archivo_gestion_anios',
   'plazo_conservacion_logs',
   'plazo_conservacion_facturas',
   'plazo_aviso_incidente',
@@ -51,6 +55,11 @@ export function parametrosIniciales(): ParametroInicial[] {
       valor: RETENCION_HISTORIAS_ANIOS_INICIAL,
       rotulo: ROTULO_RETENCION_HISTORIAS,
     },
+    {
+      clave: 'plazo_archivo_gestion_anios',
+      valor: ARCHIVO_GESTION_ANIOS_INICIAL,
+      rotulo: ROTULO_ARCHIVO_GESTION,
+    },
     // TODO(Q-07): sin cantidad por defecto.
     { clave: 'plazo_conservacion_logs', valor: null, rotulo: ROTULO_PROVISIONAL },
     { clave: 'plazo_conservacion_facturas', valor: null, rotulo: ROTULO_PROVISIONAL },
@@ -77,7 +86,7 @@ export function parametrosIniciales(): ParametroInicial[] {
     {
       clave: 'causa_bloqueo_supresion_clinica',
       valor:
-        'BORRADOR – requiere revisión jurídica. La supresión de datos clínicos no se ejecuta: la historia clínica permanece bajo retención documental del responsable. Este texto no fija un número de años ni un plazo de retención. TODO(Q-07). El módulo SEG-09 aún no está activo; el bloqueo es el valor por defecto.',
+        'BORRADOR – requiere revisión jurídica. La supresión de datos clínicos no se ejecuta: la historia clínica permanece bajo retención documental del responsable. Estado de retención: {estado_retencion}. Este texto no fija un número de años. TODO(Q-07). La purga no está implementada.',
       rotulo: 'BORRADOR – requiere revisión jurídica',
     },
   ];

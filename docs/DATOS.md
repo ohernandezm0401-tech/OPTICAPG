@@ -223,4 +223,19 @@ El titular radica consulta, reclamo, rectificación, supresión o revocatoria. E
 | RLS | `web/db/migrations/0025_seg07_habeas_data.sql` | `ENABLE` + `FORCE` y política en cada tabla con `tenant_id`. |
 | Pantallas | `/dashboard/admin/habeas-data`, `/dashboard/asesor/habeas-data`, `/dashboard/optometra/habeas-data` | UI en español. El aviso de festivos se muestra si la tabla `festivos` del tenant está vacía. |
 
-La supresión de datos clínicos queda bloqueada por defecto: SEG-09 aún no existe. La causa es el parámetro `causa_bloqueo_supresion_clinica`, texto configurable rotulado «BORRADOR – requiere revisión jurídica», sin un número de años de retención. TODO(Q-07). TODO(Q-17): registrar la solicitud no resuelve la base legal de la historia clínica.
+La supresión de datos clínicos queda bloqueada. La causa es el parámetro `causa_bloqueo_supresion_clinica`, texto configurable rotulado «BORRADOR – requiere revisión jurídica», sin un número de años. Puede incluir `{estado_retencion}`, que SEG-09 sustituye por el estado de archivo del paciente. TODO(Q-07). TODO(Q-17): registrar la solicitud no resuelve la base legal de la historia clínica.
+
+## 14. Retención de la historia clínica (SEG-09, T27)
+
+La conservación mínima es 15 años desde la última atención (Res. 839/2017 art. 3, verificada en la spec) repartidos en 5 de archivo de gestión y 10 de archivo central (spec SEG-09 ✅). Esos dos números viven en `parametros_tenant` (`retencion_historias_anios`, `plazo_archivo_gestion_anios`) y en `politica_retencion`. El parámetro de conservación no baja de 15; sí puede subir. Facturas (art. 632 ET) y logs no tienen cantidad: `verificado = false`, rótulo ⚠️ y `TODO(Q-07)`.
+
+El estado se calcula desde `pacientes.fecha_ultima_atencion` (día civil `America/Bogota` del último folio firmado): `activo` si aún no hay folio, `archivo_gestion` hasta el aniversario de 5 años inclusive, `archivo_central` hasta el de 15 inclusive, y `disposicion_final_pendiente` al día siguiente si no hay marca. Una marca `duplicada` dobla el plazo; una `permanente` no llega a disposición. La purga no se implementa: ese estado no autoriza el borrado.
+
+`inmutabilidad_antes_fila` (T12) rechaza todo `DELETE`. `aplicar_bloqueo_eliminacion_clinica` cuelga ese trigger y el de `TRUNCATE` ya existente en las tablas clínicas que no lo tenían, y revoca `DELETE` y `TRUNCATE` a `optisaas_app`. La política aplica también si el tenant contrata profesionales sin ser prestador (E-04): `aplica_contratante_no_prestador` no puede ser falso.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Cálculo y textos de pantalla | `web/dominio/retencion.ts` | Fechas fijas. Sin plazo inventado. |
+| Tablas | `politica_retencion`, `marcas_retencion` | Migración `0026_seg09_retencion.sql`. RLS `ENABLE` + `FORCE`. |
+| Bloqueo auditado | `web/db/retencion.ts` | `intentarEliminarHistoriaClinica` escribe `auditoria` con resultado `error`. |
+| Pantalla | `/dashboard/admin/retencion` | ✅ verificado y ⚠️ provisional. |

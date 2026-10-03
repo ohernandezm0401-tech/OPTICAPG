@@ -5,6 +5,7 @@
 // TODO(Q-17): el sistema registra la solicitud y no resuelve la tensión entre
 // la historia clínica y la negativa de autorización.
 // TODO(Q-07): la causa de bloqueo de supresión clínica no fija años de retención.
+// SEG-09 puede sustituir {estado_retencion} por el estado de archivo.
 // BORRADOR – requiere revisión jurídica.
 import { esDiaHabil, sumarDiasHabiles } from './calendario-habil';
 import { desplazarDias, fechaCivilEnZona, parsearFechaIso } from './fechas';
@@ -30,7 +31,7 @@ export const AVISO_SIN_FESTIVOS =
 export const LEYENDA_RECLAMO_EN_TRAMITE = 'reclamo en trámite';
 
 export const CAUSA_BLOQUEO_SUPRESION_CLINICA =
-  'BORRADOR – requiere revisión jurídica. La supresión de datos clínicos no se ejecuta: la historia clínica permanece bajo retención documental del responsable. Este texto no fija un número de años ni un plazo de retención. TODO(Q-07). El módulo SEG-09 aún no está activo; el bloqueo es el valor por defecto.';
+  'BORRADOR – requiere revisión jurídica. La supresión de datos clínicos no se ejecuta: la historia clínica permanece bajo retención documental del responsable. Estado de retención: {estado_retencion}. Este texto no fija un número de años. TODO(Q-07). La purga no está implementada.';
 
 export const ROTULO_BORRADOR_JURIDICO = 'BORRADOR – requiere revisión jurídica';
 
@@ -101,6 +102,17 @@ export function causaSupresionVisible(configurada: string | null | undefined): s
   const base = texto.length > 0 ? texto : CAUSA_BLOQUEO_SUPRESION_CLINICA;
   if (base.includes(ROTULO_BORRADOR_JURIDICO)) return base;
   return `${ROTULO_BORRADOR_JURIDICO}. ${base}`;
+}
+
+/**
+ * La causa configurable puede incluir `{estado_retencion}`.
+ * Si no trae el hueco, se anexa el estado para que T26 siga citándolo.
+ */
+export function causaSupresionConEstado(configurada: string | null | undefined, estado: string | null): string {
+  const visible = causaSupresionVisible(configurada);
+  const nombre = estado && estado.trim() !== '' ? estado.trim() : 'sin_paciente';
+  if (visible.includes('{estado_retencion}')) return visible.replaceAll('{estado_retencion}', nombre);
+  return `${visible} Estado de retención: ${nombre}.`;
 }
 
 /** Sin ámbito explícito se trata como clínico: la supresión queda bloqueada. */

@@ -315,7 +315,7 @@ describe('atención optométrica en PostgreSQL', () => {
     const borrar = await sqlApp(`delete from examenes_optometricos where atencion_id = $1`, [creada.id]);
     const diagnostico = await sqlApp(`update diagnosticos set codigo_cie10 = 'ZZ9.9' where atencion_id = $1`, [creada.id]);
     expect(update).toMatch(/inmutable/);
-    expect(borrar).toMatch(/inmutable/);
+    expect(borrar).toMatch(/inmutable|permission denied/i);
     expect(diagnostico).toMatch(/inmutable/);
 
     const rls = await obtenerPool().query<{ tabla: string; forzado: boolean }>(

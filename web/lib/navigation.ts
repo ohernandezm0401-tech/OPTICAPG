@@ -15,6 +15,7 @@ import {
   Shield,
   ShieldCheck,
   Scale,
+  Archive,
   BarChart3,
   HeartPulse,
   FileCheck,
@@ -57,7 +58,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' },
     { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' },
     { icon: Shield, iconName: 'Shield', label: 'Política de tratamiento', href: '/dashboard/admin/politica-tratamiento' },
-    { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/admin/habeas-data' }
+    { icon: Scale, iconName: 'Scale', label: 'Habeas Data y PQR', href: '/dashboard/admin/habeas-data' },
+    { icon: Archive, iconName: 'Archive', label: 'Retención de historias', href: '/dashboard/admin/retencion' }
   ],
   asesor: [
     { icon: LayoutDashboard, iconName: 'LayoutDashboard', label: 'Dashboard Comercial', href: '/dashboard/asesor' },

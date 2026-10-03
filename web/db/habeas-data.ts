@@ -31,6 +31,7 @@ import {
   ZONA_HABEAS,
   alertaMarcaSinTramite,
   calcularVenceEn,
+  causaSupresionConEstado,
   causaSupresionVisible,
   diasHabilesRestantes,
   esCampoDemografico,
@@ -47,6 +48,7 @@ import {
   type TipoSolicitud,
 } from '../dominio/habeas-data';
 import { fechaCivilEnZona } from '../dominio/fechas';
+import { ErrorRetencion, estadoPacienteEnCliente } from './retencion';
 import { presentarBogota } from '../dominio/firma';
 import { sumarDiasHabiles } from '../dominio/calendario-habil';
 import { registrarEvento } from '../lib/auditoria/servicio';
@@ -630,7 +632,17 @@ export async function radicarSolicitud(
       const anio = Number(fechaCivilEnZona(ahora, ZONA_HABEAS).slice(0, 4));
       const radicado = await siguienteRadicado(cliente, ctx.tenant_id, anio);
       const bloqueada = datos.tipo === 'supresion' && supresionClinicaBloqueada(ambito);
-      const causa = bloqueada ? plazos.causa_supresion : null;
+      let estadoRetencion: string | null = null;
+      if (bloqueada && datos.paciente_id) {
+        const hoy = fechaCivilEnZona(ahora, ZONA_HABEAS);
+        try {
+          estadoRetencion = (await estadoPacienteEnCliente(cliente, datos.paciente_id, hoy)).estado;
+        } catch (error) {
+          if (!(error instanceof ErrorRetencion) || error.status !== 404) throw error;
+          estadoRetencion = null;
+        }
+      }
+      const causa = bloqueada ? causaSupresionConEstado(plazos.causa_supresion, estadoRetencion) : null;
       let estado: EstadoSolicitud = 'radicada';
       let respuesta: string | null = null;
       let respondidaEn: string | null = null;

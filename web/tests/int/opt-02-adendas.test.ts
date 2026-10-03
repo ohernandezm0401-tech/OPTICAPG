@@ -275,7 +275,7 @@ describe('adendas de la historia clínica en PostgreSQL', () => {
     const cambio = await sqlApp(TENANT, `update atencion_adendas set motivo = 'otro' where atencion_id = $1`, [base.id]);
     expect(cambio.error).toMatch(/inmutable/i);
     const borrado = await sqlApp(TENANT, `delete from atencion_adendas where atencion_id = $1`, [base.id]);
-    expect(borrado.error).toMatch(/inmutable/i);
+    expect(borrado.error).toMatch(/inmutable|permission denied/i);
     const examen = await sqlApp(TENANT, `update examenes_optometricos set esfera_od = -3 where atencion_id = $1`, [
       base.id,
     ]);
