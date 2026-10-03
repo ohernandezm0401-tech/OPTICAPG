@@ -137,8 +137,8 @@ El plano no se persiste. Las tablas clínicas de atención todavía no existen (
 |---|---|---|
 | `atenciones.contenido` | jsonb de la atención (secciones A–I de la spec §17.3) | Contrato. La tabla llega con OPT-01. |
 | `atencion_diagnosticos.descripcion` | Texto del diagnóstico | Contrato. OPT-01. |
-| `atencion_adendas.motivo` | Motivo de la adenda | Contrato. SEG-04 / OPT-01. |
-| `atencion_adendas.nuevo_valor` | Valor nuevo de la adenda | Contrato. SEG-04 / OPT-01. |
+| `atencion_adendas.motivo` | Motivo de la adenda | Cifrado en la aplicación desde T21 (sobre `opt1:`). |
+| `atencion_adendas.nuevo_valor` | Valor nuevo de la adenda | Cifrado en la aplicación desde T21 (sobre `opt1:`). |
 | `prescripciones.indicaciones` | Indicaciones en texto libre | Contrato. OPT-05. |
 | `anexos.contenido_cifrado` | Bytes del anexo | ✅ T11. OPT-14 añadirá el vínculo a la atención. |
 | `factores_totp.secreto_protegido` | Secreto TOTP | ✅ T11. Filas en claro de T08: `npm run cifrado:recifrar-mfa` (solo desarrollo y pruebas). |
@@ -163,7 +163,7 @@ Una fila firmada no se edita ni se borra. La corrección es un INSERT en `adenda
 
 Las tablas de historia clínica todavía no existen. La tarea que las cree debe ejecutar `select aplicar_marco_inmutabilidad('public.<tabla>'::regclass)` y no publicar un endpoint `DELETE`. El borrado de un borrador lo permite el trigger; hay que anotarlo en la bitácora con la acción `anular`.
 
-`atencion_adendas.motivo` y `atencion_adendas.nuevo_valor` siguen siendo el contrato de cifrado de T11 para cuando exista la atención. El marco genérico no cifra: guarda el texto que reciba.
+`atencion_adendas` (T21, OPT-02) es la adenda de la atención firmada. Nace con RLS `ENABLE`+`FORCE` (migración `0020`) y llama `aplicar_marco_inmutabilidad`. El estado guardado es `firmada`. `motivo` y `nuevo_valor` van cifrados. `valor_anterior_ref` apunta al examen original o a la adenda anterior; no copia el valor en claro. La fila de `atenciones` no se actualiza. La tabla genérica `adendas` sigue sin cifrar y no recibe el motivo clínico: el historial de la HC lee `atencion_adendas`. El PDF reutilizable está en `renderizarPdfHistoriaClinica` (`web/lib/historia/pdf-hc.tsx`); T25 (OPT-06) debe usarlo junto con `documentoHistoriaFirmada` para la copia al paciente.
 
 ## 10. Firma electrónica (SEG-08, T14)
 

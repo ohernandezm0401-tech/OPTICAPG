@@ -10,6 +10,7 @@ import 'server-only';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
+import * as atencionAdendas from './esquema/atencion-adendas';
 import * as atenciones from './esquema/atenciones';
 import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
@@ -43,6 +44,7 @@ const esquema = {
   ...tratamiento,
   ...catalogos,
   ...atenciones,
+  ...atencionAdendas,
   ...limitesCaptura,
 };
 

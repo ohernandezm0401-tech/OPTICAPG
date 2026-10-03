@@ -141,6 +141,13 @@
       "when": 1791062000000,
       "tag": "0019_opt01_limites_captura",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791064000000,
+      "tag": "0020_opt02_atencion_adendas",
+      "breakpoints": true
     }
   ]
 }

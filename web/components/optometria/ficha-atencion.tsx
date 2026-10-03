@@ -8,6 +8,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type Resolver } from 'react-hook-form';
 
+import { PanelAdenda } from '@/components/optometria/adenda-atencion';
+import type { HistorialProyectado } from '@/dominio/adenda-atencion';
 import {
   AUTOGUARDADO_MS,
   CAPTURA_VACIA,
@@ -128,6 +130,10 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resumen, setResumen] = useState(false);
+  const [marcas, setMarcas] = useState<Record<string, string>>({});
+  const alHistorial = useCallback((historial: HistorialProyectado) => {
+    setMarcas(historial.marcas);
+  }, []);
   const ultimo = useRef('');
   const temporizador = useRef<number | undefined>(undefined);
   const epoca = useRef(0);
@@ -172,6 +178,7 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
     setHoraBogota(vista.hora_bogota);
     setSello(vista.sello ?? null);
     setVersion(vista.version_borrador ?? null);
+    setMarcas({});
     reset(captura);
     ultimo.current = JSON.stringify(captura);
   }
@@ -503,6 +510,11 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
                   className={CLASE_CAMPO}
                   {...register(id)}
                 />
+                {marcas[id] ? (
+                  <p data-testid={`marca-${id}`} className="mt-1 text-sm">
+                    {marcas[id]}
+                  </p>
+                ) : null}
               </Campo>
             ))}
           </div>
@@ -610,6 +622,8 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
           </button>
         </div>
       </form>
+
+      {firmada && atencionId ? <PanelAdenda atencionId={atencionId} onHistorial={alHistorial} /> : null}
 
       {resumen ? (
         <div
