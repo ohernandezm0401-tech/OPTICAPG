@@ -7,7 +7,7 @@ import {
   debePedirSegundoFactor,
   mfaEsObligatoria,
 } from '../../lib/auth/mfa/politica';
-import { proteccionIdentidad } from '../../lib/auth/mfa/proteccion';
+import { esSobreTexto } from '../../lib/cifrado/aes.mjs';
 import { svgQr } from '../../lib/auth/mfa/qr';
 import { evaluarMfaParaFirma, VENTANA_MFA_RECIENTE_MS } from '../../lib/auth/mfa/reciente';
 import {
@@ -89,10 +89,8 @@ describe('SEG-01 U: política, ventana de firma y QR', () => {
     expect(svg).not.toContain('<script');
   });
 
-  it('la protección del secreto es la interfaz de identidad hasta T11', () => {
-    expect(proteccionIdentidad.revelar(proteccionIdentidad.proteger('secreto-sintetico'))).toBe(
-      'secreto-sintetico',
-    );
+  it('un secreto TOTP nuevo no tiene forma de sobre cifrado', () => {
+    expect(esSobreTexto(nuevoSecretoTotp())).toBe(false);
   });
 
   it('en local el relying party sale del origen; en producción sin variables no hay passkey', () => {

@@ -105,6 +105,13 @@ export function listarProblemasProduccion(
     );
   }
 
+  const claveMaestra = variables.APP_MASTER_KEY?.trim() || variables.APP_MASTER_KEY_FILE?.trim();
+  if (!claveMaestra) {
+    problemas.push(
+      'falta la clave maestra de cifrado (APP_MASTER_KEY o APP_MASTER_KEY_FILE, fuera del repositorio; ver docs/ENTORNOS.md).',
+    );
+  }
+
   if (existeArchivo) {
     const rastros = nombresRastros.filter((nombre) => {
       try {

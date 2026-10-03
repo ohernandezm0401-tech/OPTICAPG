@@ -29,6 +29,7 @@ Con `APP_ENV=produccion` la app **no arranca** si detecta cualquiera de:
 3. Bandera de datos sintéticos (`DATOS_SINTETICOS=true` o `SEED_DEMO=true`).
 4. Adaptador de facturación simulado (`FACTURACION_ADAPTADOR=simulado`).
 5. Rastros de desarrollo en disco (módulo local de credenciales o semillas).
+6. Clave maestra de cifrado ausente (`APP_MASTER_KEY` o `APP_MASTER_KEY_FILE`).
 
 El error lista cada motivo. Pruebas: `tests/unit/plt-10-entornos.test.ts`
 (AC-PLT-10-1).
@@ -71,6 +72,28 @@ si el relying party es una IP: en local abra `http://localhost`. En producción
 sin esas variables el endpoint de llaves de acceso no abre el relying party
 (no se toma el `Host` del cliente como configuración de producción). Ver
 `web/.env.example`.
+
+## 3.2 Clave maestra de cifrado (SEG-12)
+
+La KEK no se versiona. En local:
+
+```bash
+openssl rand -base64 32
+```
+
+Pegue el resultado en `.env.local` como `APP_MASTER_KEY` (archivo ignorado por git) o guárdelo fuera del repo y apunte `APP_MASTER_KEY_FILE` a esa ruta. `APP_MASTER_KEY_ID` nombra la clave activa (por defecto `1`). Durante una rotación, `APP_MASTER_KEYS_ANTERIORES` lista las claves viejas (`id:base64,id:base64`) hasta que `rotarClaveMaestra` reenvuelva las DEK.
+
+El servidor E2E de Playwright genera una KEK efímera si el entorno no trae una. Vitest hace lo mismo en memoria (`VITEST=true`) para las pruebas que enrolan MFA. No son claves de producción.
+
+Secretos TOTP guardados en claro antes de T11 (solo desarrollo y pruebas):
+
+```bash
+npm run cifrado:recifrar-mfa
+```
+
+El script se niega a correr con `APP_ENV=produccion`. Si no hay filas en claro, termina sin pedir la KEK.
+
+El cifrado del disco donde corre PostgreSQL es de la infraestructura (no hay dependencia de código para eso).
 
 ## 4. Semilla sintética (`seed:demo`)
 

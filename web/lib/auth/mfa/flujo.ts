@@ -22,6 +22,7 @@ import {
 } from '../../../db/esquema/mfa';
 import { sesiones } from '../../../db/esquema/nucleo';
 import { withTenantTx } from '../../../db/tenant';
+import { versionDelSobreTexto } from '../../cifrado/aes.mjs';
 import { INTENTOS_PARA_BLOQUEO, minutosDeBloqueo, minutosInactividad } from '../bloqueo';
 import {
   MENSAJE_MFA_INVALIDO,
@@ -34,7 +35,7 @@ import {
 } from '../puerto';
 import { NOMBRE_RP } from './webauthn';
 import { banderaAsesorActiva, CLAVE_MFA_ASESOR, debePedirSegundoFactor, mfaEsObligatoria } from './politica';
-import { proteccionIdentidad } from './proteccion';
+import { proteccionSecretoMfa } from './proteccion';
 import { svgQr } from './qr';
 import { evaluarMfaParaFirma } from './reciente';
 import {
@@ -63,6 +64,7 @@ type Desafio = {
   usuario_id: string;
   proposito: string;
   secreto_pendiente: string | null;
+  clave_version: number | null;
   codigos_hash: string[] | null;
   codigos_entregados: number;
   desafio_webauthn: string | null;
@@ -113,7 +115,7 @@ async function correoDe(usuarioId: string): Promise<string> {
 
 async function leerDesafio(ticket: string): Promise<Desafio | null> {
   const resultado = await obtenerPool().query<Desafio>(
-    `select id, tenant_id, usuario_id, proposito, secreto_pendiente, codigos_hash,
+    `select id, tenant_id, usuario_id, proposito, secreto_pendiente, clave_version, codigos_hash,
             codigos_entregados, desafio_webauthn, direccion_ip, expira_en, consumido_en
        from desafios_mfa where id = $1`,
     [ticket],
@@ -126,6 +128,7 @@ async function leerDesafio(ticket: string): Promise<Desafio | null> {
     expira_en: new Date(fila.expira_en),
     consumido_en: fila.consumido_en ? new Date(fila.consumido_en) : null,
     codigos_hash: Array.isArray(fila.codigos_hash) ? fila.codigos_hash : null,
+    clave_version: fila.clave_version == null ? null : Number(fila.clave_version),
   };
 }
 
@@ -274,7 +277,7 @@ export async function prepararEnrolamientoTotp(ticket: string, ahora: Date = new
   }
   const correo = await correoDe(desafio.usuario_id);
   if (desafio.secreto_pendiente) {
-    const secreto = proteccionIdentidad.revelar(desafio.secreto_pendiente);
+    const secreto = await proteccionSecretoMfa.revelar(desafio.secreto_pendiente, desafio.tenant_id);
     return {
       ok: true,
       secreto,
@@ -284,13 +287,15 @@ export async function prepararEnrolamientoTotp(ticket: string, ahora: Date = new
     };
   }
   const secreto = nuevoSecretoTotp();
+  const protegido = await proteccionSecretoMfa.proteger(secreto, desafio.tenant_id);
   const codigos = generarCodigosRecuperacion(CANTIDAD_CODIGOS_RECUPERACION);
   const uri = uriTotp(secreto, correo);
   await withTenantTx({ tenant_id: desafio.tenant_id, usuario_id: desafio.usuario_id }, async (tx) => {
     await tx
       .update(desafiosMfa)
       .set({
-        secreto_pendiente: proteccionIdentidad.proteger(secreto),
+        secreto_pendiente: protegido,
+        clave_version: versionDelSobreTexto(protegido),
         codigos_hash: codigos.map(hashearCodigoRecuperacion),
         codigos_entregados: 1,
       })
@@ -383,7 +388,7 @@ export async function confirmarSegundoFactor(entrada: {
 
   if (desafio.proposito === 'enrolar') {
     if (!desafio.secreto_pendiente) return falloMfa();
-    const secreto = proteccionIdentidad.revelar(desafio.secreto_pendiente);
+    const secreto = await proteccionSecretoMfa.revelar(desafio.secreto_pendiente, desafio.tenant_id);
     const totp = verificarTotp(secreto, entrada.codigo, ahora, null);
     if (!totp.valido) {
       await anotarFallo(desafio.usuario_id, desafio.tenant_id, correo, desafio.direccion_ip, ahora);
@@ -395,6 +400,7 @@ export async function confirmarSegundoFactor(entrada: {
         tenant_id: desafio.tenant_id,
         usuario_id: desafio.usuario_id,
         secreto_protegido: desafio.secreto_pendiente!,
+        clave_version: desafio.clave_version,
         ultimo_paso: totp.paso,
         confirmado_en: ahora,
         creado_en: ahora,
@@ -426,7 +432,7 @@ export async function confirmarSegundoFactor(entrada: {
   let aceptado = false;
   if (factor) {
     const totp = verificarTotp(
-      proteccionIdentidad.revelar(factor.secreto_protegido),
+      await proteccionSecretoMfa.revelar(factor.secreto_protegido, desafio.tenant_id),
       entrada.codigo,
       ahora,
       factor.ultimo_paso,
@@ -522,7 +528,7 @@ async function aceptarCodigoDeUsuario(usuarioId: string, tenantId: string, codig
   });
   if (factor) {
     const totp = verificarTotp(
-      proteccionIdentidad.revelar(factor.secreto_protegido),
+      await proteccionSecretoMfa.revelar(factor.secreto_protegido, tenantId),
       codigo,
       ahora,
       factor.ultimo_paso,
