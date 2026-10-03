@@ -176,11 +176,10 @@ export default function LandingPage() {
       setDeviceMac(formattedMac);
       addSecurityLog(`Huella digital de hardware asignada: ${formattedMac}`);
       
-      const storedEmpresas = localStorage.getItem('optisaas_registered_empresas');
-      const registeredList = storedEmpresas ? JSON.parse(storedEmpresas) : [];
-      
-      const ipExists = registeredList.some((e: any) => e.registrationIp === clientIp);
-      const macExists = registeredList.some((e: any) => e.deviceFingerprint === formattedMac);
+      const registradas = useClinicStore.getState().empresas;
+
+      const ipExists = registradas.some((e: any) => e.registrationIp === clientIp);
+      const macExists = registradas.some((e: any) => e.deviceFingerprint === formattedMac);
       
       if (ipExists || macExists) {
         setIsDuplicate(true);
@@ -260,10 +259,9 @@ export default function LandingPage() {
       }
     }
 
-    const storedEmpresas = localStorage.getItem('optisaas_registered_empresas');
-    const registeredList = storedEmpresas ? JSON.parse(storedEmpresas) : [];
-    const isIpDup = registeredList.some((e: any) => e.registrationIp === clientIp);
-    const isMacDup = registeredList.some((e: any) => e.deviceFingerprint === deviceMac);
+    const registradas = useClinicStore.getState().empresas;
+    const isIpDup = registradas.some((e: any) => e.registrationIp === clientIp);
+    const isMacDup = registradas.some((e: any) => e.deviceFingerprint === deviceMac);
 
     if (isIpDup || isMacDup) {
       setIsDuplicate(true);
@@ -282,11 +280,7 @@ export default function LandingPage() {
     }
 
     const emailLower = email.toLowerCase().trim();
-    const storedUsers = localStorage.getItem('optisaas_registered_usuarios');
-    const usersList = storedUsers ? JSON.parse(storedUsers) : [];
-    
-    const emailExists = usersList.some((u: any) => u.email === emailLower) || 
-                        ['owner@optisaas.co', 'admin@visiontotal.com', 'carlos@visiontotal.com', 'dra.vega@visiontotal.com'].includes(emailLower);
+    const emailExists = useClinicStore.getState().usuarios.some((u) => u.email === emailLower);
     
     if (emailExists) {
       addSecurityLog(`Validación fallida: El email ${emailLower} ya se encuentra registrado.`);
@@ -341,9 +335,6 @@ export default function LandingPage() {
     addEmpresa(newEmpresa);
     addSede(newSede);
     addUsuario(newUsuario);
-
-    const updatedRegistered = [...registeredList, { id: empresaId, registrationIp: clientIp, deviceFingerprint: deviceMac }];
-    localStorage.setItem('optisaas_registered_empresas', JSON.stringify(updatedRegistered));
 
     addSecurityLog(`Configuracion exitosa de la empresa: ${opticaName}.`);
     setIsLoading(false);

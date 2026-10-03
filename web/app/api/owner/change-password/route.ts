@@ -1,18 +1,8 @@
+// PLT-02 (T03) — Sin SDK propietario: el cambio real de contraseña contra
+// PostgreSQL (hash Argon2id) llega con T05 (SEG-01). Mientras tanto responde
+// en memoria para no romper el panel del owner.
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createClient } from '@supabase/supabase-js';
-
-// Force IPv4 first DNS lookup to prevent ENOTFOUND on Windows
-if (typeof window === 'undefined') {
-  try {
-    const dns = require('dns');
-    if (dns && typeof dns.setDefaultResultOrder === 'function') {
-      dns.setDefaultResultOrder('ipv4first');
-    }
-  } catch (e) {
-    // Ignore
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -43,58 +33,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Verificar si el ID de usuario tiene formato UUID (necesario para Supabase Auth)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
-      // Simular éxito para usuarios semilla locales que no están en Supabase Auth
-      return NextResponse.json({
-        success: true,
-        message: 'Contraseña actualizada exitosamente (Simulado para usuario local/semilla).'
-      });
-    }
-
-    // 4. Inicializar cliente Supabase Admin con el Service Role Key
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-    if (!supabaseUrl || !supabaseServiceKey || supabaseUrl.includes('placeholder-url') || supabaseServiceKey.includes('placeholder-key')) {
-      // Simular éxito si Supabase no está configurado del todo
-      return NextResponse.json({
-        success: true,
-        message: 'Contraseña actualizada exitosamente (Simulado: Supabase no configurado).'
-      });
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    // 5. Actualizar la contraseña en Supabase Auth
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
-      { password: newPassword }
-    );
-
-    if (error) {
-      console.error('Error al actualizar contraseña en Supabase Auth:', error);
-      return NextResponse.json(
-        { error: `Error de Supabase Auth: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
+    // TODO(T05): actualizar `hash_password` en la tabla `usuarios`.
     return NextResponse.json({
       success: true,
-      message: 'Contraseña actualizada exitosamente.'
+      message: 'Contraseña actualizada exitosamente (demo en memoria).'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en api/owner/change-password:', error);
     return NextResponse.json(
-      { error: error?.message || 'Error interno del servidor.' },
+      { error: error instanceof Error ? error.message : 'Error interno del servidor.' },
       { status: 500 }
     );
   }

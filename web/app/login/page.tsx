@@ -190,7 +190,7 @@ export default function LoginPage() {
             {process.env.NODE_ENV === 'development' && (
               <div className="mt-8 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md">
                 <p className="text-xs font-semibold text-amber-800 dark:text-amber-500 mb-1 uppercase">Solo desarrollo — no usar en producción</p>
-                <p className="text-[11px] text-amber-700 dark:text-amber-600 mb-2">Cuentas ficticias. Desaparecen de este aviso en el build de producción y se ignoran si Supabase está configurado.</p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-600 mb-2">Cuentas ficticias. Desaparecen de este aviso en el build de producción y solo funcionan con APP_MODE=demo.</p>
                 <ul className="text-[11px] text-amber-700 dark:text-amber-600 space-y-1">
                   <li><span className="font-mono bg-white dark:bg-black/20 px-1 py-0.5 rounded">admin@visiontotal.com</span> / admin123 — Admin (dos sedes)</li>
                   <li><span className="font-mono bg-white dark:bg-black/20 px-1 py-0.5 rounded">carlos@visiontotal.com</span> / asesor123 — Asesor</li>

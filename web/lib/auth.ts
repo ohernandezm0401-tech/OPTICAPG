@@ -2,16 +2,8 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { DEV_ONLY_CREDENTIALS } from './dev-credentials';
 import { getUsuarioByEmail } from './mock-data';
+import { esModoDemo } from './modo';
 import type { Usuario } from './types';
-
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  if (!url || !key) return false;
-  if (url.includes('placeholder') || url.includes('tu-proyecto')) return false;
-  if (key.includes('placeholder') || key.includes('tu-anon') || key.includes('tu_anon')) return false;
-  return true;
-}
 
 function passwordsMatch(provided: string, expected: string) {
   const left = new TextEncoder().encode(provided);
@@ -56,32 +48,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = String(credentials?.password || '');
         if (!email || !password) return null;
 
-        if (isSupabaseConfigured()) {
-          try {
-            const { supabase } = await import('./supabase');
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-
-            if (!authError && authData.user) {
-              const { data: userProfile } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', authData.user.id)
-                .single();
-              if (userProfile) {
-                const { mapUsuarioFromDb } = await import('./supabase-mappers');
-                return toAuthUser(mapUsuarioFromDb(userProfile));
-              }
-            } else if (authError) {
-              console.warn('Supabase Auth failed:', authError.message);
-            }
-          } catch (err) {
-            console.error('Error during Supabase Auth validation:', err);
-          }
-          return null;
-        }
+        // T05 autentica contra la tabla `usuarios` de PostgreSQL. Mientras
+        // tanto, las credenciales de demostración solo existen con
+        // `APP_MODE=demo` (AC-PLT-02-4; ver `lib/modo.ts`).
+        if (!esModoDemo()) return null;
 
         const mockUser = authenticateDevUser(email, password);
         return mockUser ? toAuthUser(mockUser) : null;
