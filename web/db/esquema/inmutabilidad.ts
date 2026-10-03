@@ -1,6 +1,6 @@
 // SEG-04 (T12) — Tabla genérica de adendas. RLS ENABLE + FORCE en la
-// migración 0011. Las historias todavía no existen: T19 debe llamar
-// `aplicar_marco_inmutabilidad` sobre cada tabla clínica.
+// migración 0011. T19 llama `aplicar_marco_inmutabilidad` sobre
+// atenciones, exámenes, diagnósticos y planes de manejo.
 // TODO(Q-17): el borrador no es el registro oficial hasta firmar.
 // TODO(Q-22): hash SHA-256, sin sello de tiempo.
 import { sql } from 'drizzle-orm';

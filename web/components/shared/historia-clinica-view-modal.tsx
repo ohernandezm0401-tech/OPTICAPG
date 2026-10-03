@@ -40,63 +40,21 @@ export function HistoriaClinicaViewModal({ isOpen, onClose, hc, pacienteInfo, ci
     return age;
   };
 
-  // Default mock EMR if none is saved on the appointment
-  const currentHc: HistoriaClinica = hc || {
-    pacienteId: pacienteInfo.id,
-    citaId: '',
-    fechaRegistro: new Date().toISOString(),
-    anamnesis: {
-      motivo: 'Refiere disminución en la agudeza visual de lejos y astenopia al finalizar el día laboral.',
-      usoLentes: 'Monofocal',
-      antecedentes: {
-        ocularesPersonales: ['Uso de lentes monofocales desde hace 3 años'],
-        ocularesFamiliares: ['Padre con glaucoma diagnosticado'],
-        sistemicosPersonales: ['Ninguno relevante'],
-        otros: 'Paciente trabaja frente a computador +8 horas diarias.'
-      }
-    },
-    pruebasPreliminares: {
-      coverTestLejos: 'Ortoforia',
-      coverTestCerca: 'Exoforia Fisiológica (2 Δ)',
-      reflejosPupilares: 'Normorreactivos (PIRRL)',
-      motilidadOcular: 'Músculos extraoculares sin restricción en las 9 posiciones de mirada.'
-    },
-    refraccion: {
-      lensometriaOD: { esfera: '-1.50', cilindro: '-0.50', eje: '180', avLejos: '20/30', avCerca: '20/20' },
-      lensometriaOI: { esfera: '-1.25', cilindro: '-0.25', eje: '175', avLejos: '20/25', avCerca: '20/20' },
-      queratometriaOD: '43.00 / 43.50 @ 180°',
-      queratometriaOI: '42.75 / 43.25 @ 175°',
-      retinoscopiaOD: { esfera: '-2.00', cilindro: '-0.75', eje: '180', avLejos: '20/40', avCerca: '20/20' },
-      retinoscopiaOI: { esfera: '-1.75', cilindro: '-0.50', eje: '175', avLejos: '20/30', avCerca: '20/20' },
-      subjetivoOD: { esfera: '-2.00', cilindro: '-0.75', eje: '180', avLejos: '20/20', avCerca: '20/20' },
-      subjetivoOI: { esfera: '-1.75', cilindro: '-0.50', eje: '175', avLejos: '20/20', avCerca: '20/20' },
-      dp: '62 mm'
-    },
-    saludOcular: {
-      biomicroscopiaOD: 'Córnea transparente, cámara anterior amplia, conjuntiva sin inyección ciliar.',
-      biomicroscopiaOI: 'Córnea transparente, conjuntiva normal. Sin alteraciones en el segmento anterior.',
-      oftalmoscopiaOD: 'Relación copa/disco 0.3. Mácula normal, retina aplicada. Vasos 2/3.',
-      oftalmoscopiaOI: 'Relación copa/disco 0.3. Sin lesiones activas en polo posterior.',
-      presionIntraocularOD: 14,
-      presionIntraocularOI: 15
-    },
-    diagnosticoPlan: {
-      cie10Principal: 'H52.1',
-      cie10PrincipalNombre: 'Miopía',
-      cie10Secundario: 'H52.2',
-      cie10SecundarioNombre: 'Astigmatismo',
-      planTratamiento: 'Se prescribe corrección óptica en policarbonato con antirreflejo premium. Filtro azul para pantallas. Control en 1 año.',
-      firmaDigitalConfirmada: true,
-      nombreProfesional: 'Dra. Silva',
-      registroMedico: 'RM-12345-CO'
-    },
-    recomendacion: {
-      material: 'Policarbonato',
-      diseno: 'Monofocal',
-      tipo: 'Terminado',
-      sintomas: 'Trabaja 8+ horas en computador, refiere astenopia y fatiga ocular.'
-    }
-  };
+  if (!hc) {
+    return (
+      <div role="dialog" aria-modal="true" aria-labelledby="titulo-hc-ausente" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80">
+        <div className="bg-card border border-border rounded-2xl max-w-md w-full p-6 space-y-4">
+          <h2 id="titulo-hc-ausente" className="text-lg font-bold">Historia clínica</h2>
+          <p>La historia clínica no está en la cita. El optómetra la abre en la atención.</p>
+          <button type="button" onClick={onClose} className="rounded-md border border-border px-3 py-2 text-sm font-semibold">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentHc: HistoriaClinica = hc;
 
   return (
     <AnimatePresence>

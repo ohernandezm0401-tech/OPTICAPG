@@ -830,7 +830,6 @@ export default function AsesorDashboardPage() {
             setSelectedCita(null);
             setSelectedPaciente(null);
           }}
-          hc={selectedCita?.historiaClinica}
           pacienteInfo={selectedPaciente}
           citaEstadoComercial={selectedCita?.estadoComercial}
         />

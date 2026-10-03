@@ -1,6 +1,5 @@
 // SEG-03 (T10) — Lectura reutilizable de historia clínica.
-// Las atenciones todavía no existen (OPT-01). Este servicio registra la
-// apertura de un recurso de prueba `R3` y descarta cualquier contenido
+// OPT-01 abre la atención con este servicio. Descarta cualquier contenido
 // clínico que el llamador hubiera adjuntado por error.
 import 'server-only';
 

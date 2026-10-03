@@ -48,7 +48,6 @@ export default function SecretariaSaludPage() {
     actualizarConceptoSanitario,
     addSaneamientoLog,
     pacientes,
-    citas
   } = useClinicStore();
 
   const [activeTab, setActiveTab] = useState<'standards' | 'equipment' | 'ambient' | 'pgiras' | 'disinfection' | 'sanitation' | 'clinical'>('standards');
@@ -173,7 +172,7 @@ export default function SecretariaSaludPage() {
   ).length;
 
   // CIE-10 and Clinical Records auditing
-  const citasConHC = citas.filter(c => c.historiaClinica).length;
+  const citasConHC = 0;
   const totalHistorias = citasConHC;
   
   // Submit daily temperature log
