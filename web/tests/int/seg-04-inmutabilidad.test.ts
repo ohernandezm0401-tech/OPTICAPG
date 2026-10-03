@@ -41,7 +41,21 @@ async function sembrar() {
   );
 }
 
+async function limpiarAdendasPrueba() {
+  // Solo la limpieza de la prueba, como superusuario. El rol de aplicación
+  // no puede desactivar el trigger ni borrar una adenda firmada.
+  const cliente = await obtenerPool().connect();
+  try {
+    await cliente.query('ALTER TABLE adendas DISABLE TRIGGER inmutabilidad_fila');
+    await cliente.query('DELETE FROM adendas WHERE entidad = $1', [TABLA]);
+  } finally {
+    await cliente.query('ALTER TABLE adendas ENABLE TRIGGER inmutabilidad_fila');
+    cliente.release();
+  }
+}
+
 async function prepararTabla() {
+  await limpiarAdendasPrueba();
   await obtenerPool().query(`drop table if exists ${TABLA}`);
   await obtenerPool().query(
     `create table ${TABLA} (
@@ -137,6 +151,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await limpiarAdendasPrueba();
   await obtenerPool().query(`drop table if exists ${TABLA}`);
   await cerrarPool();
 });
