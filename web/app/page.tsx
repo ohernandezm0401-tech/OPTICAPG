@@ -109,7 +109,7 @@ export default function LandingPage() {
   const faqData = [
     {
       question: "¿Cómo garantiza la plataforma el cumplimiento de la Resolución 3100 de 2019 (REPS)?",
-      answer: "OptiSaaS está diseñado de acuerdo con los estándares de habilitación exigidos por el Ministerio de Salud de Colombia. El sistema realiza la validación formal del Código de Sede del Registro Especial de Prestadores de Servicios de Salud (REPS), estructurando las historias clínicas con los datos mínimos obligatorios de optometría (anamnesis, refracción, queratometría, prescripción final, patologías y firma digital) y aplicando bloqueos de seguridad que impiden modificaciones posteriores transcurridas 24 horas del registro del paciente."
+      answer: "OptiSaaS está diseñado de acuerdo con los estándares de habilitación exigidos por el Ministerio de Salud de Colombia. El sistema realiza la validación formal del Código de Sede del Registro Especial de Prestadores de Servicios de Salud (REPS), estructurando las historias clínicas con los datos mínimos obligatorios de optometría (anamnesis, refracción, queratometría, prescripción final, patologías y firma digital) y aplicando bloqueos que impiden modificar la historia después de firmada. La corrección posterior queda en una adenda y el original sigue visible."
     },
     {
       question: "¿Cómo funciona la generación automática de archivos RIPS bajo la normativa vigente?",

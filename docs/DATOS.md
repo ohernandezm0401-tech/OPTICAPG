@@ -145,3 +145,19 @@ El plano no se persiste. Las tablas clínicas de atención todavía no existen (
 `claves_datos`, `anexos` y `secretos_adaptador` nacen con RLS `ENABLE` + `FORCE` y política `TO optisaas_app` (migración `0010`).
 
 Buscador de secretos en el árbol versionado: `npm run secretos:buscar` (sin dependencia npm; corre en CI). No lee `.env.local`. Omite `web/.agents/` y los lockfiles.
+
+## 9. Marco de inmutabilidad (SEG-04, T12)
+
+Una fila firmada no se edita ni se borra. La corrección es un INSERT en `adendas`. No hay ventana de 24 horas.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Estados | `web/lib/inmutabilidad/estados.ts` | `borrador → firmado` (registro) o `firmada` (adenda). `adendado` solo se calcula si hay adendas. TODO(Q-17). |
+| Tabla | `adendas` | `entidad`, `entidad_id`, `adenda_de`, `motivo`, `contenido`, `firmado_por`, `firmado_en`, `hash_contenido`, `tenant_id`. RLS `ENABLE` + `FORCE` (migración `0011`). |
+| Triggers | `aplicar_marco_inmutabilidad(regclass)` | Exige las siete columnas del marco y rechaza `UPDATE`/`DELETE`/`TRUNCATE` de lo firmado. La hora de firma es `now()` del servidor. |
+| Consulta | `consulta_registro_con_adendas` | Original y adendas, con autor y hora en `America/Bogota`. |
+| Verificación | `verificar_hash_contenido` y `npm run inmutabilidad:verificar` | SHA-256 del JSON de la fila sin `hash_contenido`. TODO(Q-22): no es sello de tiempo. |
+
+Las tablas de historia clínica todavía no existen. La tarea que las cree debe ejecutar `select aplicar_marco_inmutabilidad('public.<tabla>'::regclass)` y no publicar un endpoint `DELETE`. El borrado de un borrador lo permite el trigger; hay que anotarlo en la bitácora con la acción `anular`.
+
+`atencion_adendas.motivo` y `atencion_adendas.nuevo_valor` siguen siendo el contrato de cifrado de T11 para cuando exista la atención. El marco genérico no cifra: guarda el texto que reciba.

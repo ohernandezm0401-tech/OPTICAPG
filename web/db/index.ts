@@ -14,6 +14,7 @@ import * as auditoria from './esquema/auditoria';
 import * as autenticacion from './esquema/autenticacion';
 import * as autorizacion from './esquema/autorizacion';
 import * as cifrado from './esquema/cifrado';
+import * as inmutabilidad from './esquema/inmutabilidad';
 import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
 import * as parametros from './esquema/parametros';
@@ -26,6 +27,7 @@ const esquema = {
   ...autorizacion,
   ...auditoria,
   ...cifrado,
+  ...inmutabilidad,
 };
 
 export function leerUrlBd(): string {
