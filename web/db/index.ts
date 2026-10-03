@@ -20,6 +20,7 @@ import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
 import * as pacientes from './esquema/pacientes';
 import * as parametros from './esquema/parametros';
+import * as tratamiento from './esquema/tratamiento';
 
 const esquema = {
   ...nucleo,
@@ -32,6 +33,7 @@ const esquema = {
   ...cifrado,
   ...firma,
   ...inmutabilidad,
+  ...tratamiento,
 };
 
 export function leerUrlBd(): string {

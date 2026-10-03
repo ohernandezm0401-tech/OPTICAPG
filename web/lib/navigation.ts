@@ -50,7 +50,8 @@ export const NAV_CONFIG: Record<Role, NavItemConfig[]> = {
     { icon: HeartPulse, iconName: 'HeartPulse', label: 'Secretaría de Salud', href: '/dashboard/admin/secretaria-salud' },
     { icon: Settings, iconName: 'Settings', label: 'Configuración Sede', href: '/dashboard/admin/configuracion' },
     { icon: Shield, iconName: 'Shield', label: 'Bitácora de auditoría', href: '/dashboard/auditoria' },
-    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' }
+    { icon: FileCheck, iconName: 'FileCheck', label: 'Verificador de firmas', href: '/dashboard/admin/verificador-firma' },
+    { icon: Shield, iconName: 'Shield', label: 'Política de tratamiento', href: '/dashboard/admin/politica-tratamiento' }
   ],
   asesor: [
     { icon: LayoutDashboard, iconName: 'LayoutDashboard', label: 'Dashboard Comercial', href: '/dashboard/asesor' },

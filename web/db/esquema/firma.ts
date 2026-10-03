@@ -1,6 +1,7 @@
 // SEG-08 (T14) — Firma electrónica simple y documento de ejemplo.
 // Las HC, prescripciones y consentimientos todavía no existen: `tipo` solo
-// admite `ejemplo_sintetico`. RLS ENABLE+FORCE en la migración 0013.
+// admite `ejemplo_sintetico` y, desde T15, `autorizacion_datos`.
+// RLS ENABLE+FORCE en la migración 0013.
 // TODO(Q-22): sin PDF/A y sin TSA obligatoria.
 import { sql } from 'drizzle-orm';
 import { boolean, check, date, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
@@ -58,7 +59,10 @@ export const documentosFirma = pgTable(
   (tabla) => [
     index('documentos_firma_tenant_id_idx').on(tabla.tenant_id),
     index('documentos_firma_hash_idx').on(tabla.tenant_id, tabla.hash_documento),
-    check('documentos_firma_tipo_valido', sql`${tabla.tipo} = 'ejemplo_sintetico'`),
+    check(
+      'documentos_firma_tipo_valido',
+      sql`${tabla.tipo} in ('ejemplo_sintetico', 'autorizacion_datos')`,
+    ),
     check('documentos_firma_estado_valido', sql`${tabla.estado} in ('pendiente', 'firmado', 'sellado')`),
     check(
       'documentos_firma_hash',
@@ -107,7 +111,10 @@ export const firmas = pgTable(
     index('firmas_tenant_id_idx').on(tabla.tenant_id),
     index('firmas_documento_id_idx').on(tabla.documento_id),
     check('firmas_tipo_firmante_valido', sql`${tabla.tipo_firmante} in ('profesional', 'paciente')`),
-    check('firmas_documento_tipo_valido', sql`${tabla.documento_tipo} = 'ejemplo_sintetico'`),
+    check(
+      'firmas_documento_tipo_valido',
+      sql`${tabla.documento_tipo} in ('ejemplo_sintetico', 'autorizacion_datos')`,
+    ),
     check('firmas_hash', sql`${tabla.hash_documento} is null or ${tabla.hash_documento} ~ '^[a-f0-9]{64}$'`),
   ],
 );
