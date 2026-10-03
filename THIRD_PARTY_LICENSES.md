@@ -8,10 +8,12 @@
 
 - Fecha de verificación en el registro npm: 3 de octubre de 2026 (UTC).
 - Método: `npm view <paquete>@<versión declarada> license` (campo `license` del registro npm)
-  para las directas cambiadas en T01 (`tailwindcss@3.4.17` → MIT; `@types/node@^22` → MIT)
-  y en T02 (`vitest@2.1.9` → MIT; `@playwright/test@1.63.0` → Apache-2.0; `pg@8.23.1` → MIT;
-  `@types/pg@8.23.1` → MIT); el resto de directas conserva la verificación de T00 (3-oct-2026). El árbol transitivo
-  se audita con `npm run licenses:check`, que lee `package-lock.json` (618 paquetes tras T02).
+  para las directas cambiadas en T01 (`tailwindcss@3.4.17` → MIT; `@types/node@^22` → MIT),
+  en T02 (`vitest@2.1.9` → MIT; `@playwright/test@1.63.0` → Apache-2.0; `pg@8.23.1` → MIT;
+  `@types/pg@8.23.1` → MIT) y en T03 (`drizzle-orm@0.45.3` → Apache-2.0;
+  `drizzle-kit@0.31.11` → MIT; `server-only@0.0.1` → MIT; `zod@4.6.5` → MIT);
+  el resto de directas conserva la verificación de T00 (3-oct-2026). El árbol transitivo
+  se audita con `npm run licenses:check`, que lee `package-lock.json` (697 paquetes tras T03).
 - Licencias permitidas por la regla 2: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
   (más las admitidas para datos/herramientas según PLT-09: 0BSD, MIT-0, BlueOak-1.0.0,
   CC0-1.0, Unlicense, Python-2.0, CC-BY-4.0 solo datos).
@@ -28,23 +30,26 @@
 |---|---|---|---|
 | `@base-ui/react` | `^1.4.1` | MIT | prod |
 | `@hookform/resolvers` | `^5.2.1` | MIT | prod |
-| `@supabase/supabase-js` | `^2.106.2` | MIT | prod |
 | `autoprefixer` | `^10.4.21` | MIT | prod |
 | `class-variance-authority` | `^0.7.1` | Apache-2.0 | prod |
 | `clsx` | `^2.1.1` | MIT | prod |
 | `date-fns` | `^4.1.0` | MIT | prod |
+| `drizzle-orm` | `^0.45.3` | Apache-2.0 | prod (capa de datos servidor; T03) |
 | `jsbarcode` | `^3.12.3` | MIT | prod |
 | `lucide-react` | `^1.14.0` | ISC | prod |
 | `motion` | `^12.23.24` | MIT | prod |
 | `next` | `^15.4.9` | MIT | prod |
 | `next-auth` | `^5.0.0-beta.31` | ISC | prod |
 | `next-themes` | `^0.4.6` | MIT | prod |
+| `pg` | `^8.23.1` | MIT | prod (controlador PostgreSQL solo-servidor; T03; era dev en T02) |
 | `postcss` | `^8.5.6` | MIT | prod |
 | `react` | `^19.2.1` | MIT | prod |
 | `react-dom` | `^19.2.1` | MIT | prod |
 | `recharts` | `^3.8.1` | MIT | prod |
+| `server-only` | `^0.0.1` | MIT | prod (garantiza conexión solo-servidor; T03) |
 | `sonner` | `^2.0.7` | MIT | prod |
 | `tailwind-merge` | `^3.3.1` | MIT | prod |
+| `zod` | `^4.6.5` | MIT | prod (DTOs del borde servidor; T03) |
 | `zustand` | `^5.0.13` | MIT | prod |
 
 ## Dependencias de desarrollo (`devDependencies` en `web/package.json`)
@@ -57,13 +62,13 @@
 | `@types/react` | `^19` | MIT | dev |
 | `@types/react-dom` | `^19` | MIT | dev |
 | `bcryptjs` | `^3.0.3` | BSD-3-Clause | dev |
+| `drizzle-kit` | `^0.31.11` | MIT | dev (migraciones versionadas; T03) |
 | `eslint` | `9.39.1` | MIT | dev |
 | `eslint-config-next` | `16.0.8` | MIT | dev |
 | `tailwindcss` | `^3.4.17` | MIT | dev |
 | `typescript` | `5.9.3` | Apache-2.0 | dev |
 | `vitest` | `^2.1.8` (instalado 2.1.9) | MIT | dev (pruebas unitarias e integración; T02) |
 | `@playwright/test` | `^1.63.0` | Apache-2.0 | dev (pruebas E2E; T02) |
-| `pg` | `^8.23.1` | MIT | dev (solo pruebas de integración contra PostgreSQL real, sin mocks de BD; T02) |
 | `@types/pg` | `^8.23.1` | MIT | dev (tipos de `pg` para `tsc --noEmit`; T02) |
 
 Cambios de T01 respecto a T00: `tailwindcss` 4.1.11 → `^3.4.17` (MIT, verificado en el
@@ -80,9 +85,18 @@ primero se probó `vitest@5.0.3` (MIT), pero su `vite@8.3.2` trae `lightningcss@
 basado en esbuild) y el árbol quedó limpio (618 paquetes, 0 errores). Ver
 `docs/DECISIONES.md` (ADR-011).
 
-## Auditoría transitiva (`package-lock.json`, 618 paquetes)
+Cambios de T03 respecto a T02: se retira `@supabase/supabase-js` (el navegador ya no
+usa SDK propietario; la capa demo queda en memoria y la persistencia es PostgreSQL
+vía Server Actions) y se agregan `drizzle-orm` `^0.45.3` (Apache-2.0),
+`drizzle-kit` `^0.31.11` (MIT, solo migraciones), `server-only` `^0.0.1` (MIT,
+garantiza conexión solo-servidor) y `zod` `^4.6.5` (MIT, DTOs del borde),
+verificados en el registro npm el 3-oct-2026. `pg` `^8.23.1` (MIT) pasa de
+`devDependencies` a `dependencies` (controlador de la capa servidor). Ver
+`docs/DECISIONES.md` (ADR-012).
 
-Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T02).
+## Auditoría transitiva (`package-lock.json`, 697 paquetes)
+
+Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T03).
 
 | Paquete(s) | Licencia | Estado | Origen |
 |---|---|---|---|

@@ -31,6 +31,8 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/optisaas_pruebas
+      # PLT-02 (T03): la app E2E (`/nucleo`) persiste contra el mismo servicio.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/optisaas_pruebas
     defaults:
       run:
         working-directory: web
@@ -66,11 +68,14 @@ jobs:
       - name: Build de producción
         run: npm run build
 
+      - name: Migrar esquema núcleo (PLT-02)
+        run: npm run db:migrate
+
       - name: Instalar Chromium para Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Generar AUTH_SECRET efímero (solo E2E, sin valor real)
         run: echo "AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
 
-      - name: Pruebas E2E (/login)
+      - name: Pruebas E2E (/login, /nucleo, demo)
         run: npm run test:e2e

@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import { Cita, StatusType, RecomendacionClinica, Paciente, HistoriaClinica, ProductoInventario, Empresa, Sede, Usuario, Promocion, OrdenTrabajo, OrderStatus, Garantia, EquipoMedico, LecturaAmbiental, IncidenteTecnovigilancia, RegistroResiduos, RegistroDesinfeccion, ConceptoSanitario, ServicioSaneamiento, TransaccionCaja, CajaSesion, DesgloseCaja, Proveedor, Compra, ConfiguracionMargenes, MensajeLog } from './types';
 import { mockCitas, mockPacientes, mockInventario, mockEmpresas, mockSedes, mockUsuarios, mockPromociones, mockOrdenesTrabajo, mockGarantias, mockEquiposMedicos, mockLecturasAmbientales, mockRegistrosResiduos, mockRegistrosDesinfeccion, mockConceptoSanitario, mockSaneamientoLogs, mockCajaSesiones } from './mock-data';
-import { supabase } from './supabase';
-import * as mappers from './supabase-mappers';
 
-const isSupabaseActive = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  return !!url && !url.includes('placeholder-url') && !url.includes('tu-proyecto-id');
-};
+// PLT-02 (T03) — Capa demo en memoria: sin persistencia en el navegador para
+// datos de dominio (pacientes, HC, bitácoras, ventas, caja) y sin SDK
+// propietario en el navegador. La persistencia real vive en PostgreSQL vía
+// Server Actions (`db/` + `app/acciones/`). Cada entidad migra en su propio
+// PR.
 
 
 export interface PlatformConfig {
@@ -99,156 +98,35 @@ interface ClinicStore {
   setSedeWhatsappConnected: (sedeId: string, connected: boolean) => void;
   mensajesGlobales: MensajeLog[];
   enviarMensajeChat: (sedeId: string, pacienteNombre: string, pacienteTelefono: string, texto: string, direccion?: 'entrante' | 'saliente') => void;
-  initializeStoreFromSupabase: () => Promise<void>;
 }
 
 
 
-// Helper functions for client-side persistence
-const getInitialEmpresas = () => {
-  if (typeof window === 'undefined') return mockEmpresas;
-  try {
-    const stored = localStorage.getItem('optisaas_registered_empresas');
-    if (stored) {
-      const custom = JSON.parse(stored);
-      const filteredCustom = custom.filter((c: any) => !mockEmpresas.some(me => me.id === c.id));
-      return [...mockEmpresas, ...filteredCustom];
-    }
-  } catch (e) {
-    console.error("Error loading empresas from localStorage", e);
-  }
-  return mockEmpresas;
-};
+// Estado inicial: solo datos sintéticos en memoria (modo demo). Sin
+// persistencia en el navegador: la persistencia real es PostgreSQL (ver `db/`).
+const getInitialEmpresas = () => mockEmpresas;
 
-const getInitialUsuarios = () => {
-  if (typeof window === 'undefined') return mockUsuarios;
-  try {
-    const stored = localStorage.getItem('optisaas_registered_usuarios');
-    if (stored) {
-      const custom = JSON.parse(stored);
-      const filteredCustom = custom.filter((c: any) => !mockUsuarios.some(mu => mu.id === c.id));
-      return [...mockUsuarios, ...filteredCustom];
-    }
-  } catch (e) {
-    console.error("Error loading usuarios from localStorage", e);
-  }
-  return mockUsuarios;
-};
+const getInitialUsuarios = () => mockUsuarios;
 
-const getInitialSedes = () => {
-  if (typeof window === 'undefined') return mockSedes;
-  try {
-    const stored = localStorage.getItem('optisaas_registered_sedes');
-    if (stored) {
-      const custom = JSON.parse(stored);
-      const filteredCustom = custom.filter((c: any) => !mockSedes.some(ms => ms.id === c.id));
-      return [...mockSedes, ...filteredCustom];
-    }
-  } catch (e) {
-    console.error("Error loading sedes from localStorage", e);
-  }
-  return mockSedes;
-};
+const getInitialSedes = () => mockSedes;
 
-const getInitialEquiposMedicos = () => {
-  if (typeof window === 'undefined') return mockEquiposMedicos;
-  try {
-    const stored = localStorage.getItem('optisaas_equipos_medicos');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading equipos from localStorage", e);
-  }
-  return mockEquiposMedicos;
-};
+const getInitialEquiposMedicos = () => mockEquiposMedicos;
 
-const getInitialLecturasAmbientales = () => {
-  if (typeof window === 'undefined') return mockLecturasAmbientales;
-  try {
-    const stored = localStorage.getItem('optisaas_lecturas_ambientales');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading lecturas from localStorage", e);
-  }
-  return mockLecturasAmbientales;
-};
+const getInitialLecturasAmbientales = () => mockLecturasAmbientales;
 
-const getInitialRegistrosResiduos = () => {
-  if (typeof window === 'undefined') return mockRegistrosResiduos;
-  try {
-    const stored = localStorage.getItem('optisaas_registros_residuos');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading residuos from localStorage", e);
-  }
-  return mockRegistrosResiduos;
-};
+const getInitialRegistrosResiduos = () => mockRegistrosResiduos;
 
-const getInitialRegistrosDesinfeccion = () => {
-  if (typeof window === 'undefined') return mockRegistrosDesinfeccion;
-  try {
-    const stored = localStorage.getItem('optisaas_registros_desinfeccion');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading desinfeccion from localStorage", e);
-  }
-  return mockRegistrosDesinfeccion;
-};
+const getInitialRegistrosDesinfeccion = () => mockRegistrosDesinfeccion;
 
-const getInitialConceptoSanitario = () => {
-  if (typeof window === 'undefined') return mockConceptoSanitario;
-  try {
-    const stored = localStorage.getItem('optisaas_concepto_sanitario');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading concepto sanitario from localStorage", e);
-  }
-  return mockConceptoSanitario;
-};
+const getInitialConceptoSanitario = () => mockConceptoSanitario;
 
-const getInitialSaneamientoLogs = () => {
-  if (typeof window === 'undefined') return mockSaneamientoLogs;
-  try {
-    const stored = localStorage.getItem('optisaas_saneamiento_logs');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading saneamiento logs from localStorage", e);
-  }
-  return mockSaneamientoLogs;
-};
+const getInitialSaneamientoLogs = () => mockSaneamientoLogs;
 
-const getInitialCajaSesiones = () => {
-  if (typeof window === 'undefined') return mockCajaSesiones;
-  try {
-    const stored = localStorage.getItem('optisaas_caja_sesiones');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading caja sesiones from localStorage", e);
-  }
-  return mockCajaSesiones;
-};
+const getInitialCajaSesiones = () => mockCajaSesiones;
 
-const getInitialCajaSesionActiva = () => {
-  if (typeof window === 'undefined') return null;
-  try {
-    const stored = localStorage.getItem('optisaas_caja_sesion_activa');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {
-    console.error("Error loading active caja sesion from localStorage", e);
-  }
-  return null;
-};
+const getInitialCajaSesionActiva = () => null;
 
-const getInitialWhatsappSedes = () => {
-  if (typeof window === 'undefined') return { sede1: false, sede2: false };
-  try {
-    return {
-      sede1: localStorage.getItem('optisaas_whatsapp_connected_sede1') === 'true',
-      sede2: localStorage.getItem('optisaas_whatsapp_connected_sede2') === 'true',
-    };
-  } catch (e) {
-    return { sede1: false, sede2: false };
-  }
-};
+const getInitialWhatsappSedes = () => ({ sede1: false, sede2: false });
 
 import { LENTES_COMERCIALES_CATALOGO } from './lentes-catalog';
 import scrapedLentes from './scraped-lentes.json';
@@ -293,21 +171,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         mensajesLogs: [...(updatedCaja.comunicaciones?.mensajesLogs || []), newLog]
       };
       updatedCaja = { ...updatedCaja, comunicaciones: nuevasComms };
-      if (typeof window !== 'undefined') localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-    }
-
-    if (isSupabaseActive()) {
-      supabase.from('mensajes_logs').insert({
-        id: newLog.id,
-        sesion_id: updatedCaja?.id || null,
-        tipo: newLog.tipo,
-        paciente_nombre: newLog.pacienteNombre,
-        paciente_telefono: newLog.pacienteTelefono,
-        fecha_envio: newLog.fechaEnvio,
-        mensaje_text: newLog.mensajeText,
-        estado: newLog.estado,
-        direccion: newLog.direccion
-      }).then(({ error }) => { if (error) console.error('Error logging chat message in Supabase:', error); });
     }
 
     return { 
@@ -316,11 +179,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     };
   }),
   setSedeWhatsappConnected: (sedeId, connected) => {
-    if (isSupabaseActive()) {
-      supabase.from('sedes').update({ whatsapp_conectado: connected }).eq('id', sedeId)
-        .then(({ error }) => { if (error) console.error('Error updating whatsapp_conectado in Supabase:', error); });
-    }
-    
     set((state) => ({
       sedes: state.sedes.map(s => s.id === sedeId ? { ...s, whatsappConectado: connected } : s),
       whatsappSedesConectadas: {
@@ -329,64 +187,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       }
     }));
   },
-
-  initializeStoreFromSupabase: async () => {
-    if (!isSupabaseActive()) return;
-    try {
-      const { data: emps } = await supabase.from('empresas').select('*');
-      const { data: sds } = await supabase.from('sedes').select('*');
-      const { data: usrs } = await supabase.from('usuarios').select('*');
-      const { data: pacs } = await supabase.from('pacientes').select('*');
-      const { data: cts } = await supabase.from('citas').select('*');
-      const { data: hcs } = await supabase.from('historias_clinicas').select('*');
-      const { data: invs } = await supabase.from('inventario').select('*');
-      const { data: promos } = await supabase.from('promociones').select('*');
-      const { data: ords } = await supabase.from('ordenes_trabajo').select('*');
-      const { data: gars } = await supabase.from('garantias').select('*');
-      const { data: cjs } = await supabase.from('caja_sesiones').select('*');
-      const { data: txs } = await supabase.from('transacciones_caja').select('*');
-      const { data: msgs } = await supabase.from('mensajes_logs').select('*');
-
-      set((state) => ({
-        empresas: emps && emps.length > 0 ? emps.map(mappers.mapEmpresaFromDb) : state.empresas,
-        sedes: sds && sds.length > 0 ? sds.map(mappers.mapSedeFromDb) : state.sedes,
-        usuarios: usrs && usrs.length > 0 ? usrs.map(mappers.mapUsuarioFromDb) : state.usuarios,
-        pacientes: pacs && pacs.length > 0 ? pacs.map(mappers.mapPacienteFromDb) : state.pacientes,
-        inventario: invs && invs.length > 0 ? invs.map(mappers.mapInventarioFromDb) : state.inventario,
-        promociones: promos && promos.length > 0 ? promos.map(mappers.mapPromocionFromDb) : state.promociones,
-        garantias: gars && gars.length > 0 ? gars.map(mappers.mapGarantiaFromDb) : state.garantias,
-        citas: cts && cts.length > 0 ? cts.map((c: any) => {
-          const matchingHc = hcs?.find((h: any) => h.cita_id === c.id);
-          return mappers.mapCitaFromDb(c, matchingHc);
-        }) : state.citas,
-        ordenesTrabajo: ords && ords.length > 0 ? ords.map(mappers.mapOrdenFromDb) : state.ordenesTrabajo,
-        cajaSesiones: cjs && cjs.length > 0 ? cjs.map((cj: any) => {
-          const relatedTxs = txs?.filter((t: any) => t.sesion_id === cj.id) || [];
-          return mappers.mapCajaSesionFromDb(cj, relatedTxs);
-        }) : state.cajaSesiones,
-        cajaSesionActiva: cjs ? (() => {
-          const open = cjs.find((cj: any) => cj.estado === 'abierta');
-          if (!open) return null;
-          const relatedTxs = txs?.filter((t: any) => t.sesion_id === open.id) || [];
-          return mappers.mapCajaSesionFromDb(open, relatedTxs);
-        })() : state.cajaSesionActiva,
-        mensajesGlobales: msgs && msgs.length > 0 ? msgs.map((m: any) => ({
-          id: m.id,
-          tipo: m.tipo,
-          pacienteNombre: m.paciente_nombre,
-          pacienteTelefono: m.paciente_telefono,
-          fechaEnvio: m.fecha_envio,
-          mensajeText: m.mensaje_text,
-          detalleAdicional: m.detalle_adicional,
-          estado: m.estado,
-          direccion: m.direccion || 'saliente'
-        })) : state.mensajesGlobales
-      }));
-    } catch (err) {
-      console.error('Error fetching data from Supabase, using local fallback:', err);
-    }
-  },
-
 
   // Módulo de Compras y Márgenes
   proveedores: [
@@ -454,44 +254,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       }
     });
 
-    if (isSupabaseActive()) {
-      // 1. Save Compra Invoice
-      supabase.from('compras').insert({
-        id: compra.id,
-        empresa_id: compra.empresaId,
-        proveedor_id: compra.proveedorId,
-        fecha: compra.fechaCompra,
-        total: compra.valorCompra,
-        factura_soporte_id: compra.numeroFactura,
-        detalles: compra.detalles
-      }).then(({ error }) => { if (error) console.error('Error saving Compra to Supabase:', error); });
-
-      // 2. Save Inventory Changes
-      compra.detalles.forEach(det => {
-        if (det.productoId) {
-          const updatedItem = updatedInventario.find(i => i.id === det.productoId);
-          if (updatedItem) {
-            supabase.from('inventario').update({
-              stock: updatedItem.stock,
-              precio_compra: updatedItem.precioCompra,
-              precio_venta: updatedItem.precioVenta,
-              precio: updatedItem.precio
-            }).eq('id', det.productoId)
-              .then(({ error }) => { if (error) console.error('Error updating inventory stock in Supabase:', error); });
-          }
-        } else {
-          // Find the newly pushed product from updatedInventario
-          const brand = det.nuevoProductoJson?.marca;
-          const model = det.nuevoProductoJson?.modelo;
-          const newlyAddedItem = updatedInventario.find(i => i.marca === brand && i.modelo === model && i.categoria === det.nuevoProductoJson?.categoria);
-          if (newlyAddedItem) {
-            supabase.from('inventario').insert(mappers.mapInventarioToDb(newlyAddedItem, compra.empresaId))
-              .then(({ error }) => { if (error) console.error('Error inserting new inventory item to Supabase:', error); });
-          }
-        }
-      });
-    }
-
     return {
       compras: [...state.compras, compra],
       inventario: updatedInventario
@@ -504,10 +266,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
   })),
 
   updateCitaStatus: (id, status) => {
-    if (isSupabaseActive()) {
-      supabase.from('citas').update({ estado_comercial: status }).eq('id', id)
-        .then(({ error }) => { if (error) console.error('Error updating appointment status in Supabase:', error); });
-    }
     set((state) => ({
       citas: state.citas.map(cita => 
         cita.id === id ? { ...cita, estadoComercial: status } : cita
@@ -515,10 +273,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     }));
   },
   updateCitaRecomendacion: (id, recomendacion) => {
-    if (isSupabaseActive()) {
-      supabase.from('citas').update({ recomendacion }).eq('id', id)
-        .then(({ error }) => { if (error) console.error('Error updating appointment recommendation in Supabase:', error); });
-    }
     set((state) => ({
       citas: state.citas.map(cita => 
         cita.id === id ? { ...cita, recomendacion } : cita
@@ -526,10 +280,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     }));
   },
   addPaciente: (paciente) => {
-    if (isSupabaseActive()) {
-      supabase.from('pacientes').insert(mappers.mapPacienteToDb(paciente))
-        .then(({ error }) => { if (error) console.error('Error adding patient to Supabase:', error); });
-    }
     set((state) => {
       const active = state.cajaSesionActiva;
       let updatedCaja = active;
@@ -565,27 +315,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           nuevosPacientesIds: nuevosIds,
           comunicaciones: nuevasComms
         };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-        }
-
-        if (isSupabaseActive()) {
-          supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCaja)).eq('id', updatedCaja.id)
-            .then(({ error }) => { if (error) console.error('Error updating active session communications in Supabase:', error); });
-          if (newLog) {
-            supabase.from('mensajes_logs').insert({
-              id: newLog.id,
-              sesion_id: updatedCaja.id,
-              tipo: newLog.tipo,
-              paciente_nombre: newLog.pacienteNombre,
-              paciente_telefono: newLog.pacienteTelefono,
-              fecha_envio: newLog.fechaEnvio,
-              mensaje_text: newLog.mensajeText,
-              detalle_adicional: newLog.detalleAdicional,
-              estado: newLog.estado
-            }).then(({ error }) => { if (error) console.error('Error logging first-contact message in Supabase:', error); });
-          }
-        }
       }
       return {
         pacientes: [...state.pacientes, paciente],
@@ -594,10 +323,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     });
   },
   addCita: (cita) => {
-    if (isSupabaseActive()) {
-      supabase.from('citas').insert(mappers.mapCitaToDb(cita))
-        .then(({ error }) => { if (error) console.error('Error adding appointment to Supabase:', error); });
-    }
     set((state) => {
       const active = state.cajaSesionActiva;
       let updatedCaja = active;
@@ -639,27 +364,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           ...active,
           comunicaciones: nuevasComms
         };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-        }
-
-        if (isSupabaseActive()) {
-          supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCaja)).eq('id', updatedCaja.id)
-            .then(({ error }) => { if (error) console.error('Error updating active session in Supabase:', error); });
-          if (newLog) {
-            supabase.from('mensajes_logs').insert({
-              id: newLog.id,
-              sesion_id: updatedCaja.id,
-              tipo: newLog.tipo,
-              paciente_nombre: newLog.pacienteNombre,
-              paciente_telefono: newLog.pacienteTelefono,
-              fecha_envio: newLog.fechaEnvio,
-              mensaje_text: newLog.mensajeText,
-              detalle_adicional: newLog.detalleAdicional,
-              estado: newLog.estado
-            }).then(({ error }) => { if (error) console.error('Error logging appointment message in Supabase:', error); });
-          }
-        }
       }
       return {
         citas: [...state.citas, cita],
@@ -668,12 +372,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
     });
   },
   guardarHistoriaClinica: (citaId, hc) => {
-    if (isSupabaseActive()) {
-      supabase.from('citas').update({ estado_comercial: 'cotizando' }).eq('id', citaId)
-        .then(({ error }) => { if (error) console.error('Error updating appointment status in Supabase:', error); });
-      supabase.from('historias_clinicas').upsert(mappers.mapHistoriaClinicaToDb(hc))
-        .then(({ error }) => { if (error) console.error('Error saving EMR in Supabase:', error); });
-    }
     set((state) => ({
       citas: state.citas.map(cita => 
         cita.id === citaId 
@@ -690,35 +388,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
   completeCitaPago: (citaId, pagoInfo) => {
     const facturaId = `FAC-${Date.now()}`;
     const fechaPago = new Date().toISOString();
-    
-    if (isSupabaseActive()) {
-      supabase.from('citas').update({
-        estado_comercial: 'pagado',
-        factura_id: facturaId,
-        cufe: pagoInfo.cufe,
-        pdf_url: pagoInfo.pdfUrl,
-        monto_cobrado: pagoInfo.monto,
-        metodo_pago: pagoInfo.metodoPago,
-        fecha_pago: fechaPago,
-        promocion_aplicada_id: pagoInfo.promocionAplicadaId || null,
-        descuento_aplicado: pagoInfo.descuentoAplicado || null,
-        productos_vendidos: pagoInfo.productosVendidos || null
-      }).eq('id', citaId)
-        .then(({ error }) => { if (error) console.error('Error completing payment in Supabase:', error); });
-      
-      const state = useClinicStore.getState();
-      const citaObj = state.citas.find(c => c.id === citaId);
-      if (citaObj) {
-        supabase.from('pacientes').select('saldo_pendiente').eq('id', citaObj.pacienteId).single()
-          .then(({ data }) => {
-            if (data) {
-              const newBalance = Math.max(0, Number(data.saldo_pendiente) - (pagoInfo.monto || 0));
-              supabase.from('pacientes').update({ saldo_pendiente: newBalance }).eq('id', citaObj.pacienteId)
-                .then(({ error }) => { if (error) console.error('Error updating patient balance in Supabase:', error); });
-            }
-          });
-      }
-    }
 
     set((state) => {
       let nuevasPromos = state.promociones;
@@ -795,31 +464,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           transacciones: [...updatedCajaActiva.transacciones, newTx],
           comunicaciones: nuevasComms
         };
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCajaActiva));
-        }
-
-        if (isSupabaseActive()) {
-          supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCajaActiva)).eq('id', updatedCajaActiva.id)
-            .then(({ error }) => { if (error) console.error('Error updating active session in Supabase:', error); });
-          supabase.from('transacciones_caja').insert(mappers.mapTransaccionToDb(newTx, updatedCajaActiva.id))
-            .then(({ error }) => { if (error) console.error('Error inserting POS transaction in Supabase:', error); });
-          
-          newLogs.forEach(log => {
-            supabase.from('mensajes_logs').insert({
-              id: log.id,
-              sesion_id: updatedCajaActiva!.id,
-              tipo: log.tipo,
-              paciente_nombre: log.pacienteNombre,
-              paciente_telefono: log.pacienteTelefono,
-              fecha_envio: log.fechaEnvio,
-              mensaje_text: log.mensajeText,
-              detalle_adicional: log.detalleAdicional,
-              estado: log.estado
-            }).then(({ error }) => { if (error) console.error('Error logging checkout message in Supabase:', error.message || JSON.stringify(error)); });
-          });
-        }
       }
 
       return {
@@ -856,128 +500,42 @@ export const useClinicStore = create<ClinicStore>((set) => ({
   deleteProducto: (id) => set((state) => ({
     inventario: state.inventario.filter(item => item.id !== id)
   })),
-  updatePaciente: (id, data) => set((state) => {
-    const updated = state.pacientes.map(p => 
+  updatePaciente: (id, data) => set((state) => ({
+    pacientes: state.pacientes.map(p =>
       p.id === id ? { ...p, ...data } : p
-    );
-    if (isSupabaseActive()) {
-      const updatedPac = updated.find(p => p.id === id);
-      if (updatedPac) {
-        supabase.from('pacientes').update(mappers.mapPacienteToDb(updatedPac)).eq('id', id)
-          .then(({ error }) => { if (error) console.error('Error updating patient in Supabase:', error); });
-      }
-    }
-    return { pacientes: updated };
-  }),
-  addEmpresa: (empresa) => set((state) => {
-    const updated = [...state.empresas, empresa];
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(e => !mockEmpresas.some(me => me.id === e.id));
-      localStorage.setItem('optisaas_registered_empresas', JSON.stringify(custom));
-      document.cookie = `optisaas_registered_empresas=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-    if (isSupabaseActive()) {
-      supabase.from('empresas').insert(mappers.mapEmpresaToDb(empresa))
-        .then(({ error }) => { if (error) console.error('Error adding empresa to Supabase:', error); });
-    }
-    return { empresas: updated };
-  }),
-  updateEmpresa: (id, data) => set((state) => {
-    const updated = state.empresas.map(e => e.id === id ? { ...e, ...data } : e);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(e => !mockEmpresas.some(me => me.id === e.id));
-      localStorage.setItem('optisaas_registered_empresas', JSON.stringify(custom));
-      document.cookie = `optisaas_registered_empresas=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-    if (isSupabaseActive()) {
-      const target = updated.find(e => e.id === id);
-      if (target) {
-        supabase.from('empresas').update(mappers.mapEmpresaToDb(target)).eq('id', id)
-          .then(({ error }) => { if (error) console.error('Error updating empresa in Supabase:', error); });
-      }
-    }
-    return { empresas: updated };
-  }),
-  deleteEmpresa: (id) => set((state) => {
-    const updated = state.empresas.filter(e => e.id !== id);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(e => !mockEmpresas.some(me => me.id === e.id));
-      localStorage.setItem('optisaas_registered_empresas', JSON.stringify(custom));
-      document.cookie = `optisaas_registered_empresas=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-    if (isSupabaseActive()) {
-      supabase.from('empresas').delete().eq('id', id)
-        .then(({ error }) => { if (error) console.error('Error deleting empresa in Supabase:', error); });
-    }
-    return { empresas: updated };
-  }),
-  addSede: (sede) => set((state) => {
-    const updated = [...state.sedes, sede];
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(s => !mockSedes.some(ms => ms.id === s.id));
-      localStorage.setItem('optisaas_registered_sedes', JSON.stringify(custom));
-    }
-    return { sedes: updated };
-  }),
-  updateSede: (id, data) => set((state) => {
-    const updated = state.sedes.map(s => s.id === id ? { ...s, ...data } : s);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(s => !mockSedes.some(ms => ms.id === s.id));
-      localStorage.setItem('optisaas_registered_sedes', JSON.stringify(custom));
-    }
-    return { sedes: updated };
-  }),
-  deleteSede: (id) => set((state) => {
-    const updated = state.sedes.filter(s => s.id !== id);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(s => !mockSedes.some(ms => ms.id === s.id));
-      localStorage.setItem('optisaas_registered_sedes', JSON.stringify(custom));
-    }
-    return { sedes: updated };
-  }),
-  addUsuario: async (usuario, password) => {
-    if (password && isSupabaseActive()) {
-      const { error } = await supabase.auth.signUp({
-        email: usuario.email,
-        password: password,
-        options: {
-          data: {
-            nombre: usuario.nombre,
-            role: usuario.role,
-            empresaId: usuario.empresaId
-          }
-        }
-      });
-      if (error) console.error('Error registering user in Supabase Auth:', error);
-    }
-    set((state) => {
-      const updated = [...state.usuarios, usuario];
-      if (typeof window !== 'undefined') {
-        const custom = updated.filter(u => !mockUsuarios.some(mu => mu.id === u.id));
-        localStorage.setItem('optisaas_registered_usuarios', JSON.stringify(custom));
-        document.cookie = `optisaas_registered_usuarios=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-      }
-      return { usuarios: updated };
-    });
+    )
+  })),
+  addEmpresa: (empresa) => set((state) => ({
+    empresas: [...state.empresas, empresa]
+  })),
+  updateEmpresa: (id, data) => set((state) => ({
+    empresas: state.empresas.map(e => e.id === id ? { ...e, ...data } : e)
+  })),
+  deleteEmpresa: (id) => set((state) => ({
+    empresas: state.empresas.filter(e => e.id !== id)
+  })),
+  addSede: (sede) => set((state) => ({
+    sedes: [...state.sedes, sede]
+  })),
+  updateSede: (id, data) => set((state) => ({
+    sedes: state.sedes.map(s => s.id === id ? { ...s, ...data } : s)
+  })),
+  deleteSede: (id) => set((state) => ({
+    sedes: state.sedes.filter(s => s.id !== id)
+  })),
+  // T05 autentica contra la tabla `usuarios` de PostgreSQL; mientras tanto la
+  // demo en memoria sigue disponible solo con `APP_MODE=demo` (ver `lib/modo.ts`).
+  addUsuario: (usuario) => {
+    set((state) => ({
+      usuarios: [...state.usuarios, usuario]
+    }));
   },
-  updateUsuario: (id, data) => set((state) => {
-    const updated = state.usuarios.map(u => u.id === id ? { ...u, ...data } : u);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(u => !mockUsuarios.some(mu => mu.id === u.id));
-      localStorage.setItem('optisaas_registered_usuarios', JSON.stringify(custom));
-      document.cookie = `optisaas_registered_usuarios=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-    return { usuarios: updated };
-  }),
-  deleteUsuario: (id) => set((state) => {
-    const updated = state.usuarios.filter(u => u.id !== id);
-    if (typeof window !== 'undefined') {
-      const custom = updated.filter(u => !mockUsuarios.some(mu => mu.id === u.id));
-      localStorage.setItem('optisaas_registered_usuarios', JSON.stringify(custom));
-      document.cookie = `optisaas_registered_usuarios=${encodeURIComponent(JSON.stringify(custom))}; path=/; max-age=31536000; SameSite=Lax`;
-    }
-    return { usuarios: updated };
-  }),
+  updateUsuario: (id, data) => set((state) => ({
+    usuarios: state.usuarios.map(u => u.id === id ? { ...u, ...data } : u)
+  })),
+  deleteUsuario: (id) => set((state) => ({
+    usuarios: state.usuarios.filter(u => u.id !== id)
+  })),
   updatePlatformConfig: (data) => set((state) => ({
     platformConfig: { ...state.platformConfig, ...data }
   })),
@@ -1022,33 +580,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         montoCierreCalculado: (updatedCajaActiva.montoCierreCalculado || updatedCajaActiva.montoApertura) + orden.abono,
         transacciones: [...updatedCajaActiva.transacciones, newTx]
       };
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCajaActiva));
-      }
-
-      if (isSupabaseActive()) {
-        supabase.from('transacciones_caja').insert({
-          id: newTx.id,
-          sesion_id: updatedCajaActiva.id,
-          fecha: newTx.fecha,
-          tipo: 'ingreso-abono',
-          monto: newTx.monto,
-          metodo_pago: newTx.metodoPago,
-          descripcion: newTx.descripcion,
-          referencia_id: newTx.referenciaId
-        }).then(({ error }) => { if (error) console.error('Error syncing abono transaction to Supabase:', error); });
-        
-        supabase.from('caja_sesiones').update({
-          monto_cierre_calculado: updatedCajaActiva.montoCierreCalculado
-        }).eq('id', updatedCajaActiva.id)
-          .then(({ error }) => { if (error) console.error('Error syncing cash session to Supabase:', error); });
-      }
-    }
-
-    if (isSupabaseActive()) {
-      supabase.from('ordenes_trabajo').insert(mappers.mapOrdenToDb(orden, 'emp1', 'sede1'))
-        .then(({ error }) => { if (error) console.error('Error saving OrdenTrabajo to Supabase:', error); });
     }
 
     return {
@@ -1056,17 +587,11 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       ordenesTrabajo: [...state.ordenesTrabajo, orden]
     };
   }),
-  updateOrdenStatus: (id, status) => set((state) => {
-    const updated = state.ordenesTrabajo.map(ord => 
+  updateOrdenStatus: (id, status) => set((state) => ({
+    ordenesTrabajo: state.ordenesTrabajo.map(ord =>
       ord.id === id ? { ...ord, estado: status } : ord
-    );
-    if (isSupabaseActive()) {
-      const dbEstado = status === 'calidad-optometra' || status === 'calidad-asesor' ? 'revision-calidad' : (status === 'listo-entrega' ? 'listo' : (status === 'enviado-laboratorio' ? 'en-espera' : (status === 'recibido-laboratorio' ? 'laboratorio' : status)));
-      supabase.from('ordenes_trabajo').update({ estado: dbEstado }).eq('id', id)
-        .then(({ error }) => { if (error) console.error('Error updating order status in Supabase:', error); });
-    }
-    return { ordenesTrabajo: updated };
-  }),
+    )
+  })),
   aprobarCalidadOptometra: (id, observaciones, profesionalId) => set((state) => {
     const active = state.cajaSesionActiva;
     let updatedCaja = active;
@@ -1125,9 +650,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         ...active,
         comunicaciones: nuevasComms
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-      }
     }
 
     const updatedOrders = state.ordenesTrabajo.map(o => 
@@ -1139,38 +661,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           } 
         : o
     );
-
-    if (isSupabaseActive()) {
-      const dbStatus = newStatus === 'calidad-optometra' ? 'revision-calidad' : 'listo';
-      const aud = {
-        optometra: checkOptometra,
-        asesor: ord.checkAsesor || null
-      };
-
-      supabase.from('ordenes_trabajo').update({
-        estado: dbStatus,
-        auditoria_calidad: aud
-      }).eq('id', id).then(({ error }) => { if (error) console.error('Error updating quality audit in Supabase:', error); });
-
-      if (active && active.estado === 'abierta') {
-        supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCaja!)).eq('id', updatedCaja!.id)
-          .then(({ error }) => { if (error) console.error('Error updating active session in Supabase:', error); });
-        
-        newLogs.forEach(log => {
-          supabase.from('mensajes_logs').insert({
-            id: log.id,
-            sesion_id: updatedCaja!.id,
-            tipo: log.tipo,
-            paciente_nombre: log.pacienteNombre,
-            paciente_telefono: log.pacienteTelefono,
-            fecha_envio: log.fechaEnvio,
-            mensaje_text: log.mensajeText,
-            detalle_adicional: log.detalleAdicional,
-            estado: log.estado
-          }).then(({ error }) => { if (error) console.error('Error inserting msg log in Supabase:', error); });
-        });
-      }
-    }
 
     return {
       cajaSesionActiva: updatedCaja,
@@ -1221,9 +711,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         ...active,
         comunicaciones: nuevasComms
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-      }
     }
 
     const updatedOrders = state.ordenesTrabajo.map(o => 
@@ -1235,38 +722,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           } 
         : o
     );
-
-    if (isSupabaseActive()) {
-      const dbStatus = newStatus === 'calidad-asesor' ? 'revision-calidad' : 'listo';
-      const aud = {
-        optometra: ord.checkOptometra || null,
-        asesor: checkAsesor
-      };
-
-      supabase.from('ordenes_trabajo').update({
-        estado: dbStatus,
-        auditoria_calidad: aud
-      }).eq('id', id).then(({ error }) => { if (error) console.error('Error updating quality audit in Supabase:', error); });
-
-      if (active && active.estado === 'abierta') {
-        supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCaja!)).eq('id', updatedCaja!.id)
-          .then(({ error }) => { if (error) console.error('Error updating active session in Supabase:', error); });
-        
-        if (newLogGafas) {
-          supabase.from('mensajes_logs').insert({
-            id: newLogGafas.id,
-            sesion_id: updatedCaja!.id,
-            tipo: newLogGafas.tipo,
-            paciente_nombre: newLogGafas.pacienteNombre,
-            paciente_telefono: newLogGafas.pacienteTelefono,
-            fecha_envio: newLogGafas.fechaEnvio,
-            mensaje_text: newLogGafas.mensajeText,
-            detalle_adicional: newLogGafas.detalleAdicional,
-            estado: newLogGafas.estado
-          }).then(({ error }) => { if (error) console.error('Error inserting msg log in Supabase:', error); });
-        }
-      }
-    }
 
     return {
       cajaSesionActiva: updatedCaja,
@@ -1311,9 +766,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         ...active,
         comunicaciones: nuevasComms
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updatedCaja));
-      }
     }
 
     const updatedOrders = state.ordenesTrabajo.map(o => 
@@ -1326,34 +778,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
           } 
         : o
     );
-
-    if (isSupabaseActive()) {
-      const updatedOrd = updatedOrders.find(o => o.id === id);
-      if (updatedOrd) {
-        supabase.from('ordenes_trabajo').update(mappers.mapOrdenToDb(updatedOrd, 'emp1', 'sede1'))
-          .eq('id', id)
-          .then(({ error }) => { if (error) console.error('Error completing delivery in Supabase:', error); });
-      }
-
-      if (active && active.estado === 'abierta') {
-        supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(updatedCaja!)).eq('id', updatedCaja!.id)
-          .then(({ error }) => { if (error) console.error('Error updating active session in Supabase:', error); });
-        
-        if (newLogGafas) {
-          supabase.from('mensajes_logs').insert({
-            id: newLogGafas.id,
-            sesion_id: updatedCaja!.id,
-            tipo: newLogGafas.tipo,
-            paciente_nombre: newLogGafas.pacienteNombre,
-            paciente_telefono: newLogGafas.pacienteTelefono,
-            fecha_envio: newLogGafas.fechaEnvio,
-            mensaje_text: newLogGafas.mensajeText,
-            detalle_adicional: newLogGafas.detalleAdicional,
-            estado: newLogGafas.estado
-          }).then(({ error }) => { if (error) console.error('Error inserting msg log in Supabase:', error); });
-        }
-      }
-    }
 
     return {
       cajaSesionActiva: updatedCaja,
@@ -1378,66 +802,34 @@ export const useClinicStore = create<ClinicStore>((set) => ({
         : g
     )
   })),
-  addEquipoMedico: (equipo) => set((state) => {
-    const updated = [...state.equiposMedicos, equipo];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_equipos_medicos', JSON.stringify(updated));
-    }
-    return { equiposMedicos: updated };
-  }),
-  updateEquipoMedico: (id, data) => set((state) => {
-    const updated = state.equiposMedicos.map(eq => eq.id === id ? { ...eq, ...data } : eq);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_equipos_medicos', JSON.stringify(updated));
-    }
-    return { equiposMedicos: updated };
-  }),
-  addLecturaAmbiental: (lectura) => set((state) => {
-    const updated = [lectura, ...state.lecturasAmbientales];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_lecturas_ambientales', JSON.stringify(updated));
-    }
-    return { lecturasAmbientales: updated };
-  }),
-  addIncidenteTecnovigilancia: (equipoId, incidente) => set((state) => {
-    const updated = state.equiposMedicos.map(eq => 
-      eq.id === equipoId 
-        ? { ...eq, incidentes: [incidente, ...eq.incidentes] } 
+  addEquipoMedico: (equipo) => set((state) => ({
+    equiposMedicos: [...state.equiposMedicos, equipo]
+  })),
+  updateEquipoMedico: (id, data) => set((state) => ({
+    equiposMedicos: state.equiposMedicos.map(eq => eq.id === id ? { ...eq, ...data } : eq)
+  })),
+  addLecturaAmbiental: (lectura) => set((state) => ({
+    lecturasAmbientales: [lectura, ...state.lecturasAmbientales]
+  })),
+  addIncidenteTecnovigilancia: (equipoId, incidente) => set((state) => ({
+    equiposMedicos: state.equiposMedicos.map(eq =>
+      eq.id === equipoId
+        ? { ...eq, incidentes: [incidente, ...eq.incidentes] }
         : eq
-    );
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_equipos_medicos', JSON.stringify(updated));
-    }
-    return { equiposMedicos: updated };
-  }),
-  addRegistroResiduos: (registro) => set((state) => {
-    const updated = [registro, ...state.registrosResiduos];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_registros_residuos', JSON.stringify(updated));
-    }
-    return { registrosResiduos: updated };
-  }),
-  addRegistroDesinfeccion: (registro) => set((state) => {
-    const updated = [registro, ...state.registrosDesinfeccion];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_registros_desinfeccion', JSON.stringify(updated));
-    }
-    return { registrosDesinfeccion: updated };
-  }),
-  actualizarConceptoSanitario: (data) => set((state) => {
-    const updated = { ...state.conceptoSanitario, ...data };
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_concepto_sanitario', JSON.stringify(updated));
-    }
-    return { conceptoSanitario: updated };
-  }),
-  addSaneamientoLog: (log) => set((state) => {
-    const updated = [log, ...state.saneamientoLogs];
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_saneamiento_logs', JSON.stringify(updated));
-    }
-    return { saneamientoLogs: updated };
-  }),
+    )
+  })),
+  addRegistroResiduos: (registro) => set((state) => ({
+    registrosResiduos: [registro, ...state.registrosResiduos]
+  })),
+  addRegistroDesinfeccion: (registro) => set((state) => ({
+    registrosDesinfeccion: [registro, ...state.registrosDesinfeccion]
+  })),
+  actualizarConceptoSanitario: (data) => set((state) => ({
+    conceptoSanitario: { ...state.conceptoSanitario, ...data }
+  })),
+  addSaneamientoLog: (log) => set((state) => ({
+    saneamientoLogs: [log, ...state.saneamientoLogs]
+  })),
   abrirCaja: (usuarioId, usuarioNombre, base, observaciones, sedeId = 'sede1') => {
     const nuevaSesion: CajaSesion = {
       id: `CJ-${Date.now().toString().slice(-6)}`,
@@ -1470,17 +862,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       nuevosPacientesIds: []
     };
 
-    if (isSupabaseActive()) {
-      supabase.from('caja_sesiones').insert(mappers.mapCajaSesionToDb(nuevaSesion))
-        .then(({ error }) => { if (error) console.error('Error opening cash session in Supabase:', error); });
-      supabase.from('transacciones_caja').insert(mappers.mapTransaccionToDb(nuevaSesion.transacciones[0], nuevaSesion.id))
-        .then(({ error }) => { if (error) console.error('Error recording initial cash balance in Supabase:', error); });
-    }
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(nuevaSesion));
-    }
-
     set({ cajaSesionActiva: nuevaSesion });
   },
   registrarTransaccionCaja: (tipo, monto, metodoPago, descripcion, referenciaId) => {
@@ -1510,19 +891,6 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       transacciones: [...activa.transacciones, newTx]
     };
 
-    if (isSupabaseActive()) {
-      supabase.from('transacciones_caja').insert(mappers.mapTransaccionToDb(newTx, activa.id))
-        .then(({ error }) => { if (error) console.error('Error recording cash transaction in Supabase:', error.message || JSON.stringify(error)); });
-      supabase.from('caja_sesiones').update({
-        monto_cierre_calculado: updated.montoCierreCalculado
-      }).eq('id', activa.id)
-        .then(({ error }) => { if (error) console.error('Error updating calculations in Supabase:', error); });
-    }
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('optisaas_caja_sesion_activa', JSON.stringify(updated));
-    }
-
     set({ cajaSesionActiva: updated });
   },
   cerrarCaja: (montoDeclarado, observaciones, desglose) => {
@@ -1542,41 +910,17 @@ export const useClinicStore = create<ClinicStore>((set) => ({
       observaciones: observaciones || activa.observaciones
     };
 
-    if (isSupabaseActive()) {
-      supabase.from('caja_sesiones').update(mappers.mapCajaSesionToDb(sesionCerrada)).eq('id', activa.id)
-        .then(({ error }) => { if (error) console.error('Error closing cash session in Supabase:', error); });
-        
-      // Desconectar WhatsApp si es el último asesor con caja abierta en la sede
-      supabase.from('caja_sesiones')
-        .select('id')
-        .eq('sede_id', activa.sedeId)
-        .eq('estado', 'abierta')
-        .neq('id', activa.id)
-        .then(({ data }) => {
-          if (!data || data.length === 0) {
-             useClinicStore.getState().setSedeWhatsappConnected(activa.sedeId, false);
-          }
-        });
-    } else {
-      // Verificación local (sin Supabase)
-      const state = useClinicStore.getState();
-      const otherOpen = state.cajaSesiones.filter(c => c.sedeId === activa.sedeId && c.estado === 'abierta' && c.id !== activa.id);
-      if (otherOpen.length === 0) {
-        state.setSedeWhatsappConnected(activa.sedeId, false);
-      }
+    // Desconectar WhatsApp si es la última caja abierta en la sede.
+    const estadoCajas = useClinicStore.getState();
+    const otrasAbiertas = estadoCajas.cajaSesiones.filter(c => c.sedeId === activa.sedeId && c.estado === 'abierta' && c.id !== activa.id);
+    if (otrasAbiertas.length === 0) {
+      estadoCajas.setSedeWhatsappConnected(activa.sedeId, false);
     }
 
-    set((state) => {
-      const updatedHistorico = [sesionCerrada, ...state.cajaSesiones];
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('optisaas_caja_sesion_activa');
-        localStorage.setItem('optisaas_caja_sesiones', JSON.stringify(updatedHistorico));
-      }
-      return {
-        cajaSesionActiva: null,
-        cajaSesiones: updatedHistorico
-      };
-    });
+    set((state) => ({
+      cajaSesionActiva: null,
+      cajaSesiones: [sesionCerrada, ...state.cajaSesiones]
+    }));
   }
 }));
 

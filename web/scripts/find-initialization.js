@@ -41,7 +41,7 @@ searchDir(appDir);
 
 files.forEach(file => {
   const content = fs.readFileSync(file, 'utf8');
-  if (content.includes('initializeStoreFromSupabase')) {
+  if (content.includes('obtenerDb') || content.includes("from '@/db/")) {
     console.log(`Found in: ${path.relative(path.join(__dirname, '..'), file)}`);
   }
 });
