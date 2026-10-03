@@ -190,10 +190,6 @@ export default function VentasPage() {
     return subtotal - descuentoCalculado;
   }, [subtotal, descuentoCalculado]);
 
-  // IVA 19% Incluido detail
-  const ivaCalculado = useMemo(() => {
-    return Math.round(totalFinal * 0.19 / 1.19);
-  }, [totalFinal]);
 
   // Cart Functions
   const handleAddToCart = (product: ProductoInventario) => {
@@ -578,8 +574,8 @@ export default function VentasPage() {
                     )}
 
                     <div className="flex justify-between text-[10px] text-muted-foreground italic">
-                      <span>IVA Incluido (19%)</span>
-                      <span className="font-mono">$ {ivaCalculado.toLocaleString('es-CO')}</span>
+                      <span>IVA</span>
+                      <span className="font-mono">Sin tarifa configurada</span>
                     </div>
 
                     <div className="border-t border-border/60 pt-2 flex justify-between items-end">

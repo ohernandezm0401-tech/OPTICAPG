@@ -3,7 +3,8 @@ export interface FactusItem {
   nombre: string;
   cantidad: number;
   precio: number;
-  tasa_impuesto: string; // Ej: "19.00"
+  // TODO(Q-31): puntos básicos o porcentaje los informa la tarifa del tenant; vacío = sin configurar.
+  tasa_impuesto: string;
 }
 
 export interface FactusCustomer {

@@ -19,8 +19,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useClinicStore } from '@/lib/store';
 import { toast } from '@/lib/toast-store';
 import { PLANES_CONFIG } from '@/lib/plans-config';
-import { IVA_RATE } from '@/lib/constants';
-
 interface StripeWebhookLog {
   timestamp: string;
   event: string;
@@ -115,7 +113,7 @@ export default function FacturacionPage() {
     return { eventPayload, statusText, logStatus: 'success' as const };
   };
 
-  const handleInvoicePaid = (company: typeof selectedCompany, stripeCustId: string, stripeSubId: string, total: number, iva: number) => {
+  const handleInvoicePaid = (company: typeof selectedCompany, stripeCustId: string, stripeSubId: string, total: number, iva: number | null) => {
     if (!company) return { eventPayload: {}, statusText: '', logStatus: 'error' as const };
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 30);
@@ -232,8 +230,9 @@ export default function FacturacionPage() {
     }
 
     const price = PLANES_CONFIG[selectedCompany.plan].priceCOP;
-    const iva = Math.round(price * IVA_RATE);
-    const total = price + iva;
+    // TODO(Q-31): sin tarifa de IVA por defecto; el total no inventa un porcentaje.
+    const iva = null;
+    const total = price;
     const stripeCustId = selectedCompany.stripeCustomerId || `cus_${Math.random().toString(36).substring(2, 9)}`;
     const stripeSubId = selectedCompany.stripeSubscriptionId || `sub_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -379,13 +378,13 @@ export default function FacturacionPage() {
                       <th className="px-6 py-3">Razón Social</th>
                       <th className="px-6 py-3">Plan</th>
                       <th className="px-6 py-3">Próximo Cobro</th>
-                      <th className="px-6 py-3 text-right">Tarifa + IVA</th>
+                      <th className="px-6 py-3 text-right">Tarifa base</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {empresas.map(emp => {
                       const conf = PLANES_CONFIG[emp.plan];
-                      const totalConIva = Math.round(conf.priceCOP * (1 + IVA_RATE));
+                      const totalSinTarifa = conf.priceCOP;
                       return (
                         <tr key={emp.id} className="hover:bg-secondary/15 transition-colors">
                           <td className="px-6 py-4">
@@ -409,7 +408,7 @@ export default function FacturacionPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right font-mono font-bold text-foreground">
-                            $ {totalConIva.toLocaleString('es-CO')}
+                            $ {totalSinTarifa.toLocaleString('es-CO')}
                           </td>
                         </tr>
                       );
@@ -669,7 +668,7 @@ export default function FacturacionPage() {
                     3. Cumplimiento Fiscal DIAN (XML Legal)
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    El SaaS en Colombia está sujeto a impuestos locales (19% de IVA). Las webhooks del sistema interceptan el evento de pago exitoso de Stripe (`invoice.paid`) y envían la información legal (Razón social, NIT, email, base imponible e IVA) a la API de **Factus** (Proveedor Tecnológico Autorizado) para emitir la factura electrónica oficial, generar el código QR con el CUFE y enviarla directamente al correo Dian del adquirente.
+                    El impuesto de la suscripción sale de la tarifa configurada; esta demostración no asume un porcentaje. Las webhooks interceptan el evento de pago exitoso de Stripe (`invoice.paid`) y pueden enviar la información (razón social, NIT, email y base) a un proveedor tecnológico cuando ese adaptador esté conectado.
                   </p>
                 </div>
 
@@ -794,7 +793,7 @@ export async function POST(req: Request) {
         items: [{ 
           name: "Suscripción Mensual SaaS OptiSaaS", 
           price: invoice.amount_paid - invoice.tax, 
-          tax: invoice.tax // IVA 19%
+          tax: invoice.tax
         }]
       })
     });

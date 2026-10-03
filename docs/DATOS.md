@@ -61,7 +61,7 @@ va detrás de un puerto/adaptador intercambiable (regla 2).
 
 - Autenticación real (T05/SEG-01) y autorización por sede (SEG-02).
 - Respaldos cifrados y restauración probada (PLT-07); secretos y cifrado (SEG-12).
-- Alta de tenant con contrato de encargo (PLT-03); parámetros por tenant (PLT-11).
+- Alta de tenant con contrato de encargo (PLT-03).
 
 ## 6. Aislamiento multi-tenant (PLT-01, T04)
 
@@ -91,3 +91,27 @@ la aplicación. Solo datos sintéticos.
 - Pendiente (no es de esta tarea): usuario de conexión de producción y
   residencia (Q-06, T05); alta de tenants por rol de aplicación (PLT-03, que
   definirá la vía elevada); CASL por sede en cada acción (SEG-02).
+
+## 7. Parámetros, calendario hábil y tarifas (PLT-11, T06)
+
+Los plazos y el IVA no viven en código. La siembra de un tenant
+(`sembrarParametrosIniciales`) crea filas editables; no crea tarifas ni
+festivos.
+
+| Pieza | Ruta | Notas |
+|---|---|---|
+| Día hábil y `sumarDiasHabiles` | `web/dominio/calendario-habil.ts` | Omite sábado, domingo y festivos del conjunto. El día de partida no cuenta. |
+| CSV de festivos | `web/dominio/festivos-csv.ts` + `web/db/parametros.ts` | TODO(Q-32): solo filas del CSV humano. Plantilla vacía en `web/db/festivos/plantilla.csv`. |
+| Programación comercial | `web/dominio/mensajes-comerciales.ts` | Rechaza domingo y festivo. La ventana horaria de la Ley 2300 queda en SEG-16. |
+| Snapshot de impuesto | `web/dominio/impuestos.ts` | Puntos básicos (`porcentaje_bp`). TODO(Q-31): sin porcentaje por defecto. |
+| Tablas | `web/db/esquema/parametros.ts` | `parametros_tenant`, `festivos`, `tarifas_impuesto`, `instantaneas_impuesto_linea`, `bitacora_parametros`. |
+| RLS | `web/db/migrations/0003_rls_parametros.sql` | `ENABLE` + `FORCE` y política `TO optisaas_app` en cada tabla con `tenant_id`. |
+
+Valores iniciales (editables):
+
+- `zona_horaria` = `America/Bogota`; `moneda` = `COP`.
+- `retencion_historias_anios` = 15, rótulo «según Res. 839/2017 (verificada)».
+- `plazo_conservacion_logs`, `plazo_conservacion_facturas` y `plazo_aviso_incidente` nacen en null con rótulo «provisional». TODO(Q-07): ningún número se presenta como obligación legal.
+- TODO(Q-18): vigencia y cantidad de la prescripción no se siembran (las escribe el profesional en OPT-05).
+
+La venta y el envío de mensajes todavía no existen. `cerrarLineaConImpuesto` guarda `impuesto_snapshot` y un disparador impide reescribirlo. `programarMensajeComercial(fecha, tenant)` es el predicado que usará SEG-16.

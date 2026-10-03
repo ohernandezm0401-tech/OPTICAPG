@@ -79,7 +79,7 @@ export function FacturaModal({
             nombre: `${item.marca} - ${item.modelo} (${item.categoria})`,
             cantidad: item.cantidad,
             precio: Math.round(item.precio - (item.precio * (descuentoCalculado / (subtotal || 1)))),
-            tasa_impuesto: '19.00'
+            tasa_impuesto: ''
           })),
           metodo_pago: metodoPago
         })

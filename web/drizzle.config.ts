@@ -8,7 +8,7 @@ import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './db/esquema/nucleo.ts',
+  schema: ['./db/esquema/nucleo.ts', './db/esquema/parametros.ts'],
   out: './db/migrations',
   dbCredentials: {
     url:
