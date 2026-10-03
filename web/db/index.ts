@@ -19,6 +19,7 @@ import * as cifrado from './esquema/cifrado';
 import * as firma from './esquema/firma';
 import * as inmutabilidad from './esquema/inmutabilidad';
 import * as invitaciones from './esquema/invitaciones';
+import * as limitesCaptura from './esquema/limites-captura';
 import * as mfa from './esquema/mfa';
 import * as nucleo from './esquema/nucleo';
 import * as sedesHabilitacion from './esquema/sedes-habilitacion';
@@ -42,6 +43,7 @@ const esquema = {
   ...tratamiento,
   ...catalogos,
   ...atenciones,
+  ...limitesCaptura,
 };
 
 export function leerUrlBd(): string {

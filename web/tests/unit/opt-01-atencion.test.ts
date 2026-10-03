@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 
 import { puedeFirmarAtencion, puedeIniciarAtencionClinica } from '../../dominio/atencion-optica';
 import {
+  AUTOGUARDADO_MS,
+  LIMITES_CAPTURA_PROPUESTOS,
+  crearEsquemaExamen,
+  esquemaCapturaTexto,
   esquemaCrearAtencion,
   esquemaExamenOptometrico,
   modalidadGuardada,
@@ -48,6 +52,44 @@ describe('valores ópticos OPT-01', () => {
       plan: { conducta: 'Control' },
     });
     expect(mensaje(libre)).toMatch(/CIE-10/);
+  });
+
+  it('AC-OPT-01-3: el eje 200 se rechaza y el tope sale de la configuración', () => {
+    expect(mensaje(esquemaExamenOptometrico.safeParse({ eje_od: 200 }))).toMatch(/límite de captura \(0 a 180\)/);
+    const amplio = crearEsquemaExamen({
+      ...LIMITES_CAPTURA_PROPUESTOS,
+      eje: { min: 0, max: 200 },
+    });
+    expect(amplio.safeParse({ eje_od: 200 }).success).toBe(true);
+    const estrecho = crearEsquemaExamen({
+      ...LIMITES_CAPTURA_PROPUESTOS,
+      eje: { min: 0, max: 90 },
+    });
+    expect(mensaje(estrecho.safeParse({ eje_od: 100 }))).toBe('Fuera del límite de captura (0 a 90).');
+    const captura = esquemaCapturaTexto().safeParse({
+      paciente_id: 'a1900000-0000-4000-8000-000000000001',
+      motivo: 'Control sintético',
+      antecedentes: '',
+      agudeza_od: '',
+      agudeza_oi: '',
+      esfera_od: '',
+      cilindro_od: '',
+      eje_od: '200',
+      adicion_od: '',
+      esfera_oi: '',
+      cilindro_oi: '',
+      eje_oi: '',
+      adicion_oi: '',
+      dip: '',
+      queratometria: '',
+      salud_ocular: '',
+      codigo_cie10: 'H52.1',
+      conducta: 'Control',
+      recomendaciones: '',
+    });
+    expect(mensaje(captura)).toMatch(/límite de captura/);
+    expect(AUTOGUARDADO_MS).toBeLessThanOrEqual(30_000);
+    expect(AUTOGUARDADO_MS).toBeGreaterThan(0);
   });
 
   it('AC-OPT-24-1: rechaza telemedicina y deja presencial por defecto', () => {

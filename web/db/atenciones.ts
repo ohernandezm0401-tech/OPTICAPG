@@ -13,16 +13,17 @@ import { puedeFirmarAtencion, puedeIniciarAtencionClinica } from '../dominio/ate
 import { CODIGO_TRATAMIENTO, type EstadoAutorizacion } from '../dominio/autorizacion-datos';
 import { fechaCivilEnZona } from '../dominio/fechas';
 import { ZONA_BOGOTA } from '../dominio/pacientes';
-import { codigoHttpFirma, presentarBogota } from '../dominio/firma';
+import { codigoHttpFirma, lineaSelloProfesional, presentarBogota } from '../dominio/firma';
 import {
   SCHEMA_VERSION_ATENCION,
-  esquemaActualizarAtencion,
-  esquemaCrearAtencion,
+  crearEsquemasAtencion,
   modalidadGuardada,
   type ActualizarAtencionEntrada,
   type CrearAtencionEntrada,
   type ExamenOptometrico,
+  type TextoSeccion,
 } from '../dominio/valores-opticos';
+import { ErrorLimites, leerLimitesCaptura } from './limites-captura';
 import { abrirHistoriaClinica } from '../lib/auditoria/lecturas';
 import type { ActorAuthz, SujetoRecurso } from '../lib/authz/ability';
 import { ErrorAutorizacion, exigirPuede } from '../lib/authz/exigir';
@@ -61,6 +62,11 @@ export interface AtencionVista {
   firmado_en: string | null;
   hora_bogota: string | null;
   motivo: string;
+  antecedentes: string;
+  queratometria: string;
+  salud_ocular: string;
+  sello: string | null;
+  version_borrador: number;
   schema_version: number;
   examen: Record<string, number | null>;
   diagnostico: { codigo_cie10: string; descripcion: string; principal: boolean } | null;
@@ -160,6 +166,7 @@ async function conApp<T>(ctx: ContextoAtencion, fn: (cliente: PoolClient) => Pro
 }
 
 function traducir(error: unknown): never {
+  if (error instanceof ErrorLimites) throw new ErrorAtencion(error.status, error.message);
   if (error instanceof ErrorAtencion || error instanceof ErrorAutorizacion) throw error;
   if (error instanceof ErrorFirma) {
     throw new ErrorAtencion(codigoHttpFirma(error.codigo, error.message), error.message);
@@ -190,6 +197,35 @@ function texto(valor: string | null | undefined): string | null {
 
 function contenidoExamen(examen: ExamenOptometrico): string {
   return JSON.stringify({ schema_version: SCHEMA_VERSION_ATENCION, ...examen });
+}
+
+interface ContenidoAtencion {
+  motivo: string;
+  antecedentes: TextoSeccion;
+  queratometria: TextoSeccion;
+  salud_ocular: TextoSeccion;
+}
+
+function seccion(valor: TextoSeccion | undefined): TextoSeccion {
+  return { texto: valor?.texto?.trim() ?? '' };
+}
+
+function parsearContenido(texto: string): ContenidoAtencion {
+  try {
+    const parsed = JSON.parse(texto) as Partial<ContenidoAtencion>;
+    return {
+      motivo: typeof parsed.motivo === 'string' ? parsed.motivo : '',
+      antecedentes: seccion(parsed.antecedentes),
+      queratometria: seccion(parsed.queratometria),
+      salud_ocular: seccion(parsed.salud_ocular),
+    };
+  } catch {
+    return { motivo: '', antecedentes: { texto: '' }, queratometria: { texto: '' }, salud_ocular: { texto: '' } };
+  }
+}
+
+function serializarContenido(dato: ContenidoAtencion): string {
+  return JSON.stringify({ schema_version: SCHEMA_VERSION_ATENCION, ...dato });
 }
 
 async function describirCie10(cliente: PoolClient, codigo: string): Promise<string> {
@@ -344,19 +380,38 @@ async function leerVista(cliente: PoolClient, id: string): Promise<AtencionVista
     firmado_en: Date | null;
     contenido: string;
     schema_version: number;
+    version_borrador: number;
+    firma_documento_id: string | null;
   }>(
-    `select id, estado, modalidad, tipo, folio, fecha_atencion, firmado_en, contenido, schema_version
+    `select id, estado, modalidad, tipo, folio, fecha_atencion, firmado_en, contenido,
+            schema_version, version_borrador, firma_documento_id
        from atenciones where id = $1`,
     [id],
   );
   const fila = atencion.rows[0];
   if (!fila) throw new ErrorAtencion(404, 'No se encontró la atención.');
-  let motivo = '';
-  try {
-    const parsed = JSON.parse(fila.contenido) as { motivo?: string };
-    motivo = parsed.motivo ?? '';
-  } catch {
-    motivo = '';
+  const contenido = parsearContenido(fila.contenido);
+  let sello: string | null = null;
+  if (fila.firma_documento_id) {
+    const firma = await cliente.query<{
+      nombre_firmante: string | null;
+      registro_profesional: string | null;
+      firmado_en: Date;
+    }>(
+      `select nombre_firmante, registro_profesional, firmado_en
+         from firmas
+        where documento_id = $1 and tipo_firmante = 'profesional'
+        limit 1`,
+      [fila.firma_documento_id],
+    );
+    const profesional = firma.rows[0];
+    if (profesional?.nombre_firmante && profesional.registro_profesional) {
+      sello = lineaSelloProfesional(
+        profesional.nombre_firmante,
+        profesional.registro_profesional,
+        new Date(profesional.firmado_en),
+      );
+    }
   }
   const examen = await cliente.query<Record<string, string | number | null>>(
     `select esfera_od, cilindro_od, eje_od, adicion_od, agudeza_od,
@@ -395,7 +450,12 @@ async function leerVista(cliente: PoolClient, id: string): Promise<AtencionVista
     fecha_atencion: new Date(fila.fecha_atencion).toISOString(),
     firmado_en: fila.firmado_en ? new Date(fila.firmado_en).toISOString() : null,
     hora_bogota: fila.firmado_en ? presentarBogota(new Date(fila.firmado_en)) : null,
-    motivo,
+    motivo: contenido.motivo,
+    antecedentes: contenido.antecedentes.texto,
+    queratometria: contenido.queratometria.texto,
+    salud_ocular: contenido.salud_ocular.texto,
+    sello,
+    version_borrador: fila.version_borrador,
     schema_version: fila.schema_version,
     examen: valores,
     diagnostico: diagnostico.rows[0] ?? null,
@@ -406,8 +466,9 @@ async function leerVista(cliente: PoolClient, id: string): Promise<AtencionVista
 export async function crearAtencion(ctx: ContextoAtencion, entrada: unknown): Promise<AtencionVista> {
   exigir(ctx, 'crear', { borrador: true });
   exigirUuid(ctx);
-  const datos = parsear(esquemaCrearAtencion.safeParse(entrada));
   try {
+    const limites = await leerLimitesCaptura(ctx);
+    const datos = parsear(crearEsquemasAtencion(limites.limites).crear.safeParse(entrada));
     const id = await conApp(ctx, async (cliente) => {
       await puertaPaciente(cliente, datos.paciente_id, datos.urgencia === true);
       const insertada = await cliente.query<{ id: string }>(
@@ -422,7 +483,12 @@ export async function crearAtencion(ctx: ContextoAtencion, entrada: unknown): Pr
           ctx.usuario_id,
           datos.tipo,
           modalidadGuardada(),
-          JSON.stringify({ schema_version: SCHEMA_VERSION_ATENCION, motivo: datos.motivo }),
+          serializarContenido({
+            motivo: datos.motivo,
+            antecedentes: seccion(datos.antecedentes),
+            queratometria: seccion(datos.queratometria),
+            salud_ocular: seccion(datos.salud_ocular),
+          }),
           SCHEMA_VERSION_ATENCION,
         ],
       );
@@ -465,12 +531,27 @@ export async function abrirAtencion(ctx: ContextoAtencion, id: string): Promise<
 
 async function aplicarActualizacion(cliente: PoolClient, ctx: ContextoAtencion, id: string, datos: ActualizarAtencionEntrada) {
   await exigirBorrador(cliente, id);
-  if (datos.motivo) {
+  const tocaNarrativa =
+    datos.motivo !== undefined ||
+    datos.antecedentes !== undefined ||
+    datos.queratometria !== undefined ||
+    datos.salud_ocular !== undefined;
+  if (tocaNarrativa) {
+    const actual = await cliente.query<{ contenido: string }>(`select contenido from atenciones where id = $1`, [id]);
+    const previo = parsearContenido(actual.rows[0]?.contenido ?? '');
     const cambio = await cliente.query(
       `update atenciones
-          set contenido = $2, version_borrador = version_borrador + 1, actualizado_en = now()
+          set contenido = $2, actualizado_en = now()
         where id = $1 and estado = 'borrador'`,
-      [id, JSON.stringify({ schema_version: SCHEMA_VERSION_ATENCION, motivo: datos.motivo })],
+      [
+        id,
+        serializarContenido({
+          motivo: datos.motivo ?? previo.motivo,
+          antecedentes: datos.antecedentes ?? previo.antecedentes,
+          queratometria: datos.queratometria ?? previo.queratometria,
+          salud_ocular: datos.salud_ocular ?? previo.salud_ocular,
+        }),
+      ],
     );
     if ((cambio.rowCount ?? 0) === 0) throw new ErrorAtencion(409, 'El registro firmado no se puede modificar.');
   }
@@ -535,13 +616,21 @@ async function aplicarActualizacion(cliente: PoolClient, ctx: ContextoAtencion, 
     );
     if ((cambio.rowCount ?? 0) === 0) throw new ErrorAtencion(409, 'El registro firmado no se puede modificar.');
   }
+  const version = await cliente.query(
+    `update atenciones
+        set version_borrador = version_borrador + 1, actualizado_en = now()
+      where id = $1 and estado = 'borrador'`,
+    [id],
+  );
+  if ((version.rowCount ?? 0) === 0) throw new ErrorAtencion(409, 'El registro firmado no se puede modificar.');
 }
 
 export async function actualizarAtencion(ctx: ContextoAtencion, id: string, entrada: unknown): Promise<AtencionVista> {
   if (!z.uuid().safeParse(id).success) throw new ErrorAtencion(400, 'La atención no es válida.');
-  const datos = parsear(esquemaActualizarAtencion.safeParse(entrada));
   exigirUuid(ctx);
   try {
+    const limites = await leerLimitesCaptura(ctx);
+    const datos = parsear(crearEsquemasAtencion(limites.limites).actualizar.safeParse(entrada));
     const dueno = await conApp(ctx, async (cliente) => {
       const filas = await cliente.query<{ profesional_id: string; estado: string }>(
         `select profesional_id, estado from atenciones where id = $1`,

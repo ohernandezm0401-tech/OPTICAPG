@@ -302,7 +302,10 @@ describe('atención optométrica en PostgreSQL', () => {
     const firmada = await firmarAtencion(ctx('optometra', OPTO), creada.id, AHORA);
     expect(firmada.estado).toBe('firmado');
     expect(firmada.folio).toBeGreaterThan(0);
+    expect(firmada.firmado_en).toBeTruthy();
     expect(firmada.hora_bogota).toBeTruthy();
+    expect(firmada.sello).toMatch(/RP-SINTETICO-19/);
+    expect(firmada.sello).toMatch(/Firmado electrónicamente/);
 
     await expect(
       actualizarAtencion(ctx('optometra', OPTO), creada.id, { motivo: 'Cambio posterior a la firma' }),
