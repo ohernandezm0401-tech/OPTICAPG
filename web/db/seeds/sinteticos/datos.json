@@ -1,0 +1,130 @@
+{
+  "descripcion": "Semilla sintética de demostración (PLT-10, T05). Solo datos ficticios: cada fila lleva es_sintetico=true, los NIT usan el prefijo reservado 900.000. y los correos el dominio reservado @example.invalid. Nunca datos reales de pacientes.",
+  "tenants": [
+    {
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "razon_social": "Óptica Sintética Demo Uno S.A.S. (demo)",
+      "nit": "900.000.001-1",
+      "estado": "onboarding",
+      "es_sintetico": true
+    },
+    {
+      "id": "a2222222-2222-4222-8222-222222222222",
+      "razon_social": "Óptica Sintética Demo Dos S.A.S. (demo)",
+      "nit": "900.000.002-2",
+      "estado": "onboarding",
+      "es_sintetico": true
+    }
+  ],
+  "sedes": [
+    {
+      "id": "b1111111-1111-4111-8111-111111111111",
+      "tenant_nit": "900.000.001-1",
+      "nombre": "Sede Norte Sintética (demo)",
+      "ciudad": "Bogotá D.C.",
+      "direccion": "Calle 127 # 14-54 (dirección ficticia)",
+      "tipo": "optica_con_consultorio",
+      "estado": "activa",
+      "es_sintetico": true
+    },
+    {
+      "id": "b2222222-2222-4222-8222-222222222222",
+      "tenant_nit": "900.000.001-1",
+      "nombre": "Sede Sur Sintética (demo)",
+      "ciudad": "Bogotá D.C.",
+      "direccion": "Autopista Sur # 34-12 (dirección ficticia)",
+      "tipo": "optica_sin_consultorio",
+      "estado": "activa",
+      "es_sintetico": true
+    },
+    {
+      "id": "b3333333-3333-4333-8333-333333333333",
+      "tenant_nit": "900.000.002-2",
+      "nombre": "Sede Centro Sintética (demo)",
+      "ciudad": "Medellín",
+      "direccion": "Carrera 43A # 1-50 (dirección ficticia)",
+      "tipo": "optica_sin_consultorio",
+      "estado": "activa",
+      "es_sintetico": true
+    }
+  ],
+  "usuarios": [
+    {
+      "id": "c1111111-1111-4111-8111-111111111111",
+      "tenant_nit": "900.000.001-1",
+      "email": "admin.sintetico@example.invalid",
+      "estado": "activo",
+      "es_sintetico": true
+    },
+    {
+      "id": "c2222222-2222-4222-8222-222222222222",
+      "tenant_nit": "900.000.001-1",
+      "email": "asesor.sintetico@example.invalid",
+      "estado": "activo",
+      "es_sintetico": true
+    },
+    {
+      "id": "c3333333-3333-4333-8333-333333333333",
+      "tenant_nit": "900.000.001-1",
+      "email": "optometra.sintetico@example.invalid",
+      "estado": "activo",
+      "es_sintetico": true
+    },
+    {
+      "id": "c4444444-4444-4444-8444-444444444444",
+      "tenant_nit": "900.000.002-2",
+      "email": "admin.sintetico.dos@example.invalid",
+      "estado": "activo",
+      "es_sintetico": true
+    },
+    {
+      "id": "c5555555-5555-4555-8555-555555555555",
+      "tenant_nit": "900.000.001-1",
+      "email": "auditor.sintetico@example.invalid",
+      "estado": "invitado",
+      "es_sintetico": true
+    }
+  ],
+  "membresias": [
+    {
+      "id": "d1111111-1111-4111-8111-111111111111",
+      "tenant_nit": "900.000.001-1",
+      "usuario_email": "admin.sintetico@example.invalid",
+      "sede_nombre": "Sede Norte Sintética (demo)",
+      "rol": "admin",
+      "es_sintetico": true
+    },
+    {
+      "id": "d2222222-2222-4222-8222-222222222222",
+      "tenant_nit": "900.000.001-1",
+      "usuario_email": "asesor.sintetico@example.invalid",
+      "sede_nombre": "Sede Norte Sintética (demo)",
+      "rol": "asesor",
+      "es_sintetico": true
+    },
+    {
+      "id": "d3333333-3333-4333-8333-333333333333",
+      "tenant_nit": "900.000.001-1",
+      "usuario_email": "optometra.sintetico@example.invalid",
+      "sede_nombre": "Sede Norte Sintética (demo)",
+      "rol": "optometra",
+      "es_sintetico": true
+    },
+    {
+      "id": "d4444444-4444-4444-8444-444444444444",
+      "tenant_nit": "900.000.002-2",
+      "usuario_email": "admin.sintetico.dos@example.invalid",
+      "sede_nombre": "Sede Centro Sintética (demo)",
+      "rol": "admin",
+      "es_sintetico": true
+    },
+    {
+      "id": "d5555555-5555-4555-8555-555555555555",
+      "tenant_nit": "900.000.001-1",
+      "usuario_email": "auditor.sintetico@example.invalid",
+      "sede_nombre": "Sede Sur Sintética (demo)",
+      "rol": "auditor",
+      "es_sintetico": true
+    }
+  ]
+}

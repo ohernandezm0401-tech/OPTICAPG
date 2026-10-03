@@ -8,3 +8,6 @@ playwright-report/
 *.tsbuildinfo
 .env*
 !.env.example
+# PLT-10 (T05): cuentas locales generadas con `npm run seed:dev`
+# (contraseñas aleatorias de esta máquina; nunca se versionan).
+.credenciales-desarrollo.local.json

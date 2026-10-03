@@ -98,6 +98,10 @@ Cambios de T04 respecto a T03: **sin dependencias nuevas** (restricción de la
 tarea: solo `pg`, ya declarado MIT, para `scripts/check-rls.mjs`; sin intrusos
 en `package-lock.json`). Ver `docs/DECISIONES.md` (ADR-013).
 
+Cambios de T05 respecto a T04: **sin dependencias nuevas** (`zod` MIT ya instalado
+en T03, reutilizado para `APP_ENV` en `web/lib/entorno.ts`). Ver
+`docs/DECISIONES.md` (ADR-014) y `docs/ENTORNOS.md`.
+
 ## Auditoría transitiva (`package-lock.json`, 697 paquetes)
 
 Verificación: `npm run licenses:check` (pasa con avisos; 0 errores el 3-oct-2026 tras T03).

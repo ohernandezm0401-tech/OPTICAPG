@@ -29,6 +29,8 @@
 |---|---|---|
 | Esquema Drizzle (núcleo) | `web/db/esquema/nucleo.ts` | Español `snake_case`; UUID v4/v7 (`gen_random_uuid()`); `timestamptz`; dinero en COP enteros (`bigint`, sin dinero en el núcleo). |
 | Conexión | `web/db/index.ts` | `server-only`: el build falla si se importa desde el navegador. Piscina `pg` perezosa con `DATABASE_URL` (o `DATABASE_URL_TEST` en pruebas). |
+| Entornos | `web/lib/entorno.ts` + `web/instrumentation.ts` | `APP_ENV` validado con Zod; en `produccion` el arranque aborta (PLT-10, T05; ver `docs/ENTORNOS.md`). |
+| Semillas sintéticas | `web/db/seeds/sinteticos/` | JSON + sembrador idempotente (`npm run seed:demo`); cuentas locales con `npm run seed:dev` (PLT-10, T05). |
 | Acciones | `web/db/nucleo.ts` | CRUD validado con Zod; exigen `tenant_id` explícito hasta que PLT-01 aporte `withTenantTx`. |
 | Validación | `web/db/validacion/nucleo.ts` | DTOs de entrada/salida; nada fiscal con valor quemado. |
 | Migraciones | `web/db/migrations/` | Solo `drizzle-kit generate`/`migrate`; ningún DDL manual. |
