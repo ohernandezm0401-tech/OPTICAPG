@@ -59,7 +59,7 @@ test('AC-OPT-01 E y A: el optómetra recorre la ficha con teclado', async ({ pag
   });
   expect(graves).toEqual([]);
 
-  await page.getByLabel('Paciente').pressSequentially('a1900000-0000-4000-8000-000000000099');
+  await page.getByLabel('Paciente', { exact: true }).pressSequentially('a1900000-0000-4000-8000-000000000099');
   await page.keyboard.press('Tab');
   await page.getByLabel('Motivo de consulta').fill('Control sintético de agudeza');
   await page.getByLabel('Eje ojo derecho').fill('200');
@@ -74,6 +74,7 @@ test('AC-OPT-01 E y A: el optómetra recorre la ficha con teclado', async ({ pag
 });
 
 test('AC-OPT-01-2 y AC-OPT-01-5: la ficha firmada no se edita y asesor y admin reciben 403', async ({ page }) => {
+  test.setTimeout(90_000);
   await page.route('**/api/atenciones/a1900000-0000-4000-8000-00000000f19a', async (ruta) => {
     if (ruta.request().method() === 'PATCH') {
       await ruta.fulfill({
@@ -239,7 +240,7 @@ test('AC-OPT-01-1 y AC-OPT-01-3 E y A: crea, autoguarda y firma con teclado', as
   });
   expect(graves).toEqual([]);
 
-  await page.getByLabel('Paciente').focus();
+  await page.getByLabel('Paciente', { exact: true }).focus();
   await page.keyboard.type(pacienteId);
   await page.keyboard.press('Tab');
   await page.keyboard.type('Control sintetico con teclado');

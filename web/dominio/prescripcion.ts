@@ -349,6 +349,18 @@ export function validarFirmaPrescripcion(
     }
   }
 
+  if (entrada.tipo === 'lentes_contacto') {
+    for (const campo of ['dispositivo', 'forma_uso', 'distancia_pupilar'] as const) {
+      const valor = (textos[campo] ?? '').trim();
+      if (!valor || valor === MARCA_NO_APLICA) {
+        problemas.push({
+          campo,
+          mensaje: `Los lentes de contacto exigen ${ETIQUETA_CAMPO[campo]}. «No aplica» no sustituye la adaptación.`,
+        });
+      }
+    }
+  }
+
   if (problemas.length > 0) return { ok: false, problemas };
 
   return {

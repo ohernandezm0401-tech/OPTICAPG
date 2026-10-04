@@ -4,7 +4,7 @@
 // migrada (`npm run db:migrate` con `DATABASE_URL` o `DATABASE_URL_TEST`).
 import { expect, test } from '@playwright/test';
 
-test('crear tenant → recargar → persiste en la base de datos', async ({ page }) => {
+test('sin sesión no se puede crear un tenant desde la página', async ({ page }) => {
   const sufijo = `${Date.now().toString().slice(-6)}`;
   const razonSocial = `Óptica E2E de Prueba ${sufijo} S.A.S.`;
   const nit = `901.${sufijo}-1`;
@@ -16,11 +16,7 @@ test('crear tenant → recargar → persiste en la base de datos', async ({ page
   await page.getByLabel('NIT').fill(nit);
   await page.getByRole('button', { name: 'Guardar tenant' }).click();
 
-  const fila = page.getByText(razonSocial);
-  await expect(fila).toBeVisible();
-  await expect(page.getByText(`NIT ${nit}`)).toBeVisible();
-
+  await expect(page.getByText(razonSocial)).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText(razonSocial)).toBeVisible();
-  await expect(page.getByText(`NIT ${nit}`)).toBeVisible();
+  await expect(page.getByText(razonSocial)).toHaveCount(0);
 });

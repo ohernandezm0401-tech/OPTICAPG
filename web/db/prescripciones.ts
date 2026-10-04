@@ -28,6 +28,7 @@ import {
   type ResultadoDispensacion,
 } from '../dominio/prescripcion';
 import { ZONA_HORARIA_INICIAL } from '../dominio/parametros-iniciales';
+import { cifrarCampoClinico, descifrarCampoClinico } from '../lib/cifrado/servicio';
 import { claveMaestraActiva, leerRegistroKek } from '../lib/cifrado/kek.mjs';
 import type { ActorAuthz, SujetoRecurso } from '../lib/authz/ability';
 import { ErrorAutorizacion, exigirPuede } from '../lib/authz/exigir';
@@ -270,6 +271,14 @@ const SELECT_VISTA = `
       on pf.usuario_id = p.firmado_por and pf.tenant_id = p.tenant_id
 `;
 
+async function revelarIndicaciones(tenantId: string, fila: FilaPrescripcion): Promise<FilaPrescripcion> {
+  if (!fila.indicaciones?.startsWith('opt1:')) return fila;
+  return {
+    ...fila,
+    indicaciones: await descifrarCampoClinico(tenantId, 'prescripciones.indicaciones', fila.indicaciones),
+  };
+}
+
 function vistaDe(fila: FilaPrescripcion, ahora: Date, zona: string): PrescripcionVista {
   const hoy = fechaDeFirma(ahora, zona);
   const visible = estadoVisiblePrescripcion({
@@ -486,8 +495,15 @@ async function emitir(
   try {
     const previo = await conApp(ctx, async (cliente) => {
       zona = await zonaTenant(cliente);
-      const atencion = await cliente.query<{ paciente_id: string; estado: string; tipo_doc: string; num_hc: number }>(
-        `select a.paciente_id, a.estado, p.tipo_doc, p.num_hc
+      const atencion = await cliente.query<{
+        paciente_id: string;
+        estado: string;
+        tipo_doc: string;
+        num_hc: number;
+        nombres: string;
+        apellidos: string;
+      }>(
+        `select a.paciente_id, a.estado, p.tipo_doc, p.num_hc, p.nombres, p.apellidos
            from atenciones a
            join pacientes p on p.id = a.paciente_id
           where a.id = $1`,
@@ -497,6 +513,10 @@ async function emitir(
     });
     if (!previo) throw new ErrorPrescripcion(404, 'No se encontró la atención.');
     if (previo.estado !== 'firmado') throw new ErrorPrescripcion(422, 'La prescripción se emite después de firmar la atención.');
+    const nombreFila = `${previo.nombres} ${previo.apellidos}`.trim();
+    if (entrada.paciente_nombre.trim() !== nombreFila) {
+      throw new ErrorPrescripcion(422, 'El nombre del paciente no corresponde a la atención.');
+    }
     if (entrada.numero_hc.trim() !== String(previo.num_hc)) {
       throw new ErrorPrescripcion(422, 'Falta el campo «numero_hc» del art. 17 (número de historia clínica).');
     }
@@ -514,6 +534,9 @@ async function emitir(
   } catch (error) {
     traducir(error);
   }
+  const indicacionesCifradas = (
+    await cifrarCampoClinico(ctx.tenant_id, 'prescripciones.indicaciones', datos.indicaciones)
+  ).texto;
   const anio = Number(datos.fecha.slice(0, 4));
   let numero = '';
   try {
@@ -602,7 +625,7 @@ async function emitir(
           datos.duracion_tratamiento,
           datos.cantidad_num,
           datos.cantidad_letras,
-          datos.indicaciones,
+          indicacionesCifradas,
           datos.vigencia_hasta,
           datos.nombre_prescriptor,
           datos.registro_profesional,
@@ -640,7 +663,7 @@ async function emitir(
       const fila = await leerFila(cliente, id);
       if (!fila) throw new ErrorPrescripcion(404, 'No se encontró la prescripción.');
       const zonaActual = await zonaTenant(cliente);
-      return vistaDe(fila, ahora, zonaActual);
+      return vistaDe(await revelarIndicaciones(ctx.tenant_id, fila), ahora, zonaActual);
     });
   } catch (error) {
     traducir(error);
@@ -690,7 +713,7 @@ export async function leerPrescripcion(ctx: ContextoPrescripcion, id: string, ah
       return { encontrada, zona };
     });
     if (!fila.encontrada) throw new ErrorPrescripcion(404, 'No se encontró la prescripción.');
-    const vista = vistaDe(fila.encontrada, ahora, fila.zona);
+    const vista = vistaDe(await revelarIndicaciones(ctx.tenant_id, fila.encontrada), ahora, fila.zona);
     const veHc = actorDe(ctx).rol === 'optometra' || actorDe(ctx).rol === 'oftalmologo';
     const habilidadClinica = veHc;
     if (!habilidadClinica) {

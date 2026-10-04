@@ -1,3 +1,11 @@
+-- RETIRADO. El esquema vivo son las migraciones 0000–0029 en web/db/migrations.
+-- Este archivo aborta para no ejecutar DROP TABLE de pacientes, sedes y usuarios.
+DO $retirado$
+BEGIN
+  RAISE EXCEPTION 'supabase_init.sql está retirado. Use las migraciones 0000 a 0029 en web/db/migrations.';
+END
+$retirado$;
+
 -- =========================================================================
 -- OPTISAAS - SUPABASE POSTGRESQL INITIALIZATION & SEED SCRIPT
 -- =========================================================================
@@ -13,28 +21,28 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- DELETE FROM auth.users;
 
 -- Eliminar tablas existentes para garantizar la recreación de columnas nuevas
-DROP TABLE IF EXISTS public.transacciones_caja CASCADE;
-DROP TABLE IF EXISTS public.caja_sesiones CASCADE;
-DROP TABLE IF EXISTS public.garantias CASCADE;
-DROP TABLE IF EXISTS public.ordenes_trabajo CASCADE;
-DROP TABLE IF EXISTS public.promociones CASCADE;
-DROP TABLE IF EXISTS public.historias_clinicas CASCADE;
-DROP TABLE IF EXISTS public.citas CASCADE;
-DROP TABLE IF EXISTS public.pacientes CASCADE;
-DROP TABLE IF EXISTS public.inventario CASCADE;
-DROP TABLE IF EXISTS public.sedes CASCADE;
-DROP TABLE IF EXISTS public.empresas CASCADE;
-DROP TABLE IF EXISTS public.usuarios CASCADE;
-DROP TABLE IF EXISTS public.proveedores CASCADE;
-DROP TABLE IF EXISTS public.compras CASCADE;
-DROP TABLE IF EXISTS public.configuracion_margenes CASCADE;
-DROP TABLE IF EXISTS public.mensajes_logs CASCADE;
-DROP TABLE IF EXISTS public.equipos_medicos CASCADE;
-DROP TABLE IF EXISTS public.lecturas_ambientales CASCADE;
-DROP TABLE IF EXISTS public.registros_residuos CASCADE;
-DROP TABLE IF EXISTS public.registros_desinfeccion CASCADE;
-DROP TABLE IF EXISTS public.concepto_sanitario CASCADE;
-DROP TABLE IF EXISTS public.saneamiento_logs CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.transacciones_caja CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.caja_sesiones CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.garantias CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.ordenes_trabajo CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.promociones CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.historias_clinicas CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.citas CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.pacientes CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.inventario CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.sedes CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.empresas CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.usuarios CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.proveedores CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.compras CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.configuracion_margenes CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.mensajes_logs CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.equipos_medicos CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.lecturas_ambientales CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.registros_residuos CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.registros_desinfeccion CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.concepto_sanitario CASCADE;
+-- RETIRADO DROP TABLE IF EXISTS public.saneamiento_logs CASCADE;
 
 -- =========================================================================
 -- 1. CREACIÓN DE TABLAS DE LA BASE DE DATOS

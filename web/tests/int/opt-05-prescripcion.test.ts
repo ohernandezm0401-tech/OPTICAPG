@@ -238,6 +238,13 @@ describe('prescripciones en PostgreSQL', () => {
     await expect(crearPrescripcion(ctx('asesor', ASESOR), base, AHORA)).rejects.toMatchObject({ status: 403 });
 
     const firmada = await crearPrescripcion(ctx(), base, AHORA);
+    const indicaciones = await obtenerPool().query<{ indicaciones: string }>(
+      `select indicaciones from prescripciones where id = $1`,
+      [firmada.id],
+    );
+    expect(indicaciones.rows[0]?.indicaciones.startsWith('opt1:')).toBe(true);
+    expect(indicaciones.rows[0]?.indicaciones).not.toContain('Uso sintetico');
+    expect(firmada.campos.indicaciones).toBe('Uso sintetico');
     expect(firmada.numero).toMatch(/^RX-2026-\d{6}$/);
     expect(firmada.estado).toBe('firmada');
     expect(firmada.numero_hc).toBe(String(guardado.num_hc));

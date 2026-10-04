@@ -24,6 +24,7 @@ import { sesiones } from '../../../db/esquema/nucleo';
 import { withTenantTx } from '../../../db/tenant';
 import { versionDelSobreTexto } from '../../cifrado/aes.mjs';
 import { INTENTOS_PARA_BLOQUEO, minutosDeBloqueo, minutosInactividad } from '../bloqueo';
+import { mapaRolesPorSede, rolDeSede } from '../rol-sede';
 import {
   MENSAJE_MFA_INVALIDO,
   type AltaTotp,
@@ -313,7 +314,12 @@ async function abrirTrasMfa(entrada: {
     `select sede_id, rol from membresias_para_inicio($1::uuid)`,
     [entrada.desafio.usuario_id],
   );
-  const roles = membresias.rows.map((fila) => fila.rol);
+  const rolesPorSede = mapaRolesPorSede(membresias.rows);
+  const { completarInicio, rolOperadorPlataforma } = await import('../servicio');
+  const rolPlataforma = await rolOperadorPlataforma(entrada.desafio.usuario_id);
+  const roles = rolPlataforma
+    ? [rolPlataforma, ...membresias.rows.map((fila) => fila.rol)]
+    : membresias.rows.map((fila) => fila.rol);
   const sedes = [...new Set(membresias.rows.map((fila) => fila.sede_id))];
   const parametro = await obtenerPool().query<{ valor: unknown }>(
     `select parametro_vigente($1::uuid, $2) as valor`,
@@ -322,7 +328,6 @@ async function abrirTrasMfa(entrada: {
   const crudo = parametro.rows[0]?.valor;
   const minutos =
     typeof crudo === 'number' ? crudo : typeof crudo === 'string' && crudo.trim() ? Number(crudo) : null;
-  const { completarInicio } = await import('../servicio');
   const correo = await correoDe(entrada.desafio.usuario_id);
   const resultado = await completarInicio({
     tenantId: entrada.desafio.tenant_id,
@@ -330,6 +335,8 @@ async function abrirTrasMfa(entrada: {
     correo,
     roles,
     sedes,
+    rolesPorSede,
+    rolRespaldo: rolPlataforma ?? undefined,
     inactividad: minutosInactividad(roles, Number.isFinite(minutos) ? minutos : null),
     direccionIp: entrada.desafio.direccion_ip,
     agente: null,
@@ -476,15 +483,17 @@ export async function canjearPase(pase: string, ahora: Date = new Date()): Promi
     `select sede_id, rol from membresias_para_inicio($1::uuid)`,
     [fila.usuario_id],
   );
-  const roles = membresias.rows.map((item) => item.rol);
+  const rolesPorSede = mapaRolesPorSede(membresias.rows);
   const sedes = [...new Set(membresias.rows.map((item) => item.sede_id))];
+  const sedeId = sedes[0] ?? '';
   return {
     id: fila.id,
     usuarioId: fila.usuario_id,
     tenantId: fila.tenant_id,
-    sedeId: sedes[0] ?? '',
-    rol: roles[0] ?? '',
+    sedeId,
+    rol: rolDeSede(rolesPorSede, sedeId),
     sedes,
+    rolesPorSede,
     correo: await correoDe(fila.usuario_id),
     expiraEn: new Date(fila.expira_en).toISOString(),
   };

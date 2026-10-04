@@ -58,7 +58,7 @@ Abre `landing/index.html` en el navegador. No comparte el servidor de Next.js.
 
 ## Base de datos más adelante
 
-El esquema está en [`web/supabase_init.sql`](web/supabase_init.sql) (sin semillas: se retiraron en T05; use `npm run seed:demo`). Los pasos que faltan están en [`PENDIENTES.md`](PENDIENTES.md).
+El esquema vivo son las migraciones [`web/db/migrations`](web/db/migrations) (`0000` a `0029`). `web/supabase_init.sql` está retirado y aborta al ejecutarse: no es el esquema de la app. Las semillas de demostración salen de `npm run seed:demo`. Los pasos que faltan están en [`PENDIENTES.md`](PENDIENTES.md).
 
 ## Stack
 

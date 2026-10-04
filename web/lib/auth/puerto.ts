@@ -14,6 +14,8 @@ export interface SesionEmitida {
   sedeId: string;
   rol: string;
   sedes: string[];
+  /** Rol de cada sede autorizada. La sede activa elige `rol`. */
+  rolesPorSede: Record<string, string>;
   correo: string;
   expiraEn: string;
 }

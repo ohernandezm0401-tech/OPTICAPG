@@ -305,11 +305,19 @@ export function FichaAtencion({ limitesIniciales = LIMITES_CAPTURA_PROPUESTOS }:
   async function confirmarFirma() {
     const id = atencionIdRef.current;
     if (!id || firmada) return;
+    if (version == null) {
+      setError('Guarde el borrador antes de firmar.');
+      return;
+    }
     setError(null);
     if (temporizador.current) window.clearTimeout(temporizador.current);
     epoca.current += 1;
     firmadaRef.current = true;
-    const respuesta = await fetch(`/api/atenciones/${id}/firmar`, { method: 'POST' });
+    const respuesta = await fetch(`/api/atenciones/${id}/firmar`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ version_borrador: version }),
+    });
     const json = (await respuesta.json()) as VistaAtencion & { error?: string };
     if (!respuesta.ok) {
       firmadaRef.current = false;

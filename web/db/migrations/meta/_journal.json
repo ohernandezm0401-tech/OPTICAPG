@@ -204,6 +204,13 @@
       "when": 1791080000000,
       "tag": "0028_seg11_incidentes",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791083600000,
+      "tag": "0029_aislamiento_sede_retencion",
+      "breakpoints": true
     }
   ]
 }

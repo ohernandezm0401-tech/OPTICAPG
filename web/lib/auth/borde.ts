@@ -36,13 +36,22 @@ export const authConfig = {
         token.sedeId = user.sedeId;
         token.role = user.role;
         token.sedesAccess = user.sedesAccess ?? [];
+        token.rolesPorSede = user.rolesPorSede ?? {};
         token.sesionId = user.sesionId;
         token.devLocal = user.devLocal === true;
         token.sub = user.id;
       }
       if (trigger === 'update' && typeof session?.sedeId === 'string') {
         const allowed = Array.isArray(token.sedesAccess) ? token.sedesAccess : [];
-        if (allowed.includes(session.sedeId)) token.sedeId = session.sedeId;
+        if (allowed.includes(session.sedeId)) {
+          token.sedeId = session.sedeId;
+          const mapa = token.rolesPorSede;
+          const sedePedida = session.sedeId;
+          if (mapa && typeof mapa === 'object' && typeof sedePedida === 'string') {
+            const rol = (mapa as Record<string, unknown>)[sedePedida];
+            if (typeof rol === 'string') token.role = rol;
+          }
+        }
       }
       return token;
     },

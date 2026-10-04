@@ -95,7 +95,7 @@ describe('SEG-01 autenticación en PostgreSQL real', () => {
     expect(resultado.ok).toBe(true);
     expect(JSON.stringify(resultado)).not.toContain(CLAVE);
     expect(resultado.sesion && Object.keys(resultado.sesion).sort()).toEqual(
-      ['correo', 'expiraEn', 'id', 'rol', 'sedeId', 'sedes', 'tenantId', 'usuarioId'].sort(),
+      ['correo', 'expiraEn', 'id', 'rol', 'rolesPorSede', 'sedeId', 'sedes', 'tenantId', 'usuarioId'].sort(),
     );
     const fila = await obtenerPool().query<{ hash_password: string }>('select hash_password from usuarios where id = $1', [
       usuario.id,

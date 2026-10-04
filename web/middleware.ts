@@ -19,6 +19,26 @@ function borrarCookies(respuesta: NextResponse) {
   return respuesta;
 }
 
+function politicaContenido(nonce: string): string {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+  ].join('; ');
+}
+
+function conPolitica(respuesta: NextResponse, politica: string): NextResponse {
+  respuesta.headers.set('Content-Security-Policy', politica);
+  return respuesta;
+}
+
 // La vigencia vive en Node (PostgreSQL). El middleware no importa el driver:
 // pregunta al route handler, que no vuelve a entrar al middleware (`api` está
 // fuera del matcher). Si la sesión fue revocada, la siguiente petición falla.
@@ -37,13 +57,21 @@ async function sesionVigenteEnServidor(req: { url: string; headers: Headers }): 
 
 // SEG-02: el middleware solo redirige a login. La autorización de datos vive
 // en el servidor (CASL). La ruta se reenvía para que el layout decida.
-function continuar(req: { headers: Headers; nextUrl: { pathname: string } }) {
+function continuar(
+  req: { headers: Headers; nextUrl: { pathname: string } },
+  politica: string,
+  nonce: string,
+) {
   const encabezados = new Headers(req.headers);
   encabezados.set('x-optisaas-ruta', req.nextUrl.pathname);
-  return NextResponse.next({ request: { headers: encabezados } });
+  encabezados.set('x-nonce', nonce);
+  encabezados.set('Content-Security-Policy', politica);
+  return conPolitica(NextResponse.next({ request: { headers: encabezados } }), politica);
 }
 
 export default auth(async (req) => {
+  const nonce = btoa(crypto.randomUUID());
+  const politica = politicaContenido(nonce);
   const pathname = req.nextUrl.pathname;
   const isAuthPage = pathname.startsWith('/login');
   let autenticado = !!req.auth;
@@ -53,27 +81,30 @@ export default auth(async (req) => {
     if (!vigente) {
       autenticado = false;
       if (pathname.startsWith('/dashboard')) {
-        return borrarCookies(NextResponse.redirect(new URL('/login', req.url)));
+        return conPolitica(borrarCookies(NextResponse.redirect(new URL('/login', req.url))), politica);
       }
-      return borrarCookies(continuar(req));
+      return borrarCookies(continuar(req, politica, nonce));
     }
   }
 
   if (isAuthPage) {
     if (autenticado && req.auth?.user?.role) {
-      return NextResponse.redirect(new URL(`/dashboard/${req.auth.user.role}`, req.url));
+      return conPolitica(
+        NextResponse.redirect(new URL(`/dashboard/${req.auth.user.role}`, req.url)),
+        politica,
+      );
     }
     if (autenticado) {
-      return NextResponse.redirect(new URL('/dashboard/admin', req.url));
+      return conPolitica(NextResponse.redirect(new URL('/dashboard/admin', req.url)), politica);
     }
-    return continuar(req);
+    return continuar(req, politica, nonce);
   }
 
   if (!autenticado && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    return conPolitica(NextResponse.redirect(new URL('/login', req.url)), politica);
   }
 
-  return continuar(req);
+  return continuar(req, politica, nonce);
 });
 
 export const config = {

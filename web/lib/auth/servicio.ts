@@ -19,6 +19,7 @@ import {
 } from './bloqueo';
 import { hashearContrasena, verificarContrasena } from './contrasena';
 import { evaluarPoliticaContrasena } from './politica-contrasena';
+import { mapaRolesPorSede, rolDeSede } from './rol-sede';
 import {
   MENSAJE_CREDENCIALES_INVALIDAS,
   type AuthPort,
@@ -115,7 +116,7 @@ async function buscarUsuarios(correo: string): Promise<FilaUsuario[]> {
   }));
 }
 
-async function rolOperadorPlataforma(usuarioId: string): Promise<string | null> {
+export async function rolOperadorPlataforma(usuarioId: string): Promise<string | null> {
   const resultado = await obtenerPool().query<{ rol_operador_plataforma: string | null }>(
     `select rol_operador_plataforma($1::uuid) as rol_operador_plataforma`,
     [usuarioId],
@@ -214,6 +215,8 @@ export async function completarInicio(entrada: {
   correo: string;
   roles: string[];
   sedes: string[];
+  rolesPorSede: Record<string, string>;
+  rolRespaldo?: string;
   inactividad: number;
   direccionIp: string | null;
   agente: string | null;
@@ -256,6 +259,7 @@ export async function completarInicio(entrada: {
     ahora: entrada.ahora,
   });
   const expira = new Date(entrada.ahora.getTime() + entrada.inactividad * 60_000);
+  const sedeId = entrada.sedes[0] ?? '';
   return {
     ok: true,
     mensaje: '',
@@ -265,9 +269,10 @@ export async function completarInicio(entrada: {
       id: sesionId,
       usuarioId: entrada.usuarioId,
       tenantId: entrada.tenantId,
-      sedeId: entrada.sedes[0] ?? '',
-      rol: entrada.roles[0] ?? '',
+      sedeId,
+      rol: rolDeSede(entrada.rolesPorSede, sedeId, entrada.rolRespaldo ?? ''),
       sedes: entrada.sedes,
+      rolesPorSede: entrada.rolesPorSede,
       correo: entrada.correo,
       expiraEn: expira.toISOString(),
     },
@@ -372,6 +377,7 @@ export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<Resul
   }
 
   const membresias = await membresiasDe(usuario.id);
+  const rolesPorSede = mapaRolesPorSede(membresias);
   const rolPlataforma = await rolOperadorPlataforma(usuario.id);
   const roles = rolPlataforma
     ? [rolPlataforma, ...membresias.map((fila) => fila.rol)]
@@ -395,6 +401,8 @@ export async function iniciarSesion(entrada: EntradaInicioSesion): Promise<Resul
     correo: usuario.email,
     roles,
     sedes,
+    rolesPorSede,
+    rolRespaldo: rolPlataforma ?? undefined,
     inactividad,
     direccionIp,
     agente,

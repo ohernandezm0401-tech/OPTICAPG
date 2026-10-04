@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import { headers } from 'next/headers';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/auth-provider';
@@ -19,7 +20,11 @@ export const metadata: Metadata = {
   description: 'SaaS para ópticas con consultorio de optometría (Habilitación, RIPS, INVIMA)',
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  // El middleware pone el nonce en la petición. Leerlo aquí evita el HTML
+  // estático: Next solo estampa el nonce en un render por petición. Sin eso
+  // la CSP bloquea la hidratación y el formulario de login se envía en GET.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="es" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans bg-background text-foreground antialiased min-h-screen">
@@ -29,6 +34,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           <AuthProvider>
             {children}

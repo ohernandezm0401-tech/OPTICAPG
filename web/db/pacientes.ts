@@ -266,6 +266,14 @@ export async function guardarPaciente(
         negativa_autorizacion: previo.fila.negativa_autorizacion,
       } satisfies PacienteEntrada)
     : entrada;
+  const identidadPrevia = previo
+    ? {
+        tipo_doc: base.tipo_doc,
+        num_doc_plano: base.num_doc,
+        num_doc_sobre: previo.fila.num_doc,
+        fecha_nacimiento: base.fecha_nacimiento,
+      }
+    : null;
   const validacion = validarPaciente(combinar(base, entrada, previo?.vigente === true), hoy);
   if (!validacion.ok) throw new ErrorPaciente('validacion', validacion.errores[0], validacion.errores);
   const datos = validacion.datos;
@@ -354,6 +362,30 @@ export async function guardarPaciente(
         throw new ErrorPaciente('no_encontrado', 'No se encontró el paciente.');
       }
       numHc = actual.rows[0].num_hc;
+      if (identidadPrevia) {
+        const cambios: { campo: string; anterior: string; nuevo: string }[] = [];
+        if (identidadPrevia.tipo_doc !== datos.tipo_doc) {
+          cambios.push({ campo: 'tipo_doc', anterior: identidadPrevia.tipo_doc, nuevo: datos.tipo_doc });
+        }
+        if (identidadPrevia.fecha_nacimiento !== datos.fecha_nacimiento) {
+          cambios.push({
+            campo: 'fecha_nacimiento',
+            anterior: identidadPrevia.fecha_nacimiento,
+            nuevo: datos.fecha_nacimiento,
+          });
+        }
+        if (identidadPrevia.num_doc_plano !== datos.num_doc) {
+          cambios.push({ campo: 'num_doc', anterior: identidadPrevia.num_doc_sobre, nuevo: sobre });
+        }
+        for (const cambio of cambios) {
+          await cliente.query(
+            `insert into historial_identificacion
+               (tenant_id, paciente_id, campo, valor_anterior, valor_nuevo, registrado_por)
+             values ($1, $2, $3, $4, $5, $6)`,
+            [contexto.tenant_id, id, cambio.campo, cambio.anterior, cambio.nuevo, contexto.usuario_id],
+          );
+        }
+      }
       await cliente.query(
         `update pacientes set
            tipo_doc = $2, num_doc = $3, num_doc_hash = $4, nombres = $5, apellidos = $6,
@@ -506,7 +538,20 @@ export async function abrirPaciente(contexto: ContextoPaciente, id: string, opci
         order by id desc limit 30`,
       [id],
     );
-    return { fila: fila.rows[0], vinculos: vinculos.rows, diagnosticos: diagnosticos.rows, historial: historial.rows };
+    const identidad = await cliente.query<{ campo: string; valor_anterior: string }>(
+      `select distinct on (campo) campo, valor_anterior
+         from historial_identificacion
+        where paciente_id = $1
+        order by campo, registrado_en desc`,
+      [id],
+    );
+    return {
+      fila: fila.rows[0],
+      vinculos: vinculos.rows,
+      diagnosticos: diagnosticos.rows,
+      historial: historial.rows,
+      identidad: identidad.rows,
+    };
   });
   if (!abierto) throw new ErrorPaciente('no_encontrado', 'No se encontró el paciente.');
   const num = await descifrar(contexto.tenant_id, abierto.fila.num_doc);
@@ -526,6 +571,22 @@ export async function abrirPaciente(contexto: ContextoPaciente, id: string, opci
   const diagnosticos = [];
   for (const fila of abierto.diagnosticos) {
     diagnosticos.push({ descripcion: (await descifrar(contexto.tenant_id, fila.descripcion_cifrada)) });
+  }
+  const identidadAnterior: { tipo_doc: string | null; num_doc: string | null; fecha_nacimiento: string | null } = {
+    tipo_doc: null,
+    num_doc: null,
+    fecha_nacimiento: null,
+  };
+  for (const cambio of abierto.identidad) {
+    if (cambio.campo === 'num_doc') {
+      identidadAnterior.num_doc = cambio.valor_anterior.startsWith('opt1:')
+        ? await descifrar(contexto.tenant_id, cambio.valor_anterior)
+        : cambio.valor_anterior;
+    } else if (cambio.campo === 'tipo_doc') {
+      identidadAnterior.tipo_doc = cambio.valor_anterior;
+    } else if (cambio.campo === 'fecha_nacimiento') {
+      identidadAnterior.fecha_nacimiento = cambio.valor_anterior;
+    }
   }
   const nacimiento = abierto.fila.fecha_nacimiento;
   const ficha = {
@@ -552,6 +613,7 @@ export async function abrirPaciente(contexto: ContextoPaciente, id: string, opci
       rol: evento.rol,
     })),
     diagnosticos,
+    identidad_anterior: identidadAnterior,
   };
   return fichaSinDiagnosticoParaRol(contexto.rol, ficha);
 }
@@ -560,6 +622,15 @@ export async function abrirPaciente(contexto: ContextoPaciente, id: string, opci
 export async function fusionarPacientes(contexto: ContextoPaciente, origenId: string, destinoId: string): Promise<void> {
   if (origenId === destinoId) throw new ErrorPaciente('validacion', 'No se puede fusionar un paciente consigo mismo.');
   await conApp(contexto, async (cliente) => {
+    try {
+      await cliente.query(`select fusionar_historia_paciente($1::uuid, $2::uuid)`, [origenId, destinoId]);
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : '';
+      if (/choca|consigo mismo|no pertenecen|solo reasigna/i.test(mensaje)) {
+        throw new ErrorPaciente('validacion', 'No se pudo fusionar: la historia no se puede reasignar.');
+      }
+      throw error;
+    }
     const cambio = await cliente.query(
       `update pacientes set estado = 'fusionado', fusionado_en_id = $2, actualizado_en = now()
         where id = $1 and estado <> 'fusionado'`,

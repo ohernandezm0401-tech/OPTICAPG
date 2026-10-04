@@ -56,6 +56,9 @@ export async function withTenantTx<T>(
     await tx.execute(sql.raw(`SET LOCAL app.sedes = ${literal(sedes.join(','))}`));
     await tx.execute(sql.raw(`SET LOCAL app.rol = ${literal(contexto.rol ?? '')}`));
     await tx.execute(sql.raw(`SET LOCAL app.role = ${literal(contexto.rol ?? '')}`));
+    // El superusuario ignora FORCE RLS. La transacción baja a optisaas_app,
+    // que no tiene BYPASSRLS. El usuario de conexión debe poder hacer SET ROLE.
+    await tx.execute(sql.raw('SET LOCAL ROLE optisaas_app'));
     return fn(tx as unknown as BdNucleo);
   });
 }

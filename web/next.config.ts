@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { validarArranque } from './lib/entorno';
@@ -25,6 +26,12 @@ if (!esFaseDeCompilacion) {
       }
     });
   validarArranque(process.env, rastros, existeRastro);
+  if (process.env.APP_ENV === 'produccion') {
+    execFileSync(process.execPath, [path.join(process.cwd(), 'db', 'privilegio-arranque.mjs')], {
+      stdio: 'inherit',
+      env: process.env,
+    });
+  }
 }
 
 const nextConfig: NextConfig = {
@@ -44,6 +51,23 @@ const nextConfig: NextConfig = {
   // TODO(Q-09): reevaluar si se adopta `next/image` con optimización.
   images: {
     unoptimized: true,
+  },
+  async headers() {
+    // La CSP va en el middleware: Next inserta scripts en línea y necesita
+    // un nonce por petición. Una política estática de `script-src 'self'`
+    // deja el formulario en opacity 0 porque el navegador no ejecuta la hidratación.
+    const cabeceras = [
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    ];
+    if (process.env.APP_ENV === 'produccion') {
+      cabeceras.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains',
+      });
+    }
+    return [{ source: '/:path*', headers: cabeceras }];
   },
   output: 'standalone',
   // T14: yoga-layout y fontkit no deben entrar al bundle de webpack.

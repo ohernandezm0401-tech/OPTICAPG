@@ -84,15 +84,21 @@ describe('AC-SEG-12-1 I/S: anexo cifrado', () => {
     const ajena = registroCon('ajena', randomBytes(32));
     await expect(leerAnexo(obtenerPool(), ajena, TENANT, guardado.id)).rejects.toThrow(ErrorCifrado);
 
-    await obtenerPool().query(
-      `update anexos
-          set contenido_cifrado = set_byte(contenido_cifrado, octet_length(contenido_cifrado) - 1,
-            get_byte(contenido_cifrado, octet_length(contenido_cifrado) - 1) # 1)
-        where id = $1`,
-      [guardado.id],
+    await expect(
+      obtenerPool().query(
+        `update anexos
+            set contenido_cifrado = set_byte(contenido_cifrado, octet_length(contenido_cifrado) - 1,
+              get_byte(contenido_cifrado, octet_length(contenido_cifrado) - 1) # 1)
+          where id = $1`,
+        [guardado.id],
+      ),
+    ).rejects.toThrow(/UPDATE prohibido/);
+    await expect(obtenerPool().query('delete from anexos where id = $1', [guardado.id])).rejects.toThrow(
+      /DELETE prohibido/,
     );
-    await expect(leerAnexo(obtenerPool(), registro, TENANT, guardado.id)).rejects.toThrow(/alterado|clave/);
-    await obtenerPool().query('delete from anexos where id = $1', [guardado.id]);
+    const intacto = await leerAnexo(obtenerPool(), registro, TENANT, guardado.id);
+    expect(intacto?.hash).toBe(hash(PLANO));
+    expect(intacto?.contenido.equals(PLANO)).toBe(true);
   });
 });
 

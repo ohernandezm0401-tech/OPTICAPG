@@ -8,6 +8,7 @@ declare module 'next-auth' {
       sedeId: string;
       role: string;
       sedesAccess?: string[];
+      rolesPorSede?: Record<string, string>;
       sesionId?: string;
       devLocal?: boolean;
     } & DefaultSession['user'];
@@ -22,6 +23,7 @@ declare module 'next-auth' {
     sedeId?: string;
     role?: string;
     sedesAccess?: string[];
+    rolesPorSede?: Record<string, string>;
     sesionId?: string;
     devLocal?: boolean;
   }
@@ -33,6 +35,7 @@ declare module 'next-auth/jwt' {
     sedeId?: string;
     role?: string;
     sedesAccess?: string[];
+    rolesPorSede?: Record<string, string>;
     sesionId?: string;
     devLocal?: boolean;
   }
@@ -45,6 +48,7 @@ declare module '@auth/core/types' {
       sedeId: string;
       role: string;
       sedesAccess?: string[];
+      rolesPorSede?: Record<string, string>;
       sesionId?: string;
       devLocal?: boolean;
     } & DefaultSession['user'];
@@ -59,6 +63,7 @@ declare module '@auth/core/types' {
     sedeId?: string;
     role?: string;
     sedesAccess?: string[];
+    rolesPorSede?: Record<string, string>;
     sesionId?: string;
     devLocal?: boolean;
   }

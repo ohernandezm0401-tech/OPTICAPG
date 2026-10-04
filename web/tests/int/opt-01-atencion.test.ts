@@ -299,6 +299,18 @@ describe('atención optométrica en PostgreSQL', () => {
 
   it('AC-OPT-01-2: tras firmar fallan la API y el SQL de la aplicación', async () => {
     const creada = await crearAtencion(ctx('optometra', OPTO), entrada(ADULTO));
+    const crudo = await obtenerPool().query<{ contenido: string; descripcion: string }>(
+      `select a.contenido, d.descripcion
+         from atenciones a
+         join diagnosticos d on d.atencion_id = a.id
+        where a.id = $1`,
+      [creada.id],
+    );
+    expect(crudo.rows[0]?.contenido.startsWith('opt1:')).toBe(true);
+    expect(crudo.rows[0]?.descripcion.startsWith('opt1:')).toBe(true);
+    expect(crudo.rows[0]?.contenido).not.toContain('Control sintético');
+    expect(creada.motivo).toContain('Control sintético');
+    expect(creada.diagnostico?.descripcion).toMatch(/SINTETICO/);
     const firmada = await firmarAtencion(ctx('optometra', OPTO), creada.id, AHORA);
     expect(firmada.estado).toBe('firmado');
     expect(firmada.folio).toBeGreaterThan(0);

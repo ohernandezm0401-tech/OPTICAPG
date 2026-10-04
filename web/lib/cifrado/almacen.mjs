@@ -4,7 +4,7 @@
 // `set_config` local (RLS). La rotación de KEK de todos los tenants es una
 // operación de plataforma: corre con el dueño de las tablas (la misma
 // conexión de migración), no con un rol BYPASSRLS.
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 
 import {
   aTexto,
@@ -13,6 +13,7 @@ import {
   desdeTexto,
   ErrorCifrado,
   esSobreTexto,
+  versionDelSobreTexto,
 } from './aes.mjs';
 import { esCampoTextoClinico } from './campos.mjs';
 import { claveMaestraActiva, claveMaestraPorId } from './kek.mjs';
@@ -358,7 +359,56 @@ export async function rotarClaveMaestra(fuente, registro, nueva) {
       reenvueltas += 1;
     }
   }
-  return { reenvueltas, kekId: nueva.id, registro: siguiente };
+  const hashes = await recalcularHashesDocumento(fuente, siguiente, nueva.clave, nueva.tenantId ?? null, nueva.tamanoLote ?? LOTE);
+  return { reenvueltas, hashes, kekId: nueva.id, registro: siguiente };
+}
+
+async function recalcularHashesDocumento(fuente, registro, claveHmac, tenantId, lote) {
+  let total = 0;
+  total += await recalcularHashesDe(fuente, registro, claveHmac, tenantId, lote, 'pacientes');
+  total += await recalcularHashesDe(fuente, registro, claveHmac, tenantId, lote, 'representantes');
+  return total;
+}
+
+async function recalcularHashesDe(fuente, registro, claveHmac, tenantId, lote, tabla) {
+  if (tabla !== 'pacientes' && tabla !== 'representantes') {
+    throw new ErrorCifrado('la tabla de documento no se puede rehashear');
+  }
+  const listar =
+    tabla === 'pacientes'
+      ? `select id, tenant_id, tipo_doc, num_doc from pacientes
+          where ($2::uuid is null or tenant_id = $2::uuid) and id > $1
+          order by id limit $3`
+      : `select id, tenant_id, tipo_doc, num_doc from representantes
+          where ($2::uuid is null or tenant_id = $2::uuid) and id > $1
+          order by id limit $3`;
+  const actualizar =
+    tabla === 'pacientes'
+      ? `update pacientes set num_doc_hash = $2 where id = $1`
+      : `update representantes set num_doc_hash = $2 where id = $1`;
+  let cursor = '00000000-0000-0000-0000-000000000000';
+  let total = 0;
+  for (;;) {
+    const pagina = await fuente.query(listar, [cursor, tenantId, lote]);
+    if (pagina.rows.length === 0) break;
+    for (const fila of pagina.rows) {
+      cursor = String(fila.id);
+      if (!esSobreTexto(fila.num_doc)) continue;
+      const version = versionDelSobreTexto(fila.num_doc);
+      const dek = await transaccionTenant(fuente, fila.tenant_id, (cliente) =>
+        leerDek(cliente, registro, fila.tenant_id, version),
+      );
+      if (!dek) throw new ErrorCifrado('no hay clave de datos para el documento');
+      const plano = descifrarBytes(dek.clave, desdeTexto(fila.num_doc), aadDatos(fila.tenant_id)).plano.toString('utf8');
+      const hash = createHmac('sha256', claveHmac)
+        .update(`${String(fila.tipo_doc).trim().toUpperCase()}|${plano.trim()}`, 'utf8')
+        .digest('hex');
+      await fuente.query(actualizar, [fila.id, hash]);
+      total += 1;
+    }
+    if (pagina.rows.length < lote) break;
+  }
+  return total;
 }
 
 async function recifrarAnexos(fuente, registro, tenantId, versionOrigen, versionDestino, lote) {
@@ -386,6 +436,7 @@ async function recifrarAnexos(fuente, registro, tenantId, versionOrigen, version
       const plano = descifrarBytes(origen.clave, fila.contenido_cifrado, aadDatos(tenantId)).plano;
       const sobre = cifrarBytes(destino.clave, plano, versionDestino, aadDatos(tenantId));
       await transaccionTenant(fuente, tenantId, async (cliente) => {
+        await cliente.query(`select set_config('app.rotacion_dek', '1', true)`);
         await cliente.query(
           `update anexos set contenido_cifrado = $2, clave_version = $3
             where id = $1 and tenant_id = $4 and clave_version = $5`,
@@ -475,9 +526,77 @@ export async function rotarClaveDatos(fuente, registro, tenantId, opciones = {})
   return { recifrados, versionAnterior: versiones.anterior, versionNueva: versiones.nueva };
 }
 
+const SOBRES_CLINICOS = [
+  {
+    listar: `select id, contenido as valor from atenciones
+              where tenant_id = $1 and id > $2 and contenido like 'opt1:%'
+              order by id limit $3`,
+    actualizar: `update atenciones set contenido = $2 where id = $1 and tenant_id = $3`,
+  },
+  {
+    listar: `select id, descripcion as valor from diagnosticos
+              where tenant_id = $1 and id > $2 and descripcion like 'opt1:%'
+              order by id limit $3`,
+    actualizar: `update diagnosticos set descripcion = $2 where id = $1 and tenant_id = $3`,
+  },
+  {
+    listar: `select id, motivo as valor from atencion_adendas
+              where tenant_id = $1 and id > $2 and motivo like 'opt1:%'
+              order by id limit $3`,
+    actualizar: `update atencion_adendas set motivo = $2 where id = $1 and tenant_id = $3`,
+  },
+  {
+    listar: `select id, nuevo_valor as valor from atencion_adendas
+              where tenant_id = $1 and id > $2 and nuevo_valor like 'opt1:%'
+              order by id limit $3`,
+    actualizar: `update atencion_adendas set nuevo_valor = $2 where id = $1 and tenant_id = $3`,
+  },
+  {
+    listar: `select id, indicaciones as valor from prescripciones
+              where tenant_id = $1 and id > $2 and indicaciones like 'opt1:%'
+              order by id limit $3`,
+    actualizar: `update prescripciones set indicaciones = $2 where id = $1 and tenant_id = $3`,
+  },
+];
+
+async function recifrarSobresClinicos(fuente, registro, tenantId, versionOrigen, versionDestino, lote, columna) {
+  let cursor = '00000000-0000-0000-0000-000000000000';
+  let total = 0;
+  for (;;) {
+    const pagina = await transaccionTenant(fuente, tenantId, async (cliente) => {
+      const consulta = await cliente.query(columna.listar, [tenantId, cursor, lote]);
+      return consulta.rows;
+    });
+    if (pagina.length === 0) break;
+    cursor = String(pagina[pagina.length - 1].id);
+    const destino = await transaccionTenant(fuente, tenantId, (cliente) =>
+      leerDek(cliente, registro, tenantId, versionDestino),
+    );
+    const origen = await transaccionTenant(fuente, tenantId, (cliente) =>
+      leerDek(cliente, registro, tenantId, versionOrigen),
+    );
+    if (!destino || !origen) throw new ErrorCifrado('no hay clave de datos para el lote');
+    for (const fila of pagina) {
+      if (versionDelSobreTexto(fila.valor) !== versionOrigen) continue;
+      const plano = descifrarBytes(origen.clave, desdeTexto(fila.valor), aadDatos(tenantId)).plano;
+      const texto = aTexto(cifrarBytes(destino.clave, plano, versionDestino, aadDatos(tenantId)));
+      await transaccionTenant(fuente, tenantId, async (cliente) => {
+        await cliente.query(`select set_config('app.rotacion_dek', '1', true)`);
+        await cliente.query(columna.actualizar, [fila.id, texto, tenantId]);
+      });
+      total += 1;
+    }
+    if (pagina.length < lote) break;
+  }
+  return total;
+}
+
 async function migrarVersion(fuente, registro, tenantId, origen, destino, lote) {
   let total = 0;
   total += await recifrarAnexos(fuente, registro, tenantId, origen, destino, lote);
+  for (const columna of SOBRES_CLINICOS) {
+    total += await recifrarSobresClinicos(fuente, registro, tenantId, origen, destino, lote, columna);
+  }
   total += await recifrarTextos(
     fuente,
     registro,

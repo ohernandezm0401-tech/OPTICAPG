@@ -80,6 +80,9 @@ jobs:
       - name: Migrar esquema núcleo (PLT-02)
         run: npm run db:migrate
 
+      - name: Cargar catálogo sintético de prueba (OPT-10)
+        run: npm run catalogos:cargar -- datos/catalogos/sintetico-prueba.csv
+
       - name: Verificación RLS multi-tenant (PLT-01)
         run: npm run db:check-rls
 

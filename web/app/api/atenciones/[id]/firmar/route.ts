@@ -10,7 +10,15 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   try {
     const { id } = await contexto.params;
     const ctx = await contextoAtencionHttp(request);
-    return NextResponse.json(await firmarAtencion(ctx, id));
+    const cuerpo = (await request.json().catch(() => null)) as { version_borrador?: unknown } | null;
+    const version = cuerpo?.version_borrador;
+    if (typeof version !== 'number' || !Number.isInteger(version)) {
+      return NextResponse.json(
+        { error: 'Falta la versión del borrador que confirma el profesional.' },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json(await firmarAtencion(ctx, id, new Date(), version));
   } catch (error) {
     if (error instanceof ErrorAtencion) {
       return NextResponse.json({ error: error.message }, { status: error.status });

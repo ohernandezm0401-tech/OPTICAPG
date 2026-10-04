@@ -14,12 +14,13 @@ import { leerLimitesCaptura } from './limites-captura';
 import {
   CAMPOS_REFRACCION_ADENDA,
   ETIQUETAS_REFRACCION,
+  esCampoAdenda,
   prepararAdenda,
   proyectarHistorial,
   referenciaAdenda,
-  referenciaExamen,
+  referenciaCampoAdenda,
+  seccionesCopiaHistoria,
   type AdendaPlano,
-  type CampoRefraccionAdenda,
   type EntradaPdfHistoria,
   type HistorialProyectado,
   type LineaHistorial,
@@ -29,6 +30,7 @@ import { abrirHistoriaClinica } from '../lib/auditoria/lecturas';
 import { registrarEvento } from '../lib/auditoria/servicio';
 import type { ActorAuthz, SujetoRecurso } from '../lib/authz/ability';
 import { ErrorAutorizacion, exigirPuede } from '../lib/authz/exigir';
+import { createHash } from 'node:crypto';
 import { cifrarCampoClinico, descifrarCampoClinico } from '../lib/cifrado/servicio';
 import { renderizarPdfHistoriaClinica } from '../lib/historia/pdf-hc';
 
@@ -39,7 +41,7 @@ export interface HistorialAtencion extends HistorialProyectado {
 
 const CAMPOS = CAMPOS_REFRACCION_ADENDA;
 
-function esCampo(valor: string): valor is CampoRefraccionAdenda {
+function esCampo(valor: string): boolean {
   return (CAMPOS as readonly string[]).includes(valor);
 }
 
@@ -123,12 +125,20 @@ function textoValor(valor: unknown): string {
   return Number.isFinite(numero) ? String(numero) : String(valor);
 }
 
-function motivoDe(contenido: string): string {
+function narrativaDe(contenido: string): { motivo: string; antecedentes: string; saludOcular: string } {
   try {
-    const parsed = JSON.parse(contenido) as { motivo?: unknown };
-    return typeof parsed.motivo === 'string' ? parsed.motivo : '';
+    const parsed = JSON.parse(contenido) as {
+      motivo?: unknown;
+      antecedentes?: { texto?: unknown };
+      salud_ocular?: { texto?: unknown };
+    };
+    return {
+      motivo: typeof parsed.motivo === 'string' ? parsed.motivo : '',
+      antecedentes: typeof parsed.antecedentes?.texto === 'string' ? parsed.antecedentes.texto : '',
+      saludOcular: typeof parsed.salud_ocular?.texto === 'string' ? parsed.salud_ocular.texto : '',
+    };
   } catch {
-    return '';
+    return { motivo: '', antecedentes: '', saludOcular: '' };
   }
 }
 
@@ -144,6 +154,7 @@ function contextoFirma(ctx: ContextoAtencion): ContextoFirma {
 }
 
 interface FilaBase {
+  paciente_id: string;
   sede_id: string;
   estado: string;
   profesional_id: string;
@@ -157,8 +168,9 @@ interface FilaBase {
   plan: string | null;
 }
 
-async function leerBase(cliente: PoolClient, id: string): Promise<FilaBase | null> {
+async function leerBase(cliente: PoolClient, id: string, tenantId: string): Promise<FilaBase | null> {
   const atencion = await cliente.query<{
+    paciente_id: string;
     sede_id: string;
     estado: string;
     profesional_id: string;
@@ -168,7 +180,7 @@ async function leerBase(cliente: PoolClient, id: string): Promise<FilaBase | nul
     firma_documento_id: string | null;
     autor_original: string | null;
   }>(
-    `select a.sede_id, a.estado, a.profesional_id, a.folio, a.firmado_en, a.contenido, a.firma_documento_id,
+    `select a.paciente_id, a.sede_id, a.estado, a.profesional_id, a.folio, a.firmado_en, a.contenido, a.firma_documento_id,
             p.nombre_completo as autor_original
        from atenciones a
        left join perfiles_profesionales p
@@ -178,6 +190,9 @@ async function leerBase(cliente: PoolClient, id: string): Promise<FilaBase | nul
   );
   const fila = atencion.rows[0];
   if (!fila) return null;
+  fila.contenido = fila.contenido.startsWith('opt1:')
+    ? await descifrarCampoClinico(tenantId, 'atenciones.contenido', fila.contenido)
+    : fila.contenido;
   const examen = await cliente.query<Record<string, unknown>>(
     `select esfera_od, cilindro_od, eje_od, adicion_od, agudeza_od,
             esfera_oi, cilindro_oi, eje_oi, adicion_oi, agudeza_oi,
@@ -185,8 +200,8 @@ async function leerBase(cliente: PoolClient, id: string): Promise<FilaBase | nul
        from examenes_optometricos where atencion_id = $1`,
     [id],
   );
-  const diagnostico = await cliente.query<{ codigo_cie10: string }>(
-    `select codigo_cie10 from diagnosticos where atencion_id = $1 and principal = true limit 1`,
+  const diagnostico = await cliente.query<{ codigo_cie10: string; descripcion: string }>(
+    `select codigo_cie10, descripcion from diagnosticos where atencion_id = $1 and principal = true limit 1`,
     [id],
   );
   const plan = await cliente.query<{ conducta: string }>(
@@ -196,7 +211,13 @@ async function leerBase(cliente: PoolClient, id: string): Promise<FilaBase | nul
   return {
     ...fila,
     examen: examen.rows[0] ?? {},
-    diagnostico: diagnostico.rows[0]?.codigo_cie10 ?? null,
+    diagnostico: diagnostico.rows[0]
+      ? `${diagnostico.rows[0].codigo_cie10} ${
+          diagnostico.rows[0].descripcion.startsWith('opt1:')
+            ? await descifrarCampoClinico(tenantId, 'atencion_diagnosticos.descripcion', diagnostico.rows[0].descripcion)
+            : diagnostico.rows[0].descripcion
+        }`.trim()
+      : null,
     plan: plan.rows[0]?.conducta ?? null,
   };
 }
@@ -234,7 +255,7 @@ async function adendasPlanas(ctx: ContextoAtencion, cliente: PoolClient, atencio
   );
   const planas: AdendaPlano[] = [];
   for (const fila of filas.rows) {
-    if (!esCampo(fila.campo_ref)) continue;
+    if (!esCampoAdenda(fila.campo_ref)) continue;
     planas.push({
       id: fila.id,
       numero: fila.numero,
@@ -279,7 +300,7 @@ async function armarHistorial(ctx: ContextoAtencion, atencionId: string): Promis
   sello: string | null;
 } | null> {
   return conApp(ctx, async (cliente) => {
-    const base = await leerBase(cliente, atencionId);
+    const base = await leerBase(cliente, atencionId, ctx.tenant_id);
     if (!base) return null;
     const adendas = await adendasPlanas(ctx, cliente, atencionId);
     const proyectado = proyectarHistorial({
@@ -337,21 +358,52 @@ export async function documentoHistoriaFirmada(ctx: ContextoAtencion, atencionId
     exigirLectura(ctx, armado.base.sede_id);
     const refraccion = Object.entries(armado.historial.original_refraccion)
       .map(([campo, valor]) => {
-        const etiqueta = esCampo(campo) ? ETIQUETAS_REFRACCION[campo] : campo;
+        const etiqueta = esCampo(campo) ? ETIQUETAS_REFRACCION[campo as keyof typeof ETIQUETAS_REFRACCION] : campo;
         const marca = armado.historial.marcas[campo];
         return `${etiqueta}: ${valor}${marca ? ` (${marca})` : ''}`;
       })
       .join('\n');
+    const narrativa = narrativaDe(armado.base.contenido);
+    const complementos = await conApp(ctx, async (cliente) => {
+      const prescripcion = await cliente.query<{ numero: string | null; tipo: string; dispositivo: string | null }>(
+        `select numero, tipo, dispositivo from prescripciones
+          where atencion_id = $1
+          order by creado_en desc
+          limit 1`,
+        [atencionId],
+      );
+      const consentimiento = await cliente.query<{ estado: string; otorgado: boolean }>(
+        `select estado, otorgado from consentimientos
+          where paciente_id = $1
+          order by creado_en desc
+          limit 1`,
+        [armado.base.paciente_id],
+      );
+      const rx = prescripcion.rows[0];
+      const consiente = consentimiento.rows[0];
+      return {
+        prescripcion: rx
+          ? [rx.numero, rx.tipo, rx.dispositivo].filter((parte) => parte && parte.trim()).join(' · ')
+          : '',
+        consentimiento: consiente
+          ? `${consiente.estado}${consiente.otorgado ? ', otorgado' : ''}`
+          : '',
+      };
+    });
     return {
       folio: armado.base.folio,
       hora_bogota: armado.base.firmado_en ? presentarBogota(new Date(armado.base.firmado_en)) : null,
       sello: armado.sello,
-      secciones: [
-        { titulo: 'Motivo de consulta', texto: motivoDe(armado.base.contenido) || 'Sin registro' },
-        { titulo: 'Refracción original', texto: refraccion || 'Sin registro' },
-        { titulo: 'Diagnóstico', texto: armado.base.diagnostico ?? 'Sin registro' },
-        { titulo: 'Plan', texto: armado.base.plan ?? 'Sin registro' },
-      ],
+      secciones: seccionesCopiaHistoria({
+        motivo: narrativa.motivo,
+        antecedentes: narrativa.antecedentes,
+        saludOcular: narrativa.saludOcular,
+        refraccion,
+        diagnostico: armado.base.diagnostico ?? '',
+        plan: armado.base.plan ?? '',
+        prescripcion: complementos.prescripcion,
+        consentimiento: complementos.consentimiento,
+      }),
       adendas: armado.historial.linea,
     };
   } catch (error) {
@@ -383,7 +435,7 @@ export async function crearAdendaAtencion(
     .safeParse(entrada);
   if (!cuerpo.success) throw new ErrorAtencion(400, 'La adenda no es válida.');
   try {
-    const base = await conApp(ctx, (cliente) => leerBase(cliente, atencionId));
+    const base = await conApp(ctx, (cliente) => leerBase(cliente, atencionId, ctx.tenant_id));
     if (!base) throw new ErrorAtencion(404, 'No se encontró la atención.');
     exigir(ctx, 'crear', 'R4', base.sede_id);
     exigir(ctx, 'firmar', 'R4', base.sede_id);
@@ -411,9 +463,10 @@ export async function crearAdendaAtencion(
       cuerpo: JSON.stringify({
         atencion_id: atencionId,
         campo_ref: preparada.campo,
-        motivo: preparada.motivo,
-        nuevo_valor: preparada.nuevo_valor,
         tipo_nota: preparada.tipo_nota,
+        hash_canonico: createHash('sha256')
+          .update(`${preparada.motivo}\n${preparada.nuevo_valor}`, 'utf8')
+          .digest('hex'),
       }),
     });
     await firmarProfesional(contextoFirma(ctx), documento.id, ahora);
@@ -441,7 +494,7 @@ export async function crearAdendaAtencion(
       const numero = Number(numeroFila.rows[0]?.numero ?? 1);
       const valorAnteriorRef = previa.rows[0]?.id
         ? referenciaAdenda(previa.rows[0].id)
-        : referenciaExamen(preparada.campo);
+        : referenciaCampoAdenda(preparada.campo);
       const tipo = fila.profesional_id === ctx.usuario_id ? 'correccion' : 'complementaria';
       const contenido = JSON.stringify({
         schema: 1,

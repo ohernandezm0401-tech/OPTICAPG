@@ -67,6 +67,24 @@ function campoVacio(campo: CampoArt17): PrescripcionFirmaEntrada {
   return completa({ [campo]: '' });
 }
 
+describe('lentes de contacto', () => {
+  it('rechaza «No aplica» en dispositivo, forma de uso y distancia pupilar', () => {
+    const resultado = validarFirmaPrescripcion(
+      completa({
+        tipo: 'lentes_contacto',
+        dispositivo: 'No aplica',
+        forma_uso: 'No aplica',
+        distancia_pupilar: 'No aplica',
+      }),
+      AHORA,
+    );
+    expect(resultado.ok).toBe(false);
+    if (resultado.ok) return;
+    const campos = resultado.problemas.map((problema) => problema.campo);
+    expect(campos).toEqual(expect.arrayContaining(['dispositivo', 'forma_uso', 'distancia_pupilar']));
+  });
+});
+
 describe('AC-OPT-05-1: cada campo del art. 17', () => {
   it('falla nombrando el campo que falta', () => {
     expect(CAMPOS_ART17.length).toBeGreaterThanOrEqual(15);

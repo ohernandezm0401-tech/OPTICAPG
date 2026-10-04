@@ -8,7 +8,7 @@
 // Uso: `npm run licenses:check` (desde `web/`).
 // TODO(Q-09): las entradas PENDIENTE Q-09 requieren decisión de Orlando; este
 // script seguirá avisando (sin fallar) solo por las listadas nominalmente.
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -141,7 +141,17 @@ function leerJson(ruta) {
   return JSON.parse(readFileSync(ruta, 'utf8'));
 }
 
-const esCli = process.argv[1] != null && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+function rutaReal(valor) {
+  try {
+    return realpathSync(valor);
+  } catch {
+    return path.resolve(valor);
+  }
+}
+
+// En macOS `tmpdir()` pasa por /var, que es un enlace a /private/var.
+// Node resuelve el módulo al destino real; comparar sin realpath deja el CLI en silencio.
+const esCli = process.argv[1] != null && rutaReal(process.argv[1]) === rutaReal(fileURLToPath(import.meta.url));
 
 if (esCli) {
   const candado = leerJson(RUTA_LOCK);

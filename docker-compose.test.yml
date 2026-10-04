@@ -4,7 +4,7 @@
 #
 # Uso local:
 #   docker compose -f docker-compose.test.yml up -d
-#   export DATABASE_URL_TEST=postgresql://postgres:postgres@localhost:5433/optisaas_pruebas
+#   export DATABASE_URL_TEST=postgresql://postgres:postgres@localhost:5434/optisaas_pruebas
 #   npm run test:int --prefix web
 #
 # En CI lo provee el servicio `postgres` de `.github/workflows/ci.yml`
@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: optisaas_pruebas
     ports:
-      - "5433:5432"
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d optisaas_pruebas"]
       interval: 5s

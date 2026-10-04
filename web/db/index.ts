@@ -10,6 +10,8 @@ import 'server-only';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
+import { rechazarConexionPrivilegiada as rechazarRol } from './privilegio-arranque.mjs';
+
 import * as atencionAdendas from './esquema/atencion-adendas';
 import * as entregasHc from './esquema/entregas-hc';
 import * as habeasData from './esquema/habeas-data';
@@ -77,7 +79,15 @@ let pool: Pool | null = null;
 
 export function obtenerPool(): Pool {
   if (!pool) {
-    pool = new Pool({ connectionString: leerUrlBd() });
+    pool = new Pool({
+      connectionString: leerUrlBd(),
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
+      max: 10,
+    });
+    pool.on('error', (error) => {
+      console.error('Cliente de Postgres ocioso con error:', error.message);
+    });
   }
   return pool;
 }
@@ -89,6 +99,11 @@ export function obtenerDb() {
 export type BdNucleo = ReturnType<typeof obtenerDb>;
 
 // Solo pruebas: cierra el pool para que Vitest termine limpio.
+/** En producción la piscina no puede ignorar RLS. Las pruebas usan el superusuario y hacen SET ROLE. */
+export async function rechazarConexionPrivilegiada(): Promise<void> {
+  await rechazarRol(leerUrlBd());
+}
+
 export async function cerrarPool(): Promise<void> {
   if (pool) {
     const actual = pool;

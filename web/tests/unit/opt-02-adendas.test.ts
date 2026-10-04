@@ -8,6 +8,7 @@ import {
   prepararAdenda,
   proyectarHistorial,
   referenciaExamen,
+  seccionesCopiaHistoria,
   type AdendaPlano,
   type CampoRefraccionAdenda,
 } from '../../dominio/adenda-atencion';
@@ -154,6 +155,57 @@ describe('P: la adenda no altera la refracción original', () => {
       expect(historia.linea[1]?.tipo_nota).toBe('complementaria');
       expect(historia.linea[1]?.marca).toBeNull();
     }
+  });
+});
+
+describe('AC-OPT-02-3: la copia incluye la historia completa', () => {
+  it('antecedentes, salud ocular, prescripción y consentimiento salen en el documento', async () => {
+    const secciones = seccionesCopiaHistoria({
+      motivo: 'Control sintetico',
+      antecedentes: 'Antecedente sintetico de glaucoma',
+      saludOcular: 'Segmento anterior sin hallazgo sintetico',
+      refraccion: 'Esfera ojo derecho: -1.25',
+      diagnostico: 'H52.1 Miopia sintetica',
+      plan: 'Control en doce meses',
+      prescripcion: 'RX-2026-000001 · lentes oftalmicos · montura sintetica',
+      consentimiento: 'otorgado, otorgado',
+    });
+    const titulos = secciones.map((seccion) => seccion.titulo);
+    expect(titulos).toEqual([
+      'Motivo de consulta',
+      'Antecedentes',
+      'Salud ocular',
+      'Refracción original',
+      'Diagnóstico',
+      'Plan',
+      'Prescripción',
+      'Consentimiento',
+    ]);
+    const documento = armarDocumentoHistoriaClinica({
+      folio: 4,
+      hora_bogota: '03/10/2026, 09:00:00',
+      sello: null,
+      secciones,
+      adendas: [],
+    });
+    const unido = documento.lineas.join('\n');
+    expect(unido).toContain('Antecedentes: Antecedente sintetico de glaucoma');
+    expect(unido).toContain('Salud ocular: Segmento anterior sin hallazgo sintetico');
+    expect(unido).toContain('Prescripción: RX-2026-000001 · lentes oftalmicos · montura sintetica');
+    expect(unido).toContain('Consentimiento: otorgado, otorgado');
+    const pdf = await renderizarPdfHistoriaClinica({
+      folio: 4,
+      hora_bogota: '03/10/2026, 09:00:00',
+      sello: null,
+      secciones,
+      adendas: [],
+    });
+    const texto = textoVisiblePdf(pdf);
+    expect(texto).toContain('Antecedentes');
+    expect(texto).toContain('Salud ocular');
+    expect(texto).toContain('Prescripción');
+    expect(texto).toContain('Consentimiento');
+    expect(texto).toContain('Antecedente sintetico de glaucoma');
   });
 });
 

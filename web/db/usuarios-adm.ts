@@ -335,6 +335,11 @@ export async function cambiarRol(
         returning id`,
       [entrada.usuarioId, entrada.sedeId, entrada.rolAnterior, entrada.rolNuevo],
     );
+    if ((filas.rowCount ?? 0) < 1) return 0;
+    await cliente.query(
+      `update sesiones set revocada_en = $2 where usuario_id = $1 and revocada_en is null`,
+      [entrada.usuarioId, ahora.toISOString()],
+    );
     return filas.rowCount ?? 0;
   });
   if (actualizado < 1) throw new ErrorUsuario('validacion', 'No se encontró esa membresía.');

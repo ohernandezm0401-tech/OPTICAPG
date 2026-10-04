@@ -83,6 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               sedeId: sesion.sedeId,
               role: sesion.rol,
               sedesAccess: sesion.sedes,
+              rolesPorSede: sesion.rolesPorSede,
               sesionId: sesion.id,
               devLocal: false,
             };
@@ -109,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               sedeId: sesion.sedeId,
               role: sesion.rol,
               sedesAccess: sesion.sedes,
+              rolesPorSede: sesion.rolesPorSede,
               sesionId: sesion.id,
               devLocal: false,
             };

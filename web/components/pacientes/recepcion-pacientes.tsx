@@ -86,6 +86,11 @@ export function RecepcionPacientes() {
   const [termino, setTermino] = useState('');
   const [errores, setErrores] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [identidadAnterior, setIdentidadAnterior] = useState<{
+    tipo_doc: string | null;
+    num_doc: string | null;
+    fecha_nacimiento: string | null;
+  } | null>(null);
   const [duplicado, setDuplicado] = useState<{ id: string; num_hc: number } | null>(null);
   const [historial, setHistorial] = useState<{ id: string; ts_bogota: string; accion: string; rol: string | null }[]>([]);
   const [representantes, setRepresentantes] = useState<
@@ -138,6 +143,7 @@ export function RecepcionPacientes() {
       negativa_autorizacion: ficha.negativa_autorizacion,
     });
     setHistorial(ficha.historial);
+    setIdentidadAnterior(ficha.identidad_anterior ?? null);
     setRepresentantes(ficha.representantes);
     setDiagnosticos('diagnosticos' in ficha && Array.isArray(ficha.diagnosticos) ? ficha.diagnosticos.map((d) => d.descripcion) : null);
     setAviso(ficha.aviso_mayoria);
@@ -218,6 +224,7 @@ export function RecepcionPacientes() {
               setRepresentantes([]);
               setDiagnosticos(null);
               setAviso(null);
+              setIdentidadAnterior(null);
               setErrores([]);
               setDuplicado(null);
             }}
@@ -329,6 +336,16 @@ export function RecepcionPacientes() {
             </label>
             <Campo etiqueta="Número de documento" id="num_doc" registro={form.register('num_doc')} />
             <Campo etiqueta="Fecha de nacimiento" id="fecha_nacimiento" tipo="date" registro={form.register('fecha_nacimiento')} />
+            {identidadAnterior &&
+            (identidadAnterior.tipo_doc || identidadAnterior.num_doc || identidadAnterior.fecha_nacimiento) ? (
+              <p className="text-xs text-muted-foreground sm:col-span-2" data-testid="identidad-anterior">
+                Valor anterior:
+                {identidadAnterior.tipo_doc ? ` documento ${identidadAnterior.tipo_doc}` : ''}
+                {identidadAnterior.num_doc ? ` ${identidadAnterior.num_doc}` : ''}
+                {identidadAnterior.fecha_nacimiento ? `, nacimiento ${identidadAnterior.fecha_nacimiento}` : ''}.
+                El vigente está en el formulario.
+              </p>
+            ) : null}
             <Campo etiqueta="Correo (opcional)" id="email" tipo="email" registro={form.register('email')} />
             {ETIQUETAS_NO_APLICA.map((item) => (
               <div key={item.campo} className="space-y-1">

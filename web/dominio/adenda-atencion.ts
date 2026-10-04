@@ -21,6 +21,12 @@ export const CAMPOS_REFRACCION_ADENDA = [
 
 export type CampoRefraccionAdenda = (typeof CAMPOS_REFRACCION_ADENDA)[number];
 
+export const CAMPOS_TEXTO_ADENDA = ['diagnostico', 'alergias'] as const;
+
+export type CampoTextoAdenda = (typeof CAMPOS_TEXTO_ADENDA)[number];
+
+export type CampoAdenda = CampoRefraccionAdenda | CampoTextoAdenda;
+
 export const ETIQUETAS_REFRACCION: Record<CampoRefraccionAdenda, string> = {
   esfera_od: 'Esfera ojo derecho',
   cilindro_od: 'Cilindro ojo derecho',
@@ -37,12 +43,18 @@ export const ETIQUETAS_REFRACCION: Record<CampoRefraccionAdenda, string> = {
   dip_monocular_oi: 'DIP monocular ojo izquierdo',
 };
 
+export const ETIQUETAS_ADENDA: Record<CampoAdenda, string> = {
+  ...ETIQUETAS_REFRACCION,
+  diagnostico: 'Diagnóstico',
+  alergias: 'Alergias',
+};
+
 const MOTIVO_MAX = 4000;
 
 export interface AdendaPlano {
   id: string;
   numero: number;
-  campo_ref: CampoRefraccionAdenda;
+  campo_ref: CampoAdenda;
   valor_anterior_ref: string;
   nuevo_valor: string;
   motivo: string;
@@ -89,7 +101,7 @@ export interface EntradaPdfHistoria {
 export type PreparacionAdenda =
   | {
       ok: true;
-      campo: CampoRefraccionAdenda;
+      campo: CampoAdenda;
       nuevo_valor: string;
       motivo: string;
       tipo_nota: 'correccion' | 'complementaria';
@@ -98,6 +110,14 @@ export type PreparacionAdenda =
 
 function esCampo(valor: string): valor is CampoRefraccionAdenda {
   return (CAMPOS_REFRACCION_ADENDA as readonly string[]).includes(valor);
+}
+
+function esCampoTexto(valor: string): valor is CampoTextoAdenda {
+  return (CAMPOS_TEXTO_ADENDA as readonly string[]).includes(valor);
+}
+
+export function esCampoAdenda(valor: string): valor is CampoAdenda {
+  return esCampo(valor) || esCampoTexto(valor);
 }
 
 function numeroCampo(texto: string): number | null {
@@ -109,6 +129,12 @@ function numeroCampo(texto: string): number | null {
 
 export function referenciaExamen(campo: CampoRefraccionAdenda): string {
   return `examenes_optometricos.${campo}`;
+}
+
+export function referenciaCampoAdenda(campo: CampoAdenda): string {
+  if (campo === 'diagnostico') return 'diagnosticos.descripcion';
+  if (campo === 'alergias') return 'atenciones.alergias';
+  return referenciaExamen(campo);
 }
 
 export function referenciaAdenda(id: string): string {
@@ -132,8 +158,20 @@ export function prepararAdenda(entrada: {
   if (motivo.length > MOTIVO_MAX) {
     return { ok: false, mensaje: 'El motivo de la adenda es demasiado largo.' };
   }
+  if (esCampoTexto(entrada.campo)) {
+    const nuevo = entrada.nuevoValorTexto.trim();
+    if (!nuevo) return { ok: false, mensaje: 'El nuevo valor es obligatorio.' };
+    if (nuevo.length > MOTIVO_MAX) return { ok: false, mensaje: 'El nuevo valor de la adenda es demasiado largo.' };
+    return {
+      ok: true,
+      campo: entrada.campo,
+      nuevo_valor: nuevo,
+      motivo,
+      tipo_nota: entrada.autorId === entrada.profesionalAtencionId ? 'correccion' : 'complementaria',
+    };
+  }
   if (!esCampo(entrada.campo)) {
-    return { ok: false, mensaje: 'Elija un campo de refracción.' };
+    return { ok: false, mensaje: 'Elija un campo de refracción, el diagnóstico o las alergias.' };
   }
   const numero = numeroCampo(entrada.nuevoValorTexto);
   if (numero == null) return { ok: false, mensaje: 'El nuevo valor de refracción no es un número.' };
@@ -203,7 +241,7 @@ export function proyectarHistorial(entrada: {
       numero: adenda.numero,
       tipo_nota: adenda.tipo_nota,
       campo_ref: adenda.campo_ref,
-      campo_etiqueta: ETIQUETAS_REFRACCION[adenda.campo_ref],
+      campo_etiqueta: ETIQUETAS_ADENDA[adenda.campo_ref],
       valor_anterior: valorAnterior(adenda, original, porId),
       nuevo_valor: adenda.nuevo_valor,
       motivo: adenda.motivo,
@@ -213,6 +251,29 @@ export function proyectarHistorial(entrada: {
     });
   });
   return { original_refraccion: original, marcas, linea };
+}
+
+export function seccionesCopiaHistoria(entrada: {
+  motivo: string;
+  antecedentes: string;
+  saludOcular: string;
+  refraccion: string;
+  diagnostico: string;
+  plan: string;
+  prescripcion: string;
+  consentimiento: string;
+}): SeccionPdfHistoria[] {
+  const texto = (valor: string) => valor.trim() || 'Sin registro';
+  return [
+    { titulo: 'Motivo de consulta', texto: texto(entrada.motivo) },
+    { titulo: 'Antecedentes', texto: texto(entrada.antecedentes) },
+    { titulo: 'Salud ocular', texto: texto(entrada.saludOcular) },
+    { titulo: 'Refracción original', texto: texto(entrada.refraccion) },
+    { titulo: 'Diagnóstico', texto: texto(entrada.diagnostico) },
+    { titulo: 'Plan', texto: texto(entrada.plan) },
+    { titulo: 'Prescripción', texto: texto(entrada.prescripcion) },
+    { titulo: 'Consentimiento', texto: texto(entrada.consentimiento) },
+  ];
 }
 
 export function armarDocumentoHistoriaClinica(entrada: EntradaPdfHistoria): {

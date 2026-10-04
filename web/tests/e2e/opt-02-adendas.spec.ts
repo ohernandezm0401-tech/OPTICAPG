@@ -112,7 +112,7 @@ test('AC-OPT-02-1 y AC-OPT-02-2: la adenda corrige la esfera y el historial mues
   const pacienteId = await sembrarOptometra(page);
   await page.goto('/dashboard/optometra/historia-clinica');
   await expect(page.getByRole('heading', { name: 'Atención de optometría' })).toBeVisible();
-  await page.getByLabel('Paciente').fill(pacienteId);
+  await page.getByLabel('Paciente', { exact: true }).fill(pacienteId);
   await page.getByLabel('Motivo de consulta').fill('Control sintetico de adenda');
   await page.getByLabel('Esfera ojo derecho').fill('-1.25');
   await page.getByLabel('Eje ojo derecho').fill('180');
