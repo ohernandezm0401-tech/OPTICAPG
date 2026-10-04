@@ -23,7 +23,7 @@ export async function asegurarNucleoDemo(): Promise<void> {
   await pool.query(
     `insert into tenants (id, razon_social, nit, estado)
      values ($1, 'Óptica Sintética Demo Uno S.A.S. (demo)', '900.000.001-1', 'activo')
-     on conflict (id) do nothing`,
+     on conflict do nothing`,
     [TENANT_DEMO],
   );
   await pool.query(

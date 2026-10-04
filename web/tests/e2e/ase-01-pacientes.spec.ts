@@ -65,7 +65,13 @@ test('AC-ASE-01 E y A: alta, duplicado y formulario accesible', async ({ page })
   await marcarNoAplica(page);
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByRole('heading', { name: 'Editar paciente' })).toBeVisible();
-  await expect(page.getByText('••••')).toBeVisible();
+  // Otro worker puede crear, en el mismo milisegundo, un documento con los
+  // mismos cuatro últimos dígitos. La fila se identifica por el paciente.
+  await expect(
+    page
+      .getByRole('row', { name: /Morales Demo, Elena Sintética/ })
+      .getByText(`CC ••••${documento.slice(-4)}`, { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Nuevo paciente' }).click();
   await page.getByLabel('Nombres').fill('Elena Sintética');

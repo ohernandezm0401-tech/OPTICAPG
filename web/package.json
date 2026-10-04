@@ -16,7 +16,7 @@
     "test:unit": "vitest run",
     "test:int": "vitest run --config vitest.int.config.ts",
     "test:e2e": "playwright test",
-    "ci:local": "npm run lint && npm run typecheck && npm run test && npm run test:int && npm run licenses:check && npm run catalogos:check && npm run secretos:buscar && npm run build && npm run db:migrate && npm run db:check-rls && npm run cifrado:recifrar-mfa && npm run catalogos:cargar -- datos/catalogos/sintetico-prueba.csv && npm run test:e2e",
+    "ci:local": "npm run lint && npm run typecheck && npm run test && export APP_MASTER_KEY=\"${APP_MASTER_KEY:-$(openssl rand -base64 32)}\" && export APP_MASTER_KEY_ID=\"${APP_MASTER_KEY_ID:-ci-local}\" && npm run test:int && npm run licenses:check && npm run catalogos:check && npm run secretos:buscar && npm run build && npm run db:migrate && npm run db:check-rls && npm run cifrado:recifrar-mfa && npm run catalogos:cargar -- datos/catalogos/sintetico-prueba.csv && npm run test:e2e",
     "secretos:buscar": "node scripts/buscar-secretos.mjs",
     "cifrado:recifrar-mfa": "node scripts/recifrar-secretos-mfa.mjs",
     "licenses:check": "node scripts/check-licenses.mjs",

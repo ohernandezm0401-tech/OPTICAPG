@@ -142,18 +142,15 @@ async function conApp<T>(contexto: ContextoPaciente, fn: (cliente: PoolClient) =
 }
 
 async function reservarNumHc(cliente: PoolClient, tenantId: string): Promise<number> {
-  const actual = await cliente.query<{ ultimo: number }>(
-    `select ultimo from secuencias_hc where tenant_id = $1 for update`,
+  // Un solo enunciado: dos altas paralelas del mismo tenant no chocan en la
+  // clave primaria. El número solo crece, igual que `siguienteNumHc`.
+  const reservado = await cliente.query<{ ultimo: number }>(
+    `insert into secuencias_hc (tenant_id, ultimo) values ($1, 1)
+     on conflict (tenant_id) do update set ultimo = secuencias_hc.ultimo + 1
+     returning ultimo`,
     [tenantId],
   );
-  const ultimo = actual.rows[0]?.ultimo ?? 0;
-  const siguiente = siguienteNumHc(ultimo);
-  if (actual.rows.length === 0) {
-    await cliente.query(`insert into secuencias_hc (tenant_id, ultimo) values ($1, $2)`, [tenantId, siguiente]);
-  } else {
-    await cliente.query(`update secuencias_hc set ultimo = $2 where tenant_id = $1`, [tenantId, siguiente]);
-  }
-  return siguiente;
+  return siguienteNumHc(reservado.rows[0].ultimo - 1);
 }
 
 async function buscarDuplicado(

@@ -193,7 +193,8 @@ async function asegurarPlantillas(cliente: PoolClient, ctx: ContextoAutorizacion
     await cliente.query(
       `insert into textos_legales
          (tenant_id, tipo, codigo, etiqueta, opcional, version, contenido, hash, vigente_desde, es_vigente)
-       values ($1, $2, $3, $4, $5, 1, $6, $7, $8, true)`,
+       values ($1, $2, $3, $4, $5, 1, $6, $7, $8, true)
+       on conflict do nothing`,
       [ctx.tenant_id, item.tipo, item.codigo, item.etiqueta, item.opcional, item.contenido, hashTextoLegal(item.contenido), ahora.toISOString()],
     );
   }
